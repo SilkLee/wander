@@ -65,15 +65,15 @@ services:
       dockerfile: Dockerfile
     container_name: workflowai-gateway
     ports:
-      - "8080:8080"
+      - "8000:8000"
     environment:
-      - PORT=8080
+      - PORT=8000
       - REDIS_URL=redis://redis:6379/0
       - JWT_SECRET=${JWT_SECRET:-changeme-in-production}
-      - AGENT_SERVICE_URL=http://agent-orchestrator:8001
-      - INDEXING_SERVICE_URL=http://indexing:8002
-      - MODEL_SERVICE_URL=http://model-service:8003
-      - INGESTION_SERVICE_URL=http://ingestion:8081
+      - AGENT_SERVICE_URL=http://agent-orchestrator:8002
+      - INDEXING_SERVICE_URL=http://indexing:8003
+      - MODEL_SERVICE_URL=http://model-service:8004
+      - INGESTION_SERVICE_URL=http://ingestion:8001
     depends_on:
       redis:
         condition: service_healthy
@@ -88,9 +88,9 @@ services:
       dockerfile: Dockerfile
     container_name: workflowai-ingestion
     ports:
-      - "8081:8081"
+      - "8001:8001"
     environment:
-      - PORT=8081
+      - PORT=8001
       - REDIS_URL=redis://redis:6379/0
     depends_on:
       redis:
@@ -106,13 +106,13 @@ services:
       dockerfile: Dockerfile
     container_name: workflowai-agent
     ports:
-      - "8001:8001"
+      - "8002:8002"
     environment:
-      - PORT=8001
+      - PORT=8002
       - DATABASE_URL=postgresql://workflowai:dev_password_123@postgres:5432/workflowai
       - REDIS_URL=redis://redis:6379/0
-      - MODEL_SERVICE_URL=http://model-service:8003
-      - INDEXING_SERVICE_URL=http://indexing:8002
+      - MODEL_SERVICE_URL=http://model-service:8004
+      - INDEXING_SERVICE_URL=http://indexing:8003
       - OPENAI_API_KEY=${OPENAI_API_KEY}
     depends_on:
       postgres:
@@ -132,9 +132,9 @@ services:
       dockerfile: Dockerfile
     container_name: workflowai-indexing
     ports:
-      - "8002:8002"
+      - "8003:8003"
     environment:
-      - PORT=8002
+      - PORT=8003
       - ELASTICSEARCH_URL=http://elasticsearch:9200
       - REDIS_URL=redis://redis:6379/0
     depends_on:
@@ -156,9 +156,9 @@ services:
       dockerfile: Dockerfile
     container_name: workflowai-model
     ports:
-      - "8003:8003"
+      - "8004:8004"
     environment:
-      - PORT=8003
+      - PORT=8004
       - MODEL_NAME=Qwen/Qwen2.5-7B-Instruct
       - MAX_MODEL_LEN=4096
       - GPU_MEMORY_UTILIZATION=0.9
@@ -184,9 +184,9 @@ services:
       dockerfile: Dockerfile
     container_name: workflowai-metrics
     ports:
-      - "8004:8004"
+      - "8005:8005"
     environment:
-      - PORT=8004
+      - PORT=8005
       - DATABASE_URL=postgresql://workflowai:dev_password_123@postgres:5432/workflowai
     depends_on:
       postgres:
@@ -256,7 +256,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - REACT_APP_API_URL=http://localhost:8080
+      - REACT_APP_API_URL=http://localhost:8000
     depends_on:
       - api-gateway
     networks:

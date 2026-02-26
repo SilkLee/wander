@@ -35,10 +35,10 @@ go run main.go
 
 ```bash
 # Health check
-curl http://localhost:8080/health
+curl http://localhost:8000/health
 
 # Root endpoint
-curl http://localhost:8080/
+curl http://localhost:8000/
 ```
 
 ### Build

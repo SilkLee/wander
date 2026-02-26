@@ -120,7 +120,7 @@ docker-compose up -d postgres redis
 cd services/api-gateway
 go mod download
 go run main.go
-# Gateway running on http://localhost:8080
+# Gateway running on http://localhost:8000
 
 # 4. Start Python services (in separate terminals)
 cd services/agent-orchestrator
@@ -130,7 +130,7 @@ pip install -r requirements.txt
 uvicorn main:app --reload --port 8001
 
 # 5. Verify health
-curl http://localhost:8080/health
+curl http://localhost:8000/health
 ```
 
 ### Full Stack Deployment
@@ -140,7 +140,7 @@ curl http://localhost:8080/health
 docker-compose up --build
 
 # Access services:
-# - API Gateway:  http://localhost:8080
+# - API Gateway:  http://localhost:8000
 # - Frontend:     http://localhost:3000
 # - Prometheus:   http://localhost:9090
 # - Grafana:      http://localhost:3001
@@ -237,7 +237,7 @@ pytest -v
 
 ```bash
 cd tests/load
-locust -f locustfile.py --host=http://localhost:8080 --users=1000 --spawn-rate=100
+locust -f locustfile.py --host=http://localhost:8000 --users=1000 --spawn-rate=100
 ```
 
 ---

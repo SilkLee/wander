@@ -47,7 +47,7 @@ func main() {
 	// Start server
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		port = "8000"
 	}
 
 	log.Printf("Starting API Gateway on port %s", port)
