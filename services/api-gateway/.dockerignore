@@ -1,0 +1,17 @@
+# Ignore development files
+.env
+.env.local
+*.log
+
+# Ignore build artifacts
+gateway
+*.exe
+*.test
+
+# Ignore git
+.git
+.gitignore
+
+# Ignore documentation
+README.md
+*.md
