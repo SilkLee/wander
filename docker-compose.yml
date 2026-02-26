@@ -1,0 +1,275 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: workflowai-postgres
+    environment:
+      POSTGRES_USER: workflowai
+      POSTGRES_PASSWORD: dev_password_123
+      POSTGRES_DB: workflowai
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U workflowai"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - workflowai-network
+
+  # Redis Cache & Message Queue
+  redis:
+    image: redis:7-alpine
+    container_name: workflowai-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - workflowai-network
+
+  # Elasticsearch (for RAG hybrid search)
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: workflowai-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - workflowai-network
+
+  # API Gateway (Go - Gin)
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+      dockerfile: Dockerfile
+    container_name: workflowai-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - REDIS_URL=redis://redis:6379/0
+      - JWT_SECRET=${JWT_SECRET:-changeme-in-production}
+      - AGENT_SERVICE_URL=http://agent-orchestrator:8001
+      - INDEXING_SERVICE_URL=http://indexing:8002
+      - MODEL_SERVICE_URL=http://model-service:8003
+      - INGESTION_SERVICE_URL=http://ingestion:8081
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - workflowai-network
+    restart: unless-stopped
+
+  # Ingestion Service (Go - Gin)
+  ingestion:
+    build:
+      context: ./services/ingestion
+      dockerfile: Dockerfile
+    container_name: workflowai-ingestion
+    ports:
+      - "8081:8081"
+    environment:
+      - PORT=8081
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - workflowai-network
+    restart: unless-stopped
+
+  # Agent Orchestrator (Python - FastAPI + LangChain)
+  agent-orchestrator:
+    build:
+      context: ./services/agent-orchestrator
+      dockerfile: Dockerfile
+    container_name: workflowai-agent
+    ports:
+      - "8001:8001"
+    environment:
+      - PORT=8001
+      - DATABASE_URL=postgresql://workflowai:dev_password_123@postgres:5432/workflowai
+      - REDIS_URL=redis://redis:6379/0
+      - MODEL_SERVICE_URL=http://model-service:8003
+      - INDEXING_SERVICE_URL=http://indexing:8002
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./services/agent-orchestrator:/app
+    networks:
+      - workflowai-network
+    restart: unless-stopped
+
+  # Indexing Service (Python - FastAPI + Sentence Transformers)
+  indexing:
+    build:
+      context: ./services/indexing
+      dockerfile: Dockerfile
+    container_name: workflowai-indexing
+    ports:
+      - "8002:8002"
+    environment:
+      - PORT=8002
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./services/indexing:/app
+      - ./data/vectors:/app/vectors
+    networks:
+      - workflowai-network
+    restart: unless-stopped
+
+  # Model Service (Python - FastAPI + vLLM)
+  model-service:
+    build:
+      context: ./services/model-service
+      dockerfile: Dockerfile
+    container_name: workflowai-model
+    ports:
+      - "8003:8003"
+    environment:
+      - PORT=8003
+      - MODEL_NAME=Qwen/Qwen2.5-7B-Instruct
+      - MAX_MODEL_LEN=4096
+      - GPU_MEMORY_UTILIZATION=0.9
+    volumes:
+      - ./services/model-service:/app
+      - ./models:/app/models
+    # Uncomment for GPU support
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+    networks:
+      - workflowai-network
+    restart: unless-stopped
+
+  # Metrics Service (Python - FastAPI + SQLAlchemy)
+  metrics:
+    build:
+      context: ./services/metrics
+      dockerfile: Dockerfile
+    container_name: workflowai-metrics
+    ports:
+      - "8004:8004"
+    environment:
+      - PORT=8004
+      - DATABASE_URL=postgresql://workflowai:dev_password_123@postgres:5432/workflowai
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./services/metrics:/app
+    networks:
+      - workflowai-network
+    restart: unless-stopped
+
+  # Prometheus (Metrics Collection)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: workflowai-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infra/docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    networks:
+      - workflowai-network
+    restart: unless-stopped
+
+  # Grafana (Metrics Visualization)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: workflowai-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infra/docker/grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+    networks:
+      - workflowai-network
+    restart: unless-stopped
+
+  # Jaeger (Distributed Tracing)
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: workflowai-jaeger
+    ports:
+      - "16686:16686"  # UI
+      - "4318:4318"    # OTLP HTTP
+      - "14268:14268"  # Jaeger collector
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    networks:
+      - workflowai-network
+    restart: unless-stopped
+
+  # Frontend (React)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: workflowai-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8080
+    depends_on:
+      - api-gateway
+    networks:
+      - workflowai-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  elasticsearch_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  workflowai-network:
+    driver: bridge
