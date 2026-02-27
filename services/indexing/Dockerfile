@@ -11,7 +11,8 @@ WORKDIR /app
 COPY pyproject.toml ./
 
 # Install dependencies with uv
-RUN uv pip install --system --no-cache -r pyproject.toml
+RUN uv pip install --system --no-cache --native-tls -r pyproject.toml
+
 
 # Production stage
 FROM python:3.11-slim

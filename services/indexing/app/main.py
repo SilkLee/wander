@@ -29,10 +29,8 @@ async def lifespan(app: FastAPI):
     print(f"Elasticsearch URL: {settings.elasticsearch_url}")
     print(f"Device: {settings.device}")
     
-    # Preload embedding model
-    print("Preloading embedding model...")
-    get_embedding_service()
-    print("Embedding model ready")
+    # NOTE: Model will be loaded lazily on first request to avoid startup delay
+    print("Indexing service ready (model will load on first request)")
     
     yield
     
