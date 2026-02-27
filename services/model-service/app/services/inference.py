@@ -16,6 +16,9 @@ class InferenceService:
 
     def __init__(self):
         """Initialize model and tokenizer."""
+        # Use local path if provided, otherwise use HuggingFace model ID
+        self.model_path = settings.local_model_path or settings.model_name
+        self.is_local = settings.local_model_path is not None
         self.model_name = settings.model_name
         self.device = settings.device
         self.max_model_len = settings.max_model_len
@@ -25,30 +28,42 @@ class InferenceService:
             print("CUDA not available, falling back to CPU")
             self.device = "cpu"
         
-        print(f"Loading model: {self.model_name} on {self.device}")
+        print(f"Loading model from: {self.model_path}")
+        print(f"Device: {self.device}")
+        print(f"Local model: {self.is_local}")
         
         # Load tokenizer
-        self.tokenizer = AutoTokenizer.from_pretrained(
-            self.model_name,
-            revision=settings.model_revision,
-            trust_remote_code=True,
-        )
+        try:
+            self.tokenizer = AutoTokenizer.from_pretrained(
+                self.model_path,
+                revision=None if self.is_local else settings.model_revision,
+                trust_remote_code=True,
+                local_files_only=self.is_local,
+            )
+        except Exception as e:
+            print(f"Error loading tokenizer: {e}")
+            raise
         
         # Load model
-        self.model = AutoModelForCausalLM.from_pretrained(
-            self.model_name,
-            revision=settings.model_revision,
-            torch_dtype=torch.float16 if self.device == "cuda" else torch.float32,
-            device_map="auto" if self.device == "cuda" else None,
-            trust_remote_code=True,
-        )
+        try:
+            self.model = AutoModelForCausalLM.from_pretrained(
+                self.model_path,
+                revision=None if self.is_local else settings.model_revision,
+                torch_dtype=torch.float16 if self.device == "cuda" else torch.float32,
+                device_map="auto" if self.device == "cuda" else None,
+                trust_remote_code=True,
+                local_files_only=self.is_local,
+                low_cpu_mem_usage=True,  # Reduce memory usage during loading
+            )
+        except Exception as e:
+            print(f"Error loading model: {e}")
+            raise
         
         if self.device == "cpu":
             self.model = self.model.to(self.device)
         
         self.model.eval()
         print(f"Model loaded successfully")
-
     def generate(
         self,
         prompt: str,
@@ -106,6 +121,8 @@ class InferenceService:
         """Get model information."""
         return {
             "name": self.model_name,
+            "path": self.model_path,
+            "is_local": self.is_local,
             "type": "transformers",
             "device": self.device,
             "max_length": self.max_model_len,

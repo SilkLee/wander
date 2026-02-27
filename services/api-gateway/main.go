@@ -113,6 +113,9 @@ func main() {
 		api.POST("/execute", utils.ProxyToService(cfg.AgentServiceURL))
 		api.GET("/execute/:id", utils.ProxyToService(cfg.AgentServiceURL+"/execute"))
 
+		// Model Service - LLM inference
+		api.POST("/generate", utils.ProxyToService(cfg.ModelServiceURL))
+		api.GET("/model/info", utils.ProxyToService(cfg.ModelServiceURL+"/model/info"))
 		// Placeholder for future routes
 		api.GET("/workflows", func(c *gin.Context) {
 			userID, _ := c.Get("userID")
