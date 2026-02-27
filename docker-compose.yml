@@ -109,18 +109,18 @@ services:
       - "8002:8002"
     environment:
       - PORT=8002
-      - DATABASE_URL=postgresql://workflowai:dev_password_123@postgres:5432/workflowai
       - REDIS_URL=redis://redis:6379/0
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
       - MODEL_SERVICE_URL=http://model-service:8004
-      - INDEXING_SERVICE_URL=http://indexing:8003
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=gpt-4-turbo-preview
     depends_on:
-      postgres:
+      elasticsearch:
         condition: service_healthy
       redis:
         condition: service_healthy
     volumes:
-      - ./services/agent-orchestrator:/app
+      - agent_cache:/app/cache
     networks:
       - workflowai-network
     restart: unless-stopped
@@ -136,15 +136,15 @@ services:
     environment:
       - PORT=8003
       - ELASTICSEARCH_URL=http://elasticsearch:9200
-      - REDIS_URL=redis://redis:6379/0
+      - EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
+      - DEVICE=cpu
     depends_on:
       elasticsearch:
         condition: service_healthy
       redis:
         condition: service_healthy
     volumes:
-      - ./services/indexing:/app
-      - ./data/vectors:/app/vectors
+      - indexing_cache:/app/cache
     networks:
       - workflowai-network
     restart: unless-stopped
@@ -160,11 +160,10 @@ services:
     environment:
       - PORT=8004
       - MODEL_NAME=Qwen/Qwen2.5-7B-Instruct
+      - DEVICE=cpu
       - MAX_MODEL_LEN=4096
-      - GPU_MEMORY_UTILIZATION=0.9
     volumes:
-      - ./services/model-service:/app
-      - ./models:/app/models
+      - model_cache:/app/cache
     # Uncomment for GPU support
     # deploy:
     #   resources:
@@ -269,6 +268,9 @@ volumes:
   elasticsearch_data:
   prometheus_data:
   grafana_data:
+  agent_cache:
+  indexing_cache:
+  model_cache:
 
 networks:
   workflowai-network:
