@@ -159,11 +159,14 @@ services:
       - "8004:8004"
     environment:
       - PORT=8004
-      - MODEL_NAME=Qwen/Qwen2.5-7B-Instruct
+      - MODEL_NAME=gpt2  # Lightweight model for testing (switch to Qwen/Qwen2.5-7B-Instruct after manual download)
       - DEVICE=cpu
       - MAX_MODEL_LEN=4096
+      - LOCAL_MODEL_PATH=/app/models/qwen  # Will be mounted from host
     volumes:
       - model_cache:/app/cache
+      # Mount local model directory (update path after download)
+      # - C:/develop/Qwen2.5-7B-Instruct:/app/models/qwen:ro
     # Uncomment for GPU support
     # deploy:
     #   resources:

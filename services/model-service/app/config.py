@@ -1,5 +1,6 @@
 """Configuration management for Model service."""
 
+from typing import Optional
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -73,6 +74,10 @@ class Settings(BaseSettings):
     transformers_cache: str = Field(
         default="/app/cache/transformers",
         description="Transformers cache directory",
+    )
+    local_model_path: Optional[str] = Field(
+        default=None,
+        description="Local model directory path (overrides model_name)",
     )
 
 
