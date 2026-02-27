@@ -39,6 +39,11 @@ class Settings(BaseSettings):
         default="gpt-4-turbo-preview",
         description="Default OpenAI model",
     )
+    
+    # Redis Streams configuration
+    stream_name: str = Field(default="workflowai:logs")
+    stream_group: str = Field(default="agent-orchestrator")
+    consumer_name: str = Field(default="agent-consumer-1")
 
     # LangChain Configuration
     langchain_tracing_v2: bool = Field(
@@ -59,4 +64,4 @@ class Settings(BaseSettings):
 
 
 # Global settings instance
-settings = Settings()
+settings = Settings()  # type: ignore

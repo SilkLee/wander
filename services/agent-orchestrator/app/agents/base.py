@@ -3,8 +3,8 @@
 from typing import Any, Dict, List, Optional
 from abc import ABC, abstractmethod
 
-from langchain.agents import AgentExecutor
-from langchain.tools import BaseTool
+from langchain_classic.agents import AgentExecutor, create_openai_functions_agent
+from langchain_classic.tools import BaseTool
 from langchain_openai import ChatOpenAI
 
 from app.config import settings
@@ -85,12 +85,11 @@ class BaseAgent(ABC):
         Returns:
             Configured AgentExecutor
         """
-        from langchain.agents import create_openai_functions_agent
 
         tools = self.get_tools()
         
         # Create prompt template
-        from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
+        from langchain_classic.prompts import ChatPromptTemplate, MessagesPlaceholder
         
         prompt = ChatPromptTemplate.from_messages([
             ("system", self.get_system_prompt()),

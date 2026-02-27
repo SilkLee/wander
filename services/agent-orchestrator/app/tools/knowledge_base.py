@@ -2,8 +2,8 @@
 
 from typing import Optional, Type
 
-from langchain.tools import BaseTool
-from langchain.pydantic_v1 import BaseModel, Field
+from langchain_classic.tools import BaseTool
+from pydantic import BaseModel, Field
 import httpx
 
 from app.config import settings
