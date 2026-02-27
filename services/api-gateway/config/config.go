@@ -27,6 +27,7 @@ type Config struct {
 
 	// Downstream services
 	AgentServiceURL     string
+	IngestionServiceURL string
 	IndexingServiceURL  string
 	ModelServiceURL     string
 	MetricsServiceURL   string
@@ -43,10 +44,11 @@ func Load() *Config {
 		RedisURL:           getEnv("REDIS_URL", "redis://localhost:6379/0"),
 		RateLimitRPS:       getEnvInt("RATE_LIMIT_RPS", 100),
 		AllowedOrigins:     []string{getEnv("CORS_ORIGIN", "http://localhost:3000")},
-		AgentServiceURL:    getEnv("AGENT_SERVICE_URL", "http://localhost:8002"),
-		IndexingServiceURL: getEnv("INDEXING_SERVICE_URL", "http://localhost:8003"),
-		ModelServiceURL:    getEnv("MODEL_SERVICE_URL", "http://localhost:8004"),
-		MetricsServiceURL:  getEnv("METRICS_SERVICE_URL", "http://localhost:8005"),
+		AgentServiceURL:     getEnv("AGENT_SERVICE_URL", "http://localhost:8002"),
+		IngestionServiceURL: getEnv("INGESTION_SERVICE_URL", "http://localhost:8001"),
+		IndexingServiceURL:  getEnv("INDEXING_SERVICE_URL", "http://localhost:8003"),
+		ModelServiceURL:     getEnv("MODEL_SERVICE_URL", "http://localhost:8004"),
+		MetricsServiceURL:   getEnv("METRICS_SERVICE_URL", "http://localhost:8005"),
 	}
 
 	// Validate required fields

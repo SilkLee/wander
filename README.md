@@ -193,7 +193,14 @@ docker-compose up --build
 
 ### Month 1: Foundation (Week 1-4)
 - ✅ **Week 1**: Infrastructure setup (Go Gateway, Docker Compose)
-- 🔄 **Week 2**: Data ingestion pipeline + Python services skeleton
+  - ✅ Day 1: Repository setup + Go API Gateway skeleton
+  - ✅ Day 2: Docker Compose + PostgreSQL integration
+  - ✅ Day 3: JWT authentication + Redis rate limiting
+  - ✅ Day 4: Python services skeleton (FastAPI)
+  - ✅ Day 5: Data ingestion pipeline (Go Ingestion + Redis Streams)
+  - ✅ Day 6: Indexing service (Vector embeddings + Hybrid search)
+  - 📝 Day 7: Model service (vLLM/Ollama integration)
+- 📝 **Week 2**: Advanced AI features + Integration
 - 📝 **Week 3**: RAG prototype (Elasticsearch + embeddings)
 - 📝 **Week 4**: LangChain agent basics
 
@@ -208,7 +215,6 @@ docker-compose up --build
 - 📝 **Week 10**: Performance optimization (async, caching)
 - 📝 **Week 11**: CI/CD pipeline + cloud deployment
 - 📝 **Week 12**: Portfolio packaging + interview prep
-
 ---
 
 ## 🧪 Testing
@@ -297,5 +303,5 @@ Preparing for NVIDIA Senior Software Engineer - AI Workflow (IPP) interview
 
 ---
 
-**Last Updated**: 2026-02-26  
-**Status**: ✅ Repository initialized, Week 1 Day 1 in progress
+**Last Updated**: 2026-02-27
+**Status**: ✅ Week 1 Day 6 complete (Indexing Service operational)

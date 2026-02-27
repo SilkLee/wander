@@ -99,7 +99,21 @@ func main() {
 	api.Use(middleware.RateLimit(cfg.RateLimitRPS))
 	api.Use(middleware.Authenticate(cfg.JWTSecret))
 	{
-		// Placeholder for future proxy routes
+		// Ingestion Service - Data ingestion and processing
+		api.POST("/ingest", utils.ProxyToService(cfg.IngestionServiceURL))
+		api.GET("/ingest/health", utils.ProxyToService(cfg.IngestionServiceURL+"/health"))
+
+		// Indexing Service - Vector embeddings and search
+		api.POST("/index", utils.ProxyToService(cfg.IndexingServiceURL))
+		api.POST("/index/batch", utils.ProxyToService(cfg.IndexingServiceURL+"/index/batch"))
+		api.POST("/search", utils.ProxyToService(cfg.IndexingServiceURL))
+		api.GET("/stats", utils.ProxyToService(cfg.IndexingServiceURL))
+
+		// Agent Orchestrator - Workflow coordination
+		api.POST("/execute", utils.ProxyToService(cfg.AgentServiceURL))
+		api.GET("/execute/:id", utils.ProxyToService(cfg.AgentServiceURL+"/execute"))
+
+		// Placeholder for future routes
 		api.GET("/workflows", func(c *gin.Context) {
 			userID, _ := c.Get("userID")
 			c.JSON(http.StatusOK, gin.H{
