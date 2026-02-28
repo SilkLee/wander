@@ -110,7 +110,7 @@ workflow-ai/
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/SilkLee/wander.git workflow-ai
+git clone https://github.com/SilkLee/workflow-ai.git
 cd workflow-ai
 
 # 2. Start infrastructure services
