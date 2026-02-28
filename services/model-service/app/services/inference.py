@@ -1,6 +1,6 @@
 """LLM inference service using Transformers."""
 
-from typing import Optional
+from typing import Optional, Generator, Iterator, List, Dict
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM, GenerationConfig
 
@@ -70,7 +70,7 @@ class InferenceService:
         max_tokens: Optional[int] = None,
         temperature: Optional[float] = None,
         top_p: Optional[float] = None,
-        stop: Optional[list] = None,
+        stop: Optional[List[str]] = None,
     ) -> tuple[str, int, str]:
         """
         Generate text from prompt.
@@ -117,7 +117,112 @@ class InferenceService:
         
         return generated_text, tokens_generated, finish_reason
 
-    def get_model_info(self) -> dict:
+    def generate_stream(
+        self,
+        prompt: str,
+        max_tokens: Optional[int] = None,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = None,
+        stop: Optional[List[str]] = None,
+    ) -> Iterator[tuple[str, bool]]:
+        """
+        Generate text from prompt with streaming (token-by-token).
+        
+        Args:
+            prompt: Input prompt
+            max_tokens: Max tokens to generate
+            temperature: Sampling temperature
+            top_p: Nucleus sampling probability
+            stop: Stop sequences
+            
+        Yields:
+            Tuple of (token_text, is_final)
+        """
+        # Use defaults if not provided
+        max_tokens = max_tokens or settings.default_max_tokens
+        temperature = temperature if temperature is not None else settings.default_temperature
+        top_p = top_p if top_p is not None else settings.default_top_p
+        
+        # Tokenize input
+        inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
+        input_ids = inputs.input_ids
+        input_length = input_ids.shape[1]
+        
+        # Generation config
+        gen_config = GenerationConfig(
+            max_new_tokens=max_tokens,
+            temperature=temperature,
+            top_p=top_p,
+            do_sample=temperature > 0,
+            pad_token_id=self.tokenizer.eos_token_id,
+            eos_token_id=self.tokenizer.eos_token_id,
+        )
+        
+        # Track generated tokens
+        generated_tokens = []
+        token_count = 0
+        
+        # Generate token by token
+        with torch.no_grad():
+            current_ids = input_ids
+            
+            for _ in range(max_tokens):
+                # Generate next token
+                outputs = self.model(
+                    input_ids=current_ids,
+                    use_cache=True,
+                )
+                
+                # Get logits for next token
+                next_token_logits = outputs.logits[:, -1, :]
+                
+                # Apply temperature
+                if temperature > 0:
+                    next_token_logits = next_token_logits / temperature
+                    
+                    # Apply top-p (nucleus) sampling
+                    if top_p < 1.0:
+                        sorted_logits, sorted_indices = torch.sort(next_token_logits, descending=True)
+                        cumulative_probs = torch.cumsum(torch.softmax(sorted_logits, dim=-1), dim=-1)
+                        
+                        # Remove tokens with cumulative probability above the threshold
+                        sorted_indices_to_remove = cumulative_probs > top_p
+                        # Keep at least one token
+                        sorted_indices_to_remove[..., 0] = False
+                        
+                        indices_to_remove = sorted_indices[sorted_indices_to_remove]
+                        next_token_logits[:, indices_to_remove] = float('-inf')
+                    
+                    # Sample from distribution
+                    probs = torch.softmax(next_token_logits, dim=-1)
+                    next_token = torch.multinomial(probs, num_samples=1)
+                else:
+                    # Greedy decoding
+                    next_token = torch.argmax(next_token_logits, dim=-1, keepdim=True)
+                
+                # Check if EOS token
+                if next_token.item() == self.tokenizer.eos_token_id:
+                    break
+                
+                # Decode token
+                token_text = self.tokenizer.decode(next_token[0], skip_special_tokens=True)
+                generated_tokens.append(token_text)
+                token_count += 1
+                
+                # Yield token (not final)
+                yield (token_text, False)
+                
+                # Append to current sequence
+                current_ids = torch.cat([current_ids, next_token], dim=-1)
+                
+                # Check if reached max tokens
+                if token_count >= max_tokens:
+                    break
+        
+        # Yield final marker
+        yield ("", True)
+
+    def get_model_info(self) -> Dict[str, any]:
         """Get model information."""
         return {
             "name": self.model_name,
@@ -135,7 +240,7 @@ class InferenceService:
 
 
 # Global inference service instance
-_inference_service: InferenceService = None
+_inference_service: Optional[InferenceService] = None
 
 
 def get_inference_service() -> InferenceService:

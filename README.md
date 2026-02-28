@@ -202,6 +202,7 @@ docker-compose up --build
   - ✅ Day 7: Model service (vLLM/Ollama integration)
 - ✅ **Week 2**: Agent Orchestrator + Model Service Integration
   - ✅ Day 8: Agent uses local Model Service (LangChain custom LLM wrapper)
+  - ✅ Day 9: Streaming responses with SSE (Server-Sent Events)
 - 📝 **Week 3**: RAG prototype (Elasticsearch + embeddings)
 - 📝 **Week 4**: LangChain agent basics
 
@@ -305,4 +306,4 @@ Preparing for NVIDIA Senior Software Engineer - AI Workflow (IPP) interview
 ---
 
 **Last Updated**: 2026-02-28
-**Status**: ✅ Week 2 Day 8 complete (Agent Orchestrator + Model Service integration)
+**Status**: ✅ Week 2 Day 9 complete (Streaming responses with SSE)

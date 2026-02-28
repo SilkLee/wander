@@ -2,6 +2,7 @@
 
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, status
+from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
@@ -127,6 +128,56 @@ async def generate(request: GenerateRequest) -> GenerateResponse:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Generation error: {str(e)}",
+        )
+
+
+@app.post("/generate/stream")
+async def generate_stream(request: GenerateRequest):
+    """Generate text from prompt with Server-Sent Events streaming."""
+    try:
+        inference_service = get_inference_service()
+        
+        async def event_generator():
+            """Generate SSE events."""
+            try:
+                token_count = 0
+                for token_text, is_final in inference_service.generate_stream(
+                    prompt=request.prompt,
+                    max_tokens=request.max_tokens,
+                    temperature=request.temperature,
+                    top_p=request.top_p,
+                    stop=request.stop,
+                ):
+                    if is_final:
+                        # Send final event with metadata
+                        yield f"event: done\n"
+                        yield f"data: {{\"tokens_generated\": {token_count}, \"finish_reason\": \"stop\"}}\n\n"
+                    else:
+                        # Send token event
+                        token_count += 1
+                        # Escape special characters for JSON
+                        escaped_token = token_text.replace('\\', '\\\\').replace('"', '\\"').replace('\n', '\\n').replace('\r', '\\r')
+                        yield f"event: token\n"
+                        yield f"data: {{\"token\": \"{escaped_token}\"}}\n\n"
+            except Exception as e:
+                # Send error event
+                yield f"event: error\n"
+                yield f"data: {{\"error\": \"{str(e)}\"}}\n\n"
+        
+        return StreamingResponse(
+            event_generator(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "X-Accel-Buffering": "no",  # Disable nginx buffering
+            },
+        )
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Streaming generation error: {str(e)}",
         )
 
 
