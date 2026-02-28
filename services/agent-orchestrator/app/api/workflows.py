@@ -4,6 +4,7 @@ import time
 from typing import Dict, Any
 
 from fastapi import APIRouter, HTTPException, status
+from fastapi.responses import StreamingResponse
 
 from app.models.requests import (
     LogAnalysisRequest,
@@ -66,6 +67,75 @@ async def analyze_log(request: LogAnalysisRequest) -> LogAnalysisResponse:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Log analysis failed: {str(e)}",
+        )
+
+
+@router.post("/analyze-log/stream")
+async def analyze_log_stream(request: LogAnalysisRequest):
+    """
+    Analyze build/deploy logs with streaming response (SSE).
+    
+    Returns real-time analysis progress as tokens are generated.
+    Useful for long-running analysis to provide immediate feedback.
+    
+    Args:
+        request: Log analysis request with log content and context
+        
+    Returns:
+        Server-Sent Events stream with analysis tokens
+    """
+    try:
+        async def event_generator():
+            """Generate SSE events for streaming analysis."""
+            try:
+                # Create agent
+                agent = LogAnalyzerAgent()
+                
+                # Build analysis prompt
+                prompt = f"""Analyze the following {request.log_type} log and identify:
+1. Root cause of failure
+2. Severity level (low/medium/high/critical)
+3. Suggested fixes
+4. References to documentation
+
+Log content:
+{request.log_content}"""
+                
+                # Stream LLM response
+                full_text = ""
+                async for chunk in agent.llm.astream(prompt):
+                    token = chunk
+                    full_text += token
+                    
+                    # Send token event
+                    import json
+                    yield f"event: token\n"
+                    yield f"data: {{\"token\": {json.dumps(token)}}}\n\n"
+                
+                # Send done event
+                yield f"event: done\n"
+                yield f"data: {{\"full_text\": {json.dumps(full_text)}}}\n\n"
+                
+            except Exception as e:
+                # Send error event
+                import json
+                yield f"event: error\n"
+                yield f"data: {{\"error\": {json.dumps(str(e))}}}\n\n"
+        
+        return StreamingResponse(
+            event_generator(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "X-Accel-Buffering": "no",
+            },
+        )
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Streaming log analysis failed: {str(e)}",
         )
 
 
