@@ -14,7 +14,7 @@ dependencies = [
     "httpx>=0.26.0",
     "python-dotenv>=1.0.0",
     "redis>=5.0.0",
-    "elasticsearch>=8.11.0",
+    "elasticsearch>=8.11.0,<8.12.0",  # Pin to avoid API v9 incompatibility with ES 8.11.0
 ]
 
 [project.optional-dependencies]
