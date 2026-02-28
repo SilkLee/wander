@@ -200,7 +200,8 @@ docker-compose up --build
   - ✅ Day 5: Data ingestion pipeline (Go Ingestion + Redis Streams)
   - ✅ Day 6: Indexing service (Vector embeddings + Hybrid search)
   - ✅ Day 7: Model service (vLLM/Ollama integration)
-- 📝 **Week 2**: Advanced AI features + Integration
+- ✅ **Week 2**: Agent Orchestrator + Model Service Integration
+  - ✅ Day 8: Agent uses local Model Service (LangChain custom LLM wrapper)
 - 📝 **Week 3**: RAG prototype (Elasticsearch + embeddings)
 - 📝 **Week 4**: LangChain agent basics
 
@@ -303,5 +304,5 @@ Preparing for NVIDIA Senior Software Engineer - AI Workflow (IPP) interview
 
 ---
 
-**Last Updated**: 2026-02-27
-**Status**: ✅ Week 1 Day 7 complete (Model Service operational)
+**Last Updated**: 2026-02-28
+**Status**: ✅ Week 2 Day 8 complete (Agent Orchestrator + Model Service integration)
