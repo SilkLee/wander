@@ -165,7 +165,7 @@ services:
       - MODEL_NAME=gpt2  # Lightweight model for testing (switch to Qwen/Qwen2.5-7B-Instruct after manual download)
       - DEVICE=cpu
       - MAX_MODEL_LEN=4096
-      - LOCAL_MODEL_PATH=/app/models/qwen  # Will be mounted from host
+      - LOCAL_MODEL_PATH=  # Empty - use HuggingFace model_name (gpt2)
     volumes:
       - model_cache:/app/cache
       # Mount local model directory (update path after download)

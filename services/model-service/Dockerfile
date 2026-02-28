@@ -40,7 +40,7 @@ USER appuser
 EXPOSE 8004
 
 # Health check (longer start period for model loading)
-HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=300s --retries=3 \
     CMD python -c "import httpx; httpx.get('http://localhost:8004/health')"
 
 # Run application
