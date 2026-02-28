@@ -50,12 +50,14 @@ yarn-error.log*
 *.sqlite
 *.sqlite3
 
-# Models & Data (ML models, not source code)
-*.pth
-models/
+# Models & Data (ML weights only - exclude Python code)
 *.pth
 *.bin
+*.safetensors
 *.ckpt
+*.gguf
+*.onnx
+!services/*/app/models/
 data/
 datasets/
 *.h5
