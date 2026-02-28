@@ -18,7 +18,7 @@ class InferenceService:
         """Initialize model and tokenizer."""
         # Use local path if provided, otherwise use HuggingFace model ID
         self.model_path = settings.local_model_path or settings.model_name
-        self.is_local = settings.local_model_path is not None
+        self.is_local = settings.local_model_path is not None and len(settings.local_model_path.strip()) > 0
         self.model_name = settings.model_name
         self.device = settings.device
         self.max_model_len = settings.max_model_len
@@ -38,7 +38,7 @@ class InferenceService:
                 self.model_path,
                 revision=None if self.is_local else settings.model_revision,
                 trust_remote_code=True,
-                local_files_only=self.is_local,
+                local_files_only=self.is_local,  # Only disable downloads if using local path
             )
         except Exception as e:
             print(f"Error loading tokenizer: {e}")
@@ -52,7 +52,7 @@ class InferenceService:
                 torch_dtype=torch.float16 if self.device == "cuda" else torch.float32,
                 device_map="auto" if self.device == "cuda" else None,
                 trust_remote_code=True,
-                local_files_only=self.is_local,
+                local_files_only=self.is_local,  # Only disable downloads if using local path
                 low_cpu_mem_usage=True,  # Reduce memory usage during loading
             )
         except Exception as e:
