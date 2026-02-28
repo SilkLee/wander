@@ -6,8 +6,10 @@ from abc import ABC, abstractmethod
 from langchain_classic.agents import AgentExecutor, create_openai_functions_agent
 from langchain_classic.tools import BaseTool
 from langchain_openai import ChatOpenAI
+from langchain_core.language_models.llms import LLM
 
 from app.config import settings
+from app.llm import ModelServiceLLM
 
 
 class BaseAgent(ABC):
@@ -38,12 +40,22 @@ class BaseAgent(ABC):
         self.max_iterations = max_iterations or settings.agent_max_iterations
         self.timeout = timeout or settings.agent_timeout_seconds
 
-        # Initialize LLM
-        self.llm = ChatOpenAI(
-            model=self.model_name,
-            temperature=self.temperature,
-            openai_api_key=settings.openai_api_key,
-        )
+        # Initialize LLM based on backend selection
+        if settings.use_local_model:
+            # Use local Model Service
+            self.llm = ModelServiceLLM(
+                model_service_url=settings.model_service_url,
+                temperature=self.temperature,
+                max_tokens=512,
+                timeout=60,
+            )
+        else:
+            # Use OpenAI
+            self.llm = ChatOpenAI(
+                model=self.model_name,
+                temperature=self.temperature,
+                openai_api_key=settings.openai_api_key,
+            )
 
     @abstractmethod
     def get_tools(self) -> List[BaseTool]:

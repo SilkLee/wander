@@ -114,6 +114,7 @@ services:
       - MODEL_SERVICE_URL=http://model-service:8004
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - OPENAI_MODEL=gpt-4-turbo-preview
+      - USE_LOCAL_MODEL=true
     depends_on:
       elasticsearch:
         condition: service_healthy
@@ -121,6 +122,8 @@ services:
         condition: service_healthy
     volumes:
       - agent_cache:/app/cache
+      model-service:
+        condition: service_started
     networks:
       - workflowai-network
     restart: unless-stopped

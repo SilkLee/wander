@@ -32,12 +32,22 @@ class Settings(BaseSettings):
         default="http://localhost:8004",
         description="Model service base URL",
     )
+    indexing_service_url: str = Field(
+        default="http://localhost:8003",
+        description="Indexing service base URL",
+    )
 
     # OpenAI Configuration
     openai_api_key: str = Field(default="", description="OpenAI API key")
     openai_model: str = Field(
         default="gpt-4-turbo-preview",
         description="Default OpenAI model",
+    )
+
+    # LLM Backend Selection
+    use_local_model: bool = Field(
+        default=True,
+        description="Use local Model Service instead of OpenAI",
     )
     
     # Redis Streams configuration
