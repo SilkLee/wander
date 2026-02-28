@@ -26,7 +26,7 @@ STATUS=$(aws ec2 describe-instances \
     --region "$REGION" \
     --instance-ids "$INSTANCE_ID" \
     --query 'Reservations[0].Instances[0].State.Name' \
-    --output text 2>&1)
+    --output text 2>/dev/null)
 
 if [[ "$STATUS" != "running" ]]; then
     echo "错误: 实例状态不是 running (当前: $STATUS)"
@@ -41,7 +41,7 @@ SSM_STATUS=$(aws ssm describe-instance-information \
     --region "$REGION" \
     --filters "Key=InstanceIds,Values=$INSTANCE_ID" \
     --query 'InstanceInformationList[0].PingStatus' \
-    --output text 2>&1)
+    --output text 2>/dev/null)
 
 if [[ "$SSM_STATUS" != "Online" ]]; then
     echo "错误: SSM Agent状态不是 Online (当前: $SSM_STATUS)"
