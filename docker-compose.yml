@@ -120,12 +120,12 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    volumes:
-      - agent_cache:/app/cache
       model-service:
         condition: service_started
     networks:
       - workflowai-network
+    volumes:
+      - agent_cache:/app/cache
     restart: unless-stopped
 
   # Indexing Service (Python - FastAPI + Sentence Transformers)
