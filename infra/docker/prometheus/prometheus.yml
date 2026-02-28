@@ -1,0 +1,86 @@
+# Prometheus configuration for WorkflowAI monitoring
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'workflowai'
+    environment: 'development'
+
+# Alertmanager configuration (optional)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets: ['alertmanager:9093']
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+
+  # API Gateway (Go - Gin)
+  - job_name: 'api-gateway'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['api-gateway:8000']
+        labels:
+          service: 'api-gateway'
+          language: 'go'
+
+  # Ingestion Service (Go - Gin)
+  - job_name: 'ingestion'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['ingestion:8001']
+        labels:
+          service: 'ingestion'
+          language: 'go'
+
+  # Agent Orchestrator (Python - FastAPI)
+  - job_name: 'agent-orchestrator'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['agent-orchestrator:8002']
+        labels:
+          service: 'agent-orchestrator'
+          language: 'python'
+
+  # Indexing Service (Python - FastAPI)
+  - job_name: 'indexing'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['indexing:8003']
+        labels:
+          service: 'indexing'
+          language: 'python'
+
+  # Model Service (Python - FastAPI)
+  - job_name: 'model-service'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['model-service:8004']
+        labels:
+          service: 'model-service'
+          language: 'python'
+
+  # PostgreSQL Exporter (if configured)
+  # - job_name: 'postgres'
+  #   static_configs:
+  #     - targets: ['postgres-exporter:9187']
+
+  # Redis Exporter (if configured)
+  # - job_name: 'redis'
+  #   static_configs:
+  #     - targets: ['redis-exporter:9121']
+
+  # Elasticsearch
+  - job_name: 'elasticsearch'
+    metrics_path: '/_prometheus/metrics'
+    static_configs:
+      - targets: ['elasticsearch:9200']
+        labels:
+          service: 'elasticsearch'
