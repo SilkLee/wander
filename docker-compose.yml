@@ -121,7 +121,7 @@ services:
       redis:
         condition: service_healthy
       model-service:
-        condition: service_started
+        condition: service_healthy
     networks:
       - workflowai-network
     volumes:

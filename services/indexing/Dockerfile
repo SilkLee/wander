@@ -27,6 +27,7 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 # Copy application code
 COPY app ./app
 COPY .env.example ./.env
+COPY populate_kb.py sample_data.json ./
 
 # Create cache directory for models
 RUN mkdir -p /app/cache && chmod 777 /app/cache
