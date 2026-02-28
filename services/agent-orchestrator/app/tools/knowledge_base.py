@@ -66,7 +66,7 @@ Input should be a clear, specific search query describing the issue or informati
             # Call Indexing Service search endpoint
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(
-                    f"{settings.elasticsearch_url}/search",
+                    f"{settings.indexing_service_url}/search",
                     json={
                         "query": query,
                         "top_k": top_k,

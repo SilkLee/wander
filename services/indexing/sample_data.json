@@ -1,0 +1,242 @@
+[
+  {
+    "title": "NullPointerException in UserService.getProfile()",
+    "content": "NullPointerException occurs when calling UserService.getProfile() with a non-existent user ID. Root cause: Missing null check before accessing user object properties. The method attempts to call user.getName() without verifying that the user object returned from the database is not null. Fix: Add null check after database query and return appropriate error response (404 Not Found) when user doesn't exist. Example: if (user == null) { throw new UserNotFoundException(userId); }",
+    "metadata": {
+      "source": "production_logs",
+      "severity": "high",
+      "error_type": "NullPointerException",
+      "tags": ["java", "user-service", "null-safety"],
+      "fix_suggestions": ["Add null checks", "Use Optional<User>", "Implement UserNotFoundException"],
+      "url": "https://docs.example.com/errors/null-pointer"
+    }
+  },
+  {
+    "title": "OutOfMemoryError: Java heap space in BatchProcessor",
+    "content": "OutOfMemoryError occurs during large batch processing operations. Root cause: Loading entire dataset into memory at once instead of streaming. The BatchProcessor.processRecords() method loads all 500K records into a List before processing, consuming 4GB+ heap space. Fix: Implement streaming with pagination - process records in batches of 1000. Use iterator pattern or Stream API with limit(). Example: records.stream().limit(1000).forEach(this::process). Also increase heap size: -Xmx8g -Xms4g.",
+    "metadata": {
+      "source": "production_logs",
+      "severity": "critical",
+      "error_type": "OutOfMemoryError",
+      "tags": ["java", "memory", "batch-processing", "performance"],
+      "fix_suggestions": ["Implement pagination", "Use streaming", "Increase heap size", "Profile memory usage"],
+      "url": "https://docs.example.com/errors/out-of-memory"
+    }
+  },
+  {
+    "title": "Connection timeout to PostgreSQL database",
+    "content": "Connection timeout errors when connecting to PostgreSQL database. Root cause: Connection pool exhaustion due to unclosed connections. Application creates new connections but doesn't properly close them in finally blocks, leading to pool exhaustion after 20 requests. Fix: Use try-with-resources for auto-closing connections. Verify connection pool settings: maxPoolSize=20, connectionTimeout=30s, idleTimeout=600s. Check for long-running transactions blocking connections. Monitor active connections: SELECT count(*) FROM pg_stat_activity. Consider increasing max_connections in postgresql.conf if legitimate high concurrency.",
+    "metadata": {
+      "source": "production_logs",
+      "severity": "high",
+      "error_type": "ConnectionTimeout",
+      "tags": ["database", "postgresql", "connection-pool", "timeout"],
+      "fix_suggestions": ["Use try-with-resources", "Review connection pool config", "Monitor pg_stat_activity", "Close connections properly"],
+      "url": "https://docs.example.com/errors/connection-timeout"
+    }
+  },
+  {
+    "title": "HTTP 500 Error: Failed to parse JSON request body",
+    "content": "HTTP 500 Internal Server Error when parsing JSON request body in API endpoint. Root cause: Client sending malformed JSON with unescaped special characters or incorrect encoding. Jackson parser throws JsonParseException when encountering invalid JSON. Fix: Add proper error handling with @ExceptionHandler for JsonParseException to return 400 Bad Request instead of 500. Validate request content-type is application/json. Add request body logging for debugging (sanitize sensitive data). Example: @ExceptionHandler(JsonParseException.class) public ResponseEntity<ErrorResponse> handleJsonError(JsonParseException e) { return ResponseEntity.badRequest().body(new ErrorResponse(\"Invalid JSON format\")); }",
+    "metadata": {
+      "source": "api_logs",
+      "severity": "medium",
+      "error_type": "JsonParseException",
+      "tags": ["api", "json", "parsing", "validation"],
+      "fix_suggestions": ["Add @ExceptionHandler", "Return 400 instead of 500", "Validate content-type", "Log request body"],
+      "url": "https://docs.example.com/errors/json-parse"
+    }
+  },
+  {
+    "title": "Redis connection refused on port 6379",
+    "content": "Redis connection refused error when application tries to connect to Redis server on localhost:6379. Root cause: Redis server not running or firewall blocking connection. Application depends on Redis for session storage and caching. Fix: Verify Redis is running: redis-cli ping (should return PONG). Start Redis if needed: systemctl start redis or redis-server. Check Redis config: bind 127.0.0.1, port 6379, protected-mode yes. For Docker: ensure Redis container is running and network is configured. Update connection string if Redis is on different host. Add connection retry logic with exponential backoff.",
+    "metadata": {
+      "source": "application_logs",
+      "severity": "critical",
+      "error_type": "ConnectionRefused",
+      "tags": ["redis", "cache", "connection", "infrastructure"],
+      "fix_suggestions": ["Start Redis server", "Check firewall rules", "Verify Redis config", "Add retry logic"],
+      "url": "https://docs.example.com/errors/redis-connection"
+    }
+  },
+  {
+    "title": "Elasticsearch query timeout after 30s",
+    "content": "Elasticsearch query timeout errors on large dataset searches. Root cause: Inefficient query with wildcard search on non-analyzed fields, causing full cluster scan. Query: {\"query\": {\"wildcard\": {\"description\": \"*error*\"}}} on 10M+ documents. Fix: Use match query with analyzed fields instead of wildcard: {\"query\": {\"match\": {\"description\": \"error\"}}}. Add pagination with size and from parameters (default max 10000 results). Optimize with specific field filtering using _source. Consider using scroll API for deep pagination. Index optimization: analyze text fields, use keyword type for exact matches. Increase timeout if complex aggregations needed: timeout=60s.",
+    "metadata": {
+      "source": "search_logs",
+      "severity": "medium",
+      "error_type": "QueryTimeout",
+      "tags": ["elasticsearch", "search", "performance", "timeout"],
+      "fix_suggestions": ["Use match instead of wildcard", "Add pagination", "Optimize query", "Use scroll API"],
+      "url": "https://docs.example.com/errors/es-timeout"
+    }
+  },
+  {
+    "title": "CORS error: Access-Control-Allow-Origin missing",
+    "content": "CORS (Cross-Origin Resource Sharing) error when frontend calls backend API. Browser blocks request with error: No 'Access-Control-Allow-Origin' header is present. Root cause: Backend not configured to allow cross-origin requests from frontend domain. Frontend on http://localhost:3000, backend on http://localhost:8000. Fix: Add CORS middleware to backend. For Spring Boot: @CrossOrigin(origins = \"http://localhost:3000\"). For Express: app.use(cors({origin: 'http://localhost:3000', credentials: true})). For FastAPI: app.add_middleware(CORSMiddleware, allow_origins=[\"http://localhost:3000\"], allow_credentials=True, allow_methods=[\"*\"], allow_headers=[\"*\"]). Production: restrict origins to specific domains, avoid wildcard *.",
+    "metadata": {
+      "source": "browser_logs",
+      "severity": "high",
+      "error_type": "CORSError",
+      "tags": ["cors", "api", "frontend", "security"],
+      "fix_suggestions": ["Add CORS middleware", "Configure allowed origins", "Enable credentials", "Set allow methods/headers"],
+      "url": "https://docs.example.com/errors/cors"
+    }
+  },
+  {
+    "title": "JWT token expired - 401 Unauthorized",
+    "content": "Authentication failure with 401 Unauthorized error: JWT token expired. Root cause: Access token has 15-minute expiration and user session exceeded timeout. Client not implementing token refresh mechanism. Fix: Implement refresh token flow. Issue two tokens: access token (15min) and refresh token (7 days). When access token expires, use refresh token to obtain new access token without re-login. Store refresh token in httpOnly cookie. Client should intercept 401 errors and automatically refresh: if (error.status === 401) { await refreshAccessToken(); retry(request); }. Server endpoint: POST /auth/refresh with refresh token in cookie. Invalidate refresh tokens on logout.",
+    "metadata": {
+      "source": "auth_logs",
+      "severity": "medium",
+      "error_type": "TokenExpired",
+      "tags": ["jwt", "authentication", "security", "tokens"],
+      "fix_suggestions": ["Implement refresh token flow", "Add token refresh interceptor", "Use httpOnly cookies", "Handle 401 gracefully"],
+      "url": "https://docs.example.com/errors/jwt-expired"
+    }
+  },
+  {
+    "title": "Docker container exits with code 137 (OOMKilled)",
+    "content": "Docker container terminated with exit code 137, indicating Out-Of-Memory kill by kernel. Root cause: Container memory limit (512MB) insufficient for application requirements. Java app consuming 800MB+ heap memory. Fix: Increase container memory limit in docker-compose.yml or Kubernetes: mem_limit: 2g. For Java apps, set heap size explicitly: JAVA_OPTS=-Xmx1536m -Xms512m (leave 25% for non-heap). Monitor memory usage: docker stats. Add memory limit buffer for spikes. Optimize application memory: check for memory leaks, optimize data structures, implement caching strategies. Use JVM memory tuning: -XX:MaxMetaspaceSize=256m -XX:+UseG1GC.",
+    "metadata": {
+      "source": "docker_logs",
+      "severity": "critical",
+      "error_type": "OOMKilled",
+      "tags": ["docker", "memory", "kubernetes", "container"],
+      "fix_suggestions": ["Increase memory limit", "Set JVM heap size", "Monitor with docker stats", "Check for memory leaks"],
+      "url": "https://docs.example.com/errors/oom-killed"
+    }
+  },
+  {
+    "title": "FileNotFoundException: config/application.properties not found",
+    "content": "Application fails to start with FileNotFoundException for config/application.properties. Root cause: Configuration file path incorrect or file not included in Docker image. Application expects config file at relative path config/application.properties but file located elsewhere. Fix: Use classpath loading instead of file system: @PropertySource(\"classpath:application.properties\"). For Docker, COPY config files in Dockerfile: COPY config/ /app/config/. Verify working directory: WORKDIR /app. Use environment-specific configs: application-${ENV}.properties. Alternative: externalize config with environment variables or ConfigMap (Kubernetes). Check file permissions: chmod 644 application.properties.",
+    "metadata": {
+      "source": "application_logs",
+      "severity": "high",
+      "error_type": "FileNotFoundException",
+      "tags": ["configuration", "docker", "file-system", "deployment"],
+      "fix_suggestions": ["Use classpath loading", "COPY config in Dockerfile", "Check working directory", "Use environment variables"],
+      "url": "https://docs.example.com/errors/file-not-found"
+    }
+  },
+  {
+    "title": "SSL handshake failed: certificate verify failed",
+    "content": "SSL/TLS handshake failure when connecting to external API: certificate verify failed. Root cause: Server certificate not trusted - either self-signed, expired, or signed by unknown CA. Common in development environments with self-signed certs. Fix: Production - obtain valid certificate from trusted CA (Let's Encrypt). Development - add certificate to trust store or disable verification (not for production!). For Java: keytool -import -alias mycert -file cert.crt -keystore $JAVA_HOME/lib/security/cacerts. For Python: requests.get(url, verify='/path/to/cert.pem') or verify=False (dev only). For Node.js: NODE_TLS_REJECT_UNAUTHORIZED=0 (dev only). Check cert expiration: openssl x509 -in cert.pem -noout -dates.",
+    "metadata": {
+      "source": "network_logs",
+      "severity": "high",
+      "error_type": "SSLHandshakeError",
+      "tags": ["ssl", "tls", "certificate", "security", "https"],
+      "fix_suggestions": ["Get valid CA certificate", "Import to trust store", "Check expiration", "Use Let's Encrypt"],
+      "url": "https://docs.example.com/errors/ssl-handshake"
+    }
+  },
+  {
+    "title": "Deadlock detected in database transaction",
+    "content": "Database deadlock detected during concurrent transaction processing. Error: Deadlock found when trying to get lock; try restarting transaction. Root cause: Two transactions acquiring locks in different order. Transaction A locks table Users then Orders, Transaction B locks Orders then Users. Fix: Ensure consistent lock ordering across all transactions. Use SELECT ... FOR UPDATE with NOWAIT or SKIP LOCKED. Implement retry logic with exponential backoff. Keep transactions short - acquire locks, perform operation, release quickly. Use appropriate isolation level: READ COMMITTED often sufficient. Monitor deadlocks: SELECT * FROM information_schema.innodb_locks. Consider using optimistic locking with version column instead of pessimistic locks.",
+    "metadata": {
+      "source": "database_logs",
+      "severity": "high",
+      "error_type": "Deadlock",
+      "tags": ["database", "transaction", "concurrency", "locking"],
+      "fix_suggestions": ["Consistent lock ordering", "Add retry logic", "Use NOWAIT/SKIP LOCKED", "Keep transactions short", "Consider optimistic locking"],
+      "url": "https://docs.example.com/errors/deadlock"
+    }
+  },
+  {
+    "title": "Kafka consumer lag exceeding threshold (10000 messages)",
+    "content": "Kafka consumer lag increasing continuously, now 10000+ messages behind. Root cause: Consumer processing slower than producer rate. Message processing takes 500ms each, throughput 2 msg/sec, but producer sending 10 msg/sec. Fix: Optimize message processing - identify bottlenecks with profiling. Implement batch processing: consumer.poll(Duration.ofMillis(100)) returns up to max.poll.records messages. Increase consumer parallelism: add more consumer instances in same group. Consider async processing: consumer commits offset after queuing to thread pool. Tune consumer config: max.poll.records=500, fetch.min.bytes=1048576. Monitor lag: kafka-consumer-groups.sh --describe. Consider compaction if message order not critical.",
+    "metadata": {
+      "source": "kafka_logs",
+      "severity": "medium",
+      "error_type": "ConsumerLag",
+      "tags": ["kafka", "streaming", "performance", "consumer"],
+      "fix_suggestions": ["Optimize processing", "Batch processing", "Add consumer instances", "Async processing", "Tune config"],
+      "url": "https://docs.example.com/errors/kafka-lag"
+    }
+  },
+  {
+    "title": "TypeError: Cannot read property 'map' of undefined",
+    "content": "React application crashes with TypeError: Cannot read property 'map' of undefined. Root cause: Attempting to call .map() on array that hasn't loaded yet from API. Component renders before async data fetch completes, state.items is undefined. Fix: Add conditional rendering or default value. Option 1: {items && items.map(...)}. Option 2: {items?.map(...)} (optional chaining). Option 3: const [items, setItems] = useState([]). Add loading state: {loading ? <Spinner /> : items.map(...)}. Use React Query for better data fetching: const {data, isLoading} = useQuery('items', fetchItems). Handle error state: {error && <ErrorMessage />}. Ensure API response structure matches expected format.",
+    "metadata": {
+      "source": "frontend_logs",
+      "severity": "medium",
+      "error_type": "TypeError",
+      "tags": ["react", "javascript", "frontend", "async"],
+      "fix_suggestions": ["Add conditional rendering", "Use optional chaining", "Initialize state with empty array", "Add loading state", "Use React Query"],
+      "url": "https://docs.example.com/errors/type-error"
+    }
+  },
+  {
+    "title": "gRPC connection timeout to microservice",
+    "content": "gRPC client timeout when calling downstream microservice. Error: DEADLINE_EXCEEDED after 10s timeout. Root cause: Service mesh network latency or downstream service overloaded. Fix: Increase timeout for slow operations: stub.withDeadlineAfter(30, TimeUnit.SECONDS). Implement retry policy with exponential backoff: RetryPolicy.newBuilder().setMaxAttempts(3).setBackoff(Duration.ofMillis(100), Duration.ofSeconds(1)). Add circuit breaker to prevent cascading failures. Monitor service health: implement gRPC health check protocol. Optimize downstream service: profile slow operations, add caching, scale horizontally. Check service mesh config: Istio/Linkerd timeout settings. Use streaming for large payloads.",
+    "metadata": {
+      "source": "grpc_logs",
+      "severity": "high",
+      "error_type": "DeadlineExceeded",
+      "tags": ["grpc", "microservices", "timeout", "service-mesh"],
+      "fix_suggestions": ["Increase timeout", "Add retry policy", "Implement circuit breaker", "Optimize downstream service", "Check service mesh config"],
+      "url": "https://docs.example.com/errors/grpc-timeout"
+    }
+  },
+  {
+    "title": "Kubernetes pod CrashLoopBackOff",
+    "content": "Kubernetes pod stuck in CrashLoopBackOff state, restarting repeatedly. Root cause: Application failing health check or crashing on startup. Common causes: missing environment variables, failed database connection, port already in use. Fix: Check logs: kubectl logs <pod-name> --previous. Describe pod: kubectl describe pod <pod-name> shows events. Verify liveness/readiness probes configured correctly: initialDelaySeconds=30, periodSeconds=10. Ensure all required env vars set: kubectl get configmap, kubectl get secret. Check resource limits not too restrictive: memory request/limit, CPU. Test container locally: docker run. Fix startup issues: database connection retry logic, graceful degradation. Adjust probe thresholds: failureThreshold=3, successThreshold=1.",
+    "metadata": {
+      "source": "kubernetes_logs",
+      "severity": "critical",
+      "error_type": "CrashLoopBackOff",
+      "tags": ["kubernetes", "container", "deployment", "health-check"],
+      "fix_suggestions": ["Check logs with kubectl", "Verify probes config", "Check env vars", "Test container locally", "Add startup retry logic"],
+      "url": "https://docs.example.com/errors/crash-loop"
+    }
+  },
+  {
+    "title": "Python ImportError: No module named 'requests'",
+    "content": "Python application fails with ImportError: No module named 'requests' when trying to import third-party library. Root cause: Package not installed in current Python environment or using wrong virtual environment. Fix: Install missing package: pip install requests. For production: add to requirements.txt and run pip install -r requirements.txt. For Docker: ensure RUN pip install -r requirements.txt in Dockerfile. Verify virtual environment active: which python should show venv path. Check Python version compatibility: some packages require Python 3.8+. For Poetry: poetry add requests. For Conda: conda install requests. Use pip list to verify installed packages. Common mistake: installing globally but running from venv.",
+    "metadata": {
+      "source": "python_logs",
+      "severity": "medium",
+      "error_type": "ImportError",
+      "tags": ["python", "dependencies", "pip", "virtual-environment"],
+      "fix_suggestions": ["pip install package", "Add to requirements.txt", "Verify virtual environment", "Check Python version", "Update Dockerfile"],
+      "url": "https://docs.example.com/errors/import-error"
+    }
+  },
+  {
+    "title": "MySQL query optimization: slow SELECT with multiple JOINs",
+    "content": "MySQL query executing slowly (5+ seconds) with multiple JOINs on large tables. Query: SELECT * FROM orders o JOIN customers c ON o.customer_id=c.id JOIN products p ON o.product_id=p.id WHERE o.status='pending'. Root cause: Missing indexes on join columns and WHERE clause. Full table scans on 1M+ rows. Fix: Add indexes: CREATE INDEX idx_customer_id ON orders(customer_id); CREATE INDEX idx_product_id ON orders(product_id); CREATE INDEX idx_status ON orders(status). Use EXPLAIN to analyze query plan. Select only needed columns instead of SELECT *. Consider composite index: CREATE INDEX idx_status_customer ON orders(status, customer_id). Partition large tables by date. Use query cache if data rarely changes. Consider denormalization for read-heavy workloads.",
+    "metadata": {
+      "source": "database_logs",
+      "severity": "medium",
+      "error_type": "SlowQuery",
+      "tags": ["mysql", "performance", "query-optimization", "indexing"],
+      "fix_suggestions": ["Add indexes on join columns", "Use EXPLAIN", "Select specific columns", "Create composite indexes", "Consider partitioning"],
+      "url": "https://docs.example.com/errors/slow-query"
+    }
+  },
+  {
+    "title": "AWS S3 access denied: 403 Forbidden",
+    "content": "AWS S3 operation fails with 403 Forbidden error when trying to upload/download objects. Root cause: IAM role/user lacks required S3 permissions or bucket policy blocks access. Fix: Verify IAM policy includes s3:PutObject, s3:GetObject, s3:ListBucket permissions. Example policy: {\"Effect\": \"Allow\", \"Action\": [\"s3:GetObject\", \"s3:PutObject\"], \"Resource\": \"arn:aws:s3:::bucket-name/*\"}. Check bucket policy doesn't deny access. Verify correct AWS credentials: aws configure list. For EC2: ensure IAM role attached to instance. For cross-account: configure bucket policy to allow external account. Check object ACL: public-read for public access. Test with AWS CLI: aws s3 ls s3://bucket-name. Review CloudTrail logs for permission details.",
+    "metadata": {
+      "source": "aws_logs",
+      "severity": "high",
+      "error_type": "AccessDenied",
+      "tags": ["aws", "s3", "iam", "permissions", "cloud"],
+      "fix_suggestions": ["Update IAM policy", "Check bucket policy", "Verify credentials", "Attach IAM role", "Review ACLs"],
+      "url": "https://docs.example.com/errors/s3-access-denied"
+    }
+  },
+  {
+    "title": "Nginx 502 Bad Gateway error",
+    "content": "Nginx reverse proxy returns 502 Bad Gateway when forwarding requests to upstream application server. Root cause: Upstream server not responding, crashed, or connection refused. Fix: Check upstream server running: systemctl status app-server. Verify upstream configuration: upstream backend { server localhost:8080; }. Check Nginx error log: /var/log/nginx/error.log shows connection refused or timeout. Increase timeout values: proxy_connect_timeout 60s; proxy_send_timeout 60s; proxy_read_timeout 60s. Verify firewall allows connections. Test upstream directly: curl http://localhost:8080. Add health checks: upstream backend { server localhost:8080 max_fails=3 fail_timeout=30s; }. Consider load balancing multiple upstreams for redundancy.",
+    "metadata": {
+      "source": "nginx_logs",
+      "severity": "high",
+      "error_type": "BadGateway",
+      "tags": ["nginx", "reverse-proxy", "upstream", "http"],
+      "fix_suggestions": ["Check upstream server", "Verify Nginx config", "Increase timeouts", "Check firewall", "Add health checks"],
+      "url": "https://docs.example.com/errors/bad-gateway"
+    }
+  }
+]
