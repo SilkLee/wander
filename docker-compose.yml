@@ -183,24 +183,25 @@ services:
     restart: unless-stopped
 
   # Metrics Service (Python - FastAPI + SQLAlchemy)
-  metrics:
-    build:
-      context: ./services/metrics
-      dockerfile: Dockerfile
-    container_name: workflowai-metrics
-    ports:
-      - "8005:8005"
-    environment:
-      - PORT=8005
-      - DATABASE_URL=postgresql://workflowai:dev_password_123@postgres:5432/workflowai
-    depends_on:
-      postgres:
-        condition: service_healthy
-    volumes:
-      - ./services/metrics:/app
-    networks:
-      - workflowai-network
-    restart: unless-stopped
+  # COMMENTED OUT: Not implemented yet (only .gitkeep exists)
+  # metrics:
+  #   build:
+  #     context: ./services/metrics
+  #     dockerfile: Dockerfile
+  #   container_name: workflowai-metrics
+  #   ports:
+  #     - "8005:8005"
+  #   environment:
+  #     - PORT=8005
+  #     - DATABASE_URL=postgresql://workflowai:dev_password_123@postgres:5432/workflowai
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   volumes:
+  #     - ./services/metrics:/app
+  #   networks:
+  #     - workflowai-network
+  #   restart: unless-stopped
 
   # Prometheus (Metrics Collection)
   prometheus:
