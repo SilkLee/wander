@@ -10,11 +10,11 @@ from app.config import settings
 
 
 class KnowledgeBaseInput(BaseModel):
-    """Input schema for knowledge base search."""
+    """Input schema for knowledge base search (single-input for ZeroShotAgent)."""
     
     query: str = Field(description="Search query for finding similar issues or documentation")
-    top_k: int = Field(default=5, description="Number of top results to return")
-
+    # top_k removed: ZeroShotAgent only supports single-input tools
+    # Default top_k=5 is hardcoded in _arun method
 
 class KnowledgeBaseTool(BaseTool):
     """
@@ -37,13 +37,12 @@ Input should be a clear, specific search query describing the issue or informati
     
     args_schema: Type[BaseModel] = KnowledgeBaseInput
     
-    def _run(self, query: str, top_k: int = 5) -> str:
+    def _run(self, query: str) -> str:
         """
         Synchronous search (not used in async context).
         
         Args:
             query: Search query
-            top_k: Number of results
             
         Returns:
             Search results as formatted string
@@ -51,18 +50,20 @@ Input should be a clear, specific search query describing the issue or informati
         # Not implemented - use async version
         raise NotImplementedError("Use async version (arun)")
     
-    async def _arun(self, query: str, top_k: int = 5) -> str:
+    async def _arun(self, query: str) -> str:
         """
         Perform async search against knowledge base.
         
         Args:
             query: Search query
-            top_k: Number of results
             
         Returns:
             Formatted search results
         """
         try:
+            # Hardcode top_k=5 (ZeroShotAgent requires single-input tools)
+            top_k = 5
+            
             # Call Indexing Service search endpoint
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(
@@ -101,23 +102,22 @@ Input should be a clear, specific search query describing the issue or informati
         except httpx.HTTPStatusError as e:
             # Handle 404 or other HTTP errors gracefully
             if e.response.status_code == 404:
-                return self._fallback_elasticsearch_search(query, top_k)
+                return self._fallback_elasticsearch_search(query)
             return f"Error searching knowledge base: {str(e)}"
             
         except httpx.RequestError as e:
             # Network errors - try direct Elasticsearch as fallback
-            return self._fallback_elasticsearch_search(query, top_k)
+            return self._fallback_elasticsearch_search(query)
             
         except Exception as e:
             return f"Unexpected error during search: {str(e)}"
     
-    def _fallback_elasticsearch_search(self, query: str, top_k: int) -> str:
+    def _fallback_elasticsearch_search(self, query: str) -> str:
         """
         Fallback: Direct Elasticsearch search if Indexing Service unavailable.
         
         Args:
             query: Search query
-            top_k: Number of results
             
         Returns:
             Search results or error message
@@ -128,6 +128,9 @@ Input should be a clear, specific search query describing the issue or informati
             
             async def search():
                 es = AsyncElasticsearch([settings.elasticsearch_url])
+                
+                # Hardcode top_k=5
+                top_k = 5
                 
                 # Simple match query
                 result = await es.search(
