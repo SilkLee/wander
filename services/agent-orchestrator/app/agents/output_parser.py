@@ -23,13 +23,13 @@ def extract_final_answer_from_verbose_output(exception: OutputParserException) -
         Cleaned observation message to send back to the agent
     """
     # Get the full LLM output that failed parsing
-    llm_output = getattr(exception, 'llm_output', str(exception))
+    llm_output = getattr(exception, 'llm_output', None) or str(exception)
     
     # Case 1: "Final Answer and parsable action" error
     # This happens when LLM includes both Final Answer and mentions "Action" in notes
     if "both a final answer and a parse-able action" in str(exception):
         # Extract everything after "Final Answer:" up to first double newline or "Note:"
-        if "Final Answer:" in llm_output:
+        if llm_output and "Final Answer:" in llm_output:
             # Find Final Answer section
             answer_start = llm_output.find("Final Answer:")
             if answer_start != -1:
