@@ -26,7 +26,7 @@ class ModelServiceLLM(LLM):
     temperature: float = 0.7
     top_p: float = 0.9
     stop: Optional[List[str]] = None
-    timeout: int = 180  # Increased for CPU inference (GPT-2 takes 10-30s per call, Agent may need 3-5 calls)
+    timeout: int = 300  # Increased for Qwen model download + CPU inference (first request: model download 2-3min, inference 30-60s)
 
     @property
     def _llm_type(self) -> str:
