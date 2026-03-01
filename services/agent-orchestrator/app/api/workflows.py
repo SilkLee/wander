@@ -5,7 +5,7 @@ import time
 import traceback
 from typing import Dict, Any
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
 
 from app.models.requests import (
@@ -14,26 +14,32 @@ from app.models.requests import (
     WorkflowExecutionRequest,
     WorkflowExecutionResponse,
 )
+from app.dependencies import get_analyze_log_use_case
+from app.application.use_cases.analyze_log import AnalyzeLogUseCase
 from app.agents.analyzer import LogAnalyzerAgent
 
 router = APIRouter(prefix="/workflows", tags=["workflows"])
 logger = logging.getLogger(__name__)
 
-logger = logging.getLogger(__name__)
 
 
 @router.post("/analyze-log", response_model=LogAnalysisResponse)
-async def analyze_log(request: LogAnalysisRequest) -> LogAnalysisResponse:
+async def analyze_log(
+    request: LogAnalysisRequest,
+    use_case: AnalyzeLogUseCase = Depends(get_analyze_log_use_case),
+) -> LogAnalysisResponse:
     """
     Analyze build/deploy logs using AI agent.
     
     This endpoint:
-    1. Creates a LogAnalyzerAgent
-    2. Executes analysis workflow with RAG search
-    3. Returns structured analysis results
+    1. Accepts use case via dependency injection
+    2. Calls use_case.execute() with log content
+    3. Converts domain model to response DTO
+    4. Returns structured analysis results
     
     Args:
         request: Log analysis request with log content and context
+        use_case: AnalyzeLogUseCase injected by FastAPI
         
     Returns:
         Structured analysis with root cause, fixes, and references
@@ -44,30 +50,38 @@ async def analyze_log(request: LogAnalysisRequest) -> LogAnalysisResponse:
     try:
         start_time = time.time()
         
-        # Create agent
-        agent = LogAnalyzerAgent()
-        
-        # Execute analysis
-        result = await agent.execute({
-            "log_content": request.log_content,
-            "log_type": request.log_type,
-            "context": request.context or {},
-        })
+        # Execute analysis via use case (with DI)
+        analysis = await use_case.execute(request.log_content)
         
         execution_time = time.time() - start_time
         
-        # Build response
+        # Convert domain model to response DTO
+        suggested_fixes = analysis.get_remediation_steps()
+        severity_str = analysis.severity.name.lower()
+        root_cause_desc = (
+            analysis.root_causes[0].description if analysis.root_causes else "Unknown"
+        )
+        
         response = LogAnalysisResponse(
-            analysis_id=result["analysis_id"],
-            root_cause=result["root_cause"],
-            severity=result["severity"],
-            suggested_fixes=result["suggested_fixes"],
-            references=result["references"],
-            confidence=result["confidence"],
+            analysis_id=str(analysis.id),
+            root_cause=root_cause_desc,
+            severity=severity_str,
+            suggested_fixes=suggested_fixes,
+            references=[],  # TODO: Extract from root causes or external source
+            confidence=analysis.confidence.score,
         )
         
         return response
         
+    except ValueError as e:
+        error_msg = f"Log analysis validation error: {str(e)}"
+        error_trace = traceback.format_exc()
+        logger.error(f"{error_msg}\n{error_trace}")
+        print(f"[ERROR] {error_msg}", flush=True)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error_msg,
+        )
     except Exception as e:
         error_msg = f"Log analysis failed: {str(e)}"
         error_trace = traceback.format_exc()
