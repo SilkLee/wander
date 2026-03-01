@@ -10,6 +10,7 @@ from langchain_core.language_models.llms import LLM
 
 from app.config import settings
 from app.llm import ModelServiceLLM
+from app.agents.output_parser import create_lenient_parsing_error_handler
 
 
 class BaseAgent(ABC):
@@ -113,7 +114,7 @@ class BaseAgent(ABC):
             max_iterations=self.max_iterations,
             verbose=True,
             return_intermediate_steps=True,
-            handle_parsing_errors=True,  # Important: handle ReAct parsing errors gracefully
+            handle_parsing_errors=create_lenient_parsing_error_handler(),
             agent_kwargs={
                 "prefix": self.get_system_prompt(),
             }
