@@ -107,10 +107,10 @@ Provide:
         try:
             result = await asyncio.wait_for(
                 asyncio.to_thread(executor.invoke, {"input": agent_input}),
-                timeout=180.0  # 180 second timeout for CPU inference (GPT-2 needs ~10-30s per LLM call)
+                timeout=300.0  # Increased for CPU inference + Agent retries on parsing errors
             )
         except asyncio.TimeoutError:
-            raise RuntimeError("Agent execution timed out after 180 seconds")
+            raise RuntimeError("Agent execution timed out after 300 seconds")
         
         # Parse agent output
         output = result.get("output", "")
