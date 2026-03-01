@@ -3,7 +3,7 @@
 from typing import Any, Dict, List, Optional
 from abc import ABC, abstractmethod
 
-from langchain.agents import AgentExecutor, initialize_agent, AgentType
+from langchain_classic.agents import AgentExecutor, initialize_agent, AgentType
 from langchain.tools import BaseTool
 from langchain_openai import ChatOpenAI
 from langchain_core.language_models.llms import LLM
