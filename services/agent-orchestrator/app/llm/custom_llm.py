@@ -66,7 +66,8 @@ class ModelServiceLLM(LLM):
 
         # Call Model Service
         try:
-            with httpx.Client(timeout=self.timeout) as client:
+            timeout_config = httpx.Timeout(timeout=self.timeout, read=self.timeout, write=30.0, connect=10.0)
+            with httpx.Client(timeout=timeout_config) as client:
                 response = client.post(
                     f"{self.model_service_url}/generate",
                     json=payload,
@@ -125,7 +126,8 @@ class ModelServiceLLM(LLM):
         }
 
         try:
-            async with httpx.AsyncClient(timeout=self.timeout) as client:
+            timeout_config = httpx.Timeout(timeout=self.timeout, read=self.timeout, write=30.0, connect=10.0)
+            async with httpx.AsyncClient(timeout=timeout_config) as client:
                 response = await client.post(
                     f"{self.model_service_url}/generate",
                     json=payload,
