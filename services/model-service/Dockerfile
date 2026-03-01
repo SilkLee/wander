@@ -11,7 +11,11 @@ WORKDIR /app
 COPY pyproject.toml ./
 
 # Install dependencies with uv (without vLLM for smaller image)
-RUN uv pip install --system --no-cache -r pyproject.toml
+# Install CPU-only PyTorch first to save space
+RUN uv pip install --system --no-cache torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+
+# Install other dependencies
+RUN uv pip install --system --no-cache --native-tls -r pyproject.toml
 
 # Production stage
 FROM python:3.11-slim
