@@ -5,6 +5,7 @@ from fastapi import FastAPI, HTTPException, status
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
+import asyncio
 
 from app.config import settings
 from app.models.requests import (
@@ -109,14 +110,15 @@ async def generate(request: GenerateRequest) -> GenerateResponse:
     try:
         inference_service = get_inference_service()
         
-        generated_text, tokens_generated, finish_reason = inference_service.generate(
+        # Run synchronous model.generate() in thread pool to avoid blocking event loop
+        generated_text, tokens_generated, finish_reason = await asyncio.to_thread(
+            inference_service.generate,
             prompt=request.prompt,
             max_tokens=request.max_tokens,
             temperature=request.temperature,
             top_p=request.top_p,
             stop=request.stop,
         )
-        
         return GenerateResponse(
             text=generated_text,
             prompt=request.prompt,

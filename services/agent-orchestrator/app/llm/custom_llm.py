@@ -26,7 +26,7 @@ class ModelServiceLLM(LLM):
     temperature: float = 0.7
     top_p: float = 0.9
     stop: Optional[List[str]] = None
-    timeout: int = 60
+    timeout: int = 180  # Increased for CPU inference (GPT-2 takes 10-30s per call, Agent may need 3-5 calls)
 
     @property
     def _llm_type(self) -> str:
@@ -87,7 +87,9 @@ class ModelServiceLLM(LLM):
             error_msg = f"Model Service HTTP error: {e.response.status_code} - {e.response.text}"
             raise RuntimeError(error_msg) from e
         except httpx.RequestError as e:
-            error_msg = f"Model Service connection error: {str(e)}"
+            # More detailed error for connection issues
+            error_detail = str(e) or f"{type(e).__name__} (no error message)"
+            error_msg = f"Model Service connection error: {error_detail}. URL: {self.model_service_url}"
             raise RuntimeError(error_msg) from e
         except Exception as e:
             error_msg = f"Model Service unexpected error: {str(e)}"
