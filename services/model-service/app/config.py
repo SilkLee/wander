@@ -22,7 +22,7 @@ class Settings(BaseSettings):
 
     # Model Configuration
     model_name: str = Field(
-        default="Qwen/Qwen2.5-7B-Instruct",
+        default="Qwen/Qwen2.5-1.5B-Instruct",
         description="HuggingFace model ID",
     )
     model_revision: str = Field(
