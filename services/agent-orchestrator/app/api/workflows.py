@@ -1,6 +1,8 @@
 """Workflow execution API endpoints."""
 
+import logging
 import time
+import traceback
 from typing import Dict, Any
 
 from fastapi import APIRouter, HTTPException, status
@@ -15,6 +17,9 @@ from app.models.requests import (
 from app.agents.analyzer import LogAnalyzerAgent
 
 router = APIRouter(prefix="/workflows", tags=["workflows"])
+logger = logging.getLogger(__name__)
+
+logger = logging.getLogger(__name__)
 
 
 @router.post("/analyze-log", response_model=LogAnalysisResponse)
@@ -64,11 +69,15 @@ async def analyze_log(request: LogAnalysisRequest) -> LogAnalysisResponse:
         return response
         
     except Exception as e:
+        error_msg = f"Log analysis failed: {str(e)}"
+        error_trace = traceback.format_exc()
+        logger.error(f"{error_msg}\n{error_trace}")
+        print(f"[ERROR] {error_msg}", flush=True)
+        print(error_trace, flush=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Log analysis failed: {str(e)}",
+            detail=f"{error_msg}\n{error_trace}",
         )
-
 
 @router.post("/analyze-log/stream")
 async def analyze_log_stream(request: LogAnalysisRequest):

@@ -3,8 +3,8 @@
 from typing import Any, Dict, List, Optional
 from abc import ABC, abstractmethod
 
-from langchain_classic.agents import AgentExecutor, create_openai_functions_agent
-from langchain_classic.tools import BaseTool
+from langchain.agents import AgentExecutor
+from langchain.tools import BaseTool
 from langchain_openai import ChatOpenAI
 from langchain_core.language_models.llms import LLM
 
@@ -93,36 +93,31 @@ class BaseAgent(ABC):
     def create_executor(self) -> AgentExecutor:
         """
         Create AgentExecutor with configured tools and settings.
-
+        
+        Uses ReAct agent framework which works with any LLM (including GPT-2).
+        ReAct agents use text-based reasoning instead of function calling.
+        
         Returns:
             Configured AgentExecutor
         """
 
         tools = self.get_tools()
         
-        # Create prompt template
-        from langchain_classic.prompts import ChatPromptTemplate, MessagesPlaceholder
+        # Create ReAct agent using initialize_agent (LangChain 1.x standard)
+        # AgentType.ZERO_SHOT_REACT_DESCRIPTION works with any LLM (text-based reasoning)
+        from langchain.agents import initialize_agent, AgentType
         
-        prompt = ChatPromptTemplate.from_messages([
-            ("system", self.get_system_prompt()),
-            ("human", "{input}"),
-            MessagesPlaceholder(variable_name="agent_scratchpad"),
-        ])
-
-        # Create agent
-        agent = create_openai_functions_agent(
+        executor = initialize_agent(
+            tools=tools,
             llm=self.llm,
-            tools=tools,
-            prompt=prompt,
-        )
-
-        # Create executor
-        executor = AgentExecutor(
-            agent=agent,
-            tools=tools,
+            agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
             max_iterations=self.max_iterations,
             verbose=True,
             return_intermediate_steps=True,
+            handle_parsing_errors=True,  # Important: handle ReAct parsing errors gracefully
+            agent_kwargs={
+                "prefix": self.get_system_prompt(),
+            }
         )
-
+        
         return executor

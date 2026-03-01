@@ -1,5 +1,6 @@
 """Log analyzer agent using LangChain."""
 
+import asyncio
 import uuid
 from typing import Any, Dict, List
 
@@ -102,8 +103,14 @@ Provide:
         # Create executor
         executor = self.create_executor()
         
-        # Execute agent
-        result = await executor.ainvoke({"input": agent_input})
+        # Execute agent with timeout
+        try:
+            result = await asyncio.wait_for(
+                asyncio.to_thread(executor.invoke, {"input": agent_input}),
+                timeout=180.0  # 180 second timeout for CPU inference (GPT-2 needs ~10-30s per LLM call)
+            )
+        except asyncio.TimeoutError:
+            raise RuntimeError("Agent execution timed out after 180 seconds")
         
         # Parse agent output
         output = result.get("output", "")
