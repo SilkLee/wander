@@ -1,0 +1,1 @@
+{"log_content":"ERROR: Connection timeout at database.py:142\nTraceback (most recent call last):\n  File \"database.py\", line 142, in connect\n    conn = psycopg2.connect(host=DB_HOST, port=5432, timeout=30)\npsycopg2.OperationalError: timeout expired (30 seconds)\nCould not establish connection to PostgreSQL database at 10.0.1.50:5432","log_type":"application"}
