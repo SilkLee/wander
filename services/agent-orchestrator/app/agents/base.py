@@ -3,7 +3,7 @@
 from typing import Any, Dict, List, Optional
 from abc import ABC, abstractmethod
 
-from langchain.agents import AgentExecutor
+from langchain.agents import AgentExecutor, initialize_agent, AgentType
 from langchain.tools import BaseTool
 from langchain_openai import ChatOpenAI
 from langchain_core.language_models.llms import LLM
@@ -105,7 +105,6 @@ class BaseAgent(ABC):
         
         # Create ReAct agent using initialize_agent (LangChain 1.x standard)
         # AgentType.ZERO_SHOT_REACT_DESCRIPTION works with any LLM (text-based reasoning)
-        from langchain.agents import initialize_agent, AgentType
         
         executor = initialize_agent(
             tools=tools,
