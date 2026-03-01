@@ -11,6 +11,10 @@ WORKDIR /app
 COPY pyproject.toml ./
 
 # Install dependencies with uv
+# Install CPU-only PyTorch first to save space
+RUN uv pip install --system --no-cache torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+
+# Install other dependencies
 RUN uv pip install --system --no-cache --native-tls -r pyproject.toml
 
 
