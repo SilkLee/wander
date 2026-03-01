@@ -72,7 +72,8 @@ async def health_check() -> HealthResponse:
     model_name = settings.model_name
     
     try:
-        inference_service = get_inference_service()
+        # Use asyncio.to_thread to avoid blocking FastAPI event loop
+        inference_service = await asyncio.to_thread(get_inference_service)
         model_loaded = True
     except Exception as e:
         print(f"Model health check failed: {e}")
@@ -92,7 +93,8 @@ async def health_check() -> HealthResponse:
 async def readiness_check():
     """Kubernetes readiness probe."""
     try:
-        get_inference_service()
+        # Use asyncio.to_thread to avoid blocking FastAPI event loop
+        await asyncio.to_thread(get_inference_service)
         return {"ready": True}
     except Exception:
         return {"ready": False}
