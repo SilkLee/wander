@@ -162,7 +162,7 @@ services:
       - "8004:8004"
     environment:
       - PORT=8004
-      - MODEL_NAME=gpt2  # Lightweight for testing; Qwen upgrade deferred due to 7GB download timeout from China
+      - MODEL_NAME=Qwen/Qwen2.5-1.5B-Instruct  # Instruction-tuned model for Day 10 Agent workflow
       - DEVICE=cpu
       - MAX_MODEL_LEN=4096
       - LOCAL_MODEL_PATH=  # Empty - use HuggingFace model_name (gpt2)
