@@ -47,7 +47,7 @@ class BaseAgent(ABC):
                 model_service_url=settings.model_service_url,
                 temperature=self.temperature,
                 max_tokens=512,
-                timeout=60,
+                timeout=300,  # Increased for CPU inference (Qwen2.5-1.5B: ~30-60s per call)
             )
         else:
             # Use OpenAI
