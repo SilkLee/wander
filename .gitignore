@@ -85,6 +85,9 @@ build/
 Thumbs.db
 .DS_Store
 
+# Git worktrees
+.worktrees/
+
 # Terraform
 *.tfstate
 *.tfstate.*
