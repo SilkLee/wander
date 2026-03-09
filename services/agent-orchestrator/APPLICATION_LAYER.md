@@ -36,13 +36,23 @@ app/application/
 - **RepositoryPort**: Interface for persistence
   - `async save(analysis: LogAnalysis) -> None`
   - `async get_by_id(analysis_id: str) -> Optional[LogAnalysis]`
+  
+- **LanggraphPort**: Interface for workflow orchestration
+  - `run(inputs: dict) -> dict`
+  - Returns: parsed/diagnosis/evidence/remediation dicts for intermediate_summary
 
 ### 2. AnalyzeLogUseCase (app/application/use_cases/analyze_log.py)
 **Purpose**: Orchestrate log analysis workflow respecting domain invariants
 
 **Constructor**:
 ```python
-def __init__(self, agent: AgentPort, parser: ParserPort, repository: RepositoryPort)
+def __init__(
+    self,
+    agent: AgentPort,
+    parser: ParserPort,
+    repository: RepositoryPort,
+    langgraph: Optional[LanggraphPort] = None,
+)
 ```
 
 **Workflow (execute method)**:
@@ -51,7 +61,8 @@ def __init__(self, agent: AgentPort, parser: ParserPort, repository: RepositoryP
 3. Parse raw agent output into domain components
 4. Create LogAnalysis domain model (enforces invariants)
 5. Persist to repository
-6. Return domain model
+6. (Optional) Run LangGraph workflow for intermediate reasoning artifacts
+7. Return AnalysisResult (domain model + optional langgraph_result)
 
 **Dependency Inversion**: Uses Protocol interfaces, enabling testing with any compatible mock
 
@@ -130,6 +141,8 @@ class MockParser:
 
 use_case = AnalyzeLogUseCase(MockAgent(), MockParser(), MockRepository())
 result = await use_case.execute("logs...")
+assert result.analysis is not None
+assert result.langgraph_result is None or "parsed" in result.langgraph_result
 ```
 
 ### Unit Testing DTOs
@@ -149,6 +162,7 @@ Will implement concrete adapters:
 1. **AgentAdapter**: LangChain agent wrapper
 2. **ParserAdapter**: Raw result → domain model conversion
 3. **RepositoryAdapter**: PostgreSQL/Redis persistence
+4. **LanggraphFlowAdapter**: Bridges app layer to workflows/langgraph_flow
 
 These will satisfy the Port interfaces without modifying application layer.
 
