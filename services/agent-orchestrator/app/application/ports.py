@@ -4,9 +4,13 @@ Uses typing.Protocol for dependency inversion - allowing any implementation
 that matches the interface, enabling easy testing with mocks.
 """
 
+from collections.abc import Mapping
 from typing import Optional, Protocol
 
 from app.domain.models.log_analysis import LogAnalysis
+from app.domain.models.confidence import Confidence
+from app.domain.models.root_cause import RootCause
+from app.domain.models.severity import Severity
 
 
 class AgentPort(Protocol):
@@ -16,7 +20,7 @@ class AgentPort(Protocol):
     Enables dependency injection and testing without concrete implementations.
     """
 
-    async def analyze_logs(self, log_content: str) -> dict:
+    async def analyze_logs(self, log_content: str) -> dict[str, object]:
         """Analyze logs using an LLM agent.
         
         Args:
@@ -39,7 +43,9 @@ class ParserPort(Protocol):
     enforcing business rules and invariants.
     """
 
-    def parse_analysis_result(self, raw_result: dict) -> tuple:
+    def parse_analysis_result(
+        self, raw_result: Mapping[str, object]
+    ) -> tuple[Severity, Confidence, list[RootCause]]:
         """Parse agent output into domain components.
         
         Args:
@@ -80,5 +86,25 @@ class RepositoryPort(Protocol):
             
         Returns:
             LogAnalysis if found, None otherwise
+        """
+        ...
+
+
+class LanggraphPort(Protocol):
+    """Port for LangGraph-based multi-agent analysis workflow.
+
+    Wraps the LangGraph triage graph that parses logs, diagnoses root causes,
+    gathers evidence, and produces remediation steps.
+    """
+
+    async def run(self, inputs: Mapping[str, object]) -> dict[str, object]:
+        """Execute the LangGraph workflow on the given inputs.
+
+        Args:
+            inputs: Dict containing at minimum 'log_content' (str)
+
+        Returns:
+            Dict with keys: 'raw_log', 'parsed' (ParsedLog), 'diagnosis' (Diagnosis),
+            'evidence' (EvidenceBundle), 'remediation' (Remediation)
         """
         ...

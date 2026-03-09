@@ -1,5 +1,3 @@
-"""Workflow execution API endpoints."""
-
 import logging
 import time
 import traceback
@@ -28,32 +26,10 @@ async def analyze_log(
     request: LogAnalysisRequest,
     use_case: AnalyzeLogUseCase = Depends(get_analyze_log_use_case),
 ) -> LogAnalysisResponse:
-    """
-    Analyze build/deploy logs using AI agent.
-    
-    This endpoint:
-    1. Accepts use case via dependency injection
-    2. Calls use_case.execute() with log content
-    3. Converts domain model to response DTO
-    4. Returns structured analysis results
-    
-    Args:
-        request: Log analysis request with log content and context
-        use_case: AnalyzeLogUseCase injected by FastAPI
-        
-    Returns:
-        Structured analysis with root cause, fixes, and references
-        
-    Raises:
-        HTTPException: If analysis fails
-    """
     try:
-        start_time = time.time()
-        
         # Execute analysis via use case (with DI)
-        analysis = await use_case.execute(request.log_content)
-        
-        execution_time = time.time() - start_time
+        result = await use_case.execute(request.log_content)
+        analysis = result.analysis
         
         # Convert domain model to response DTO
         suggested_fixes = analysis.get_remediation_steps()
@@ -62,6 +38,41 @@ async def analyze_log(
             analysis.root_causes[0].description if analysis.root_causes else "Unknown"
         )
         
+        intermediate_summary = {
+            "severity": severity_str,
+            "confidence_score": analysis.confidence.score,
+            "root_cause_count": len(analysis.root_causes),
+            "is_actionable": analysis.is_actionable(),
+            "is_critical": analysis.is_critical(),
+        }
+
+        if result.langgraph_result is not None:
+            parsed = result.langgraph_result.get("parsed")
+            diagnosis = result.langgraph_result.get("diagnosis")
+            evidence = result.langgraph_result.get("evidence")
+            remediation = result.langgraph_result.get("remediation")
+            intermediate_summary.update(
+                {
+                    "parsed": parsed.model_dump() if hasattr(parsed, "model_dump") else parsed,
+                    "diagnosis": diagnosis.model_dump() if hasattr(diagnosis, "model_dump") else diagnosis,
+                    "evidence": evidence.model_dump() if hasattr(evidence, "model_dump") else evidence,
+                    "remediation": remediation.model_dump() if hasattr(remediation, "model_dump") else remediation,
+                    "errors": result.langgraph_result.get("errors", []),
+                    "retry_summary": result.langgraph_result.get("retry_summary", {}),
+                    "degraded": result.langgraph_result.get("degraded", False),
+                }
+            )
+            if hasattr(diagnosis, "confidence"):
+                intermediate_summary["diagnosis_confidence"] = diagnosis.confidence
+            if hasattr(parsed, "source"):
+                intermediate_summary["parsed_source"] = parsed.source
+            if hasattr(parsed, "error_signatures"):
+                intermediate_summary["error_signatures"] = parsed.error_signatures
+            if hasattr(remediation, "steps"):
+                intermediate_summary["remediation_steps"] = remediation.steps
+            if hasattr(evidence, "citations"):
+                intermediate_summary["evidence_citations"] = evidence.citations
+
         response = LogAnalysisResponse(
             analysis_id=str(analysis.id),
             root_cause=root_cause_desc,
@@ -69,6 +80,7 @@ async def analyze_log(
             suggested_fixes=suggested_fixes,
             references=[],  # TODO: Extract from root causes or external source
             confidence=analysis.confidence.score,
+            intermediate_summary=intermediate_summary,
         )
         
         return response
@@ -95,21 +107,8 @@ async def analyze_log(
 
 @router.post("/analyze-log/stream")
 async def analyze_log_stream(request: LogAnalysisRequest):
-    """
-    Analyze build/deploy logs with streaming response (SSE).
-    
-    Returns real-time analysis progress as tokens are generated.
-    Useful for long-running analysis to provide immediate feedback.
-    
-    Args:
-        request: Log analysis request with log content and context
-        
-    Returns:
-        Server-Sent Events stream with analysis tokens
-    """
     try:
         async def event_generator():
-            """Generate SSE events for streaming analysis."""
             try:
                 # Create agent
                 agent = LogAnalyzerAgent()
@@ -164,23 +163,6 @@ Log content:
 
 @router.post("/execute", response_model=WorkflowExecutionResponse)
 async def execute_workflow(request: WorkflowExecutionRequest) -> WorkflowExecutionResponse:
-    """
-    Execute generic workflow by type.
-    
-    Supports multiple workflow types:
-    - log_analysis: Build/deploy log analysis
-    - code_review: PR review workflow (future)
-    - metrics_calculation: DORA metrics (future)
-    
-    Args:
-        request: Workflow execution request with type and inputs
-        
-    Returns:
-        Workflow execution results
-        
-    Raises:
-        HTTPException: If workflow type unsupported or execution fails
-    """
     import uuid
     
     start_time = time.time()
@@ -237,18 +219,6 @@ async def execute_workflow(request: WorkflowExecutionRequest) -> WorkflowExecuti
 
 
 async def _execute_log_analysis_workflow(inputs: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Execute log analysis workflow.
-    
-    Args:
-        inputs: Must contain log_content, optionally log_type and context
-        
-    Returns:
-        Analysis results
-        
-    Raises:
-        ValueError: If required inputs missing
-    """
     if "log_content" not in inputs:
         raise ValueError("Missing required input: log_content")
     
@@ -260,12 +230,6 @@ async def _execute_log_analysis_workflow(inputs: Dict[str, Any]) -> Dict[str, An
 
 @router.get("/types")
 async def list_workflow_types() -> Dict[str, Any]:
-    """
-    List available workflow types.
-    
-    Returns:
-        Dictionary of workflow types and their descriptions
-    """
     return {
         "workflows": [
             {

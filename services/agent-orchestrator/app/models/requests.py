@@ -1,12 +1,8 @@
-"""Request and response models for Agent Orchestrator API."""
-
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
 
 class HealthResponse(BaseModel):
-    """Health check response."""
-
     status: str = Field(description="Service status")
     service: str = Field(description="Service name")
     version: str = Field(description="Service version")
@@ -15,8 +11,6 @@ class HealthResponse(BaseModel):
 
 
 class LogAnalysisRequest(BaseModel):
-    """Request for log analysis workflow."""
-
     log_content: str = Field(description="Log content to analyze")
     log_type: str = Field(default="build", description="Type of log (build/deploy/runtime)")
     context: Optional[Dict[str, Any]] = Field(
@@ -26,8 +20,6 @@ class LogAnalysisRequest(BaseModel):
 
 
 class LogAnalysisResponse(BaseModel):
-    """Response from log analysis workflow."""
-
     analysis_id: str = Field(description="Unique analysis ID")
     root_cause: str = Field(description="Identified root cause")
     severity: str = Field(description="Issue severity (critical/high/medium/low)")
@@ -41,11 +33,13 @@ class LogAnalysisResponse(BaseModel):
         le=1.0,
         description="Confidence score of analysis",
     )
+    intermediate_summary: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="Summary of intermediate agent outputs",
+    )
 
 
 class WorkflowExecutionRequest(BaseModel):
-    """Generic workflow execution request."""
-
     workflow_type: str = Field(description="Type of workflow to execute")
     inputs: Dict[str, Any] = Field(description="Workflow input parameters")
     options: Optional[Dict[str, Any]] = Field(
@@ -55,8 +49,6 @@ class WorkflowExecutionRequest(BaseModel):
 
 
 class WorkflowExecutionResponse(BaseModel):
-    """Generic workflow execution response."""
-
     execution_id: str = Field(description="Unique execution ID")
     status: str = Field(description="Execution status (running/completed/failed)")
     outputs: Dict[str, Any] = Field(description="Workflow outputs")
