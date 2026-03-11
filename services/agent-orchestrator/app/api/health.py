@@ -66,7 +66,7 @@ async def readiness_check():
     except Exception:
         raise HTTPException(status_code=503, detail="Redis not available")
 
-    return {"status": "ready"}
+    return {"ready": True}
 
 
 @router.get("/live")
@@ -76,4 +76,4 @@ async def liveness_check():
 
     Returns 200 if service process is alive.
     """
-    return {"status": "alive"}
+    return {"alive": True}
