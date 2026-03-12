@@ -15,6 +15,8 @@ from app.models.requests import (
 from app.dependencies import get_analyze_log_use_case
 from app.application.use_cases.analyze_log import AnalyzeLogUseCase
 from app.agents.analyzer import LogAnalyzerAgent
+from app.workflows.pr_risk_flow import run_pr_risk
+from app.workflows.code_review_flow import run_code_review
 
 router = APIRouter(prefix="/workflows", tags=["workflows"])
 logger = logging.getLogger(__name__)
@@ -173,15 +175,13 @@ async def execute_workflow(request: WorkflowExecutionRequest) -> WorkflowExecuti
         if request.workflow_type == "log_analysis":
             result = await _execute_log_analysis_workflow(request.inputs)
             
+        elif request.workflow_type == "pr_risk":
+            result = await run_pr_risk(request.inputs)
+
         elif request.workflow_type == "code_review":
-            # Future implementation
-            raise HTTPException(
-                status_code=status.HTTP_501_NOT_IMPLEMENTED,
-                detail="Code review workflow not yet implemented",
-            )
-            
+            result = await run_code_review(request.inputs)
+
         elif request.workflow_type == "metrics_calculation":
-            # Future implementation
             raise HTTPException(
                 status_code=status.HTTP_501_NOT_IMPLEMENTED,
                 detail="Metrics calculation workflow not yet implemented",
@@ -240,11 +240,18 @@ async def list_workflow_types() -> Dict[str, Any]:
                 "inputs": ["log_content", "log_type", "context"],
             },
             {
+                "type": "pr_risk",
+                "name": "PR Risk Assessment",
+                "description": "Assess risk level of a pull request",
+                "status": "available",
+                "inputs": ["diff", "context", "coding_standards"],
+            },
+            {
                 "type": "code_review",
                 "name": "Code Review",
                 "description": "AI-powered PR review",
-                "status": "planned",
-                "inputs": ["pr_diff", "metadata"],
+                "status": "available",
+                "inputs": ["diff", "context", "coding_standards"],
             },
             {
                 "type": "metrics_calculation",
