@@ -6,12 +6,12 @@ analysis + tool outputs.
 """
 
 import asyncio
-from typing import Any, Dict, List
+from typing import Any
 
 from langchain.tools import BaseTool
 
 from app.agents.base import BaseAgent
-from app.models.agent_reports import DependencyRisk, ImpactReport, PRSummary, RiskFinding
+from app.models.agent_reports import ImpactReport, PRSummary
 from app.tools.dependency_scan_tool import DependencyScanTool
 from app.tools.impact_analysis_tool import ImpactAnalysisTool
 from app.tools.repo_search_tool import RepoSearchTool
@@ -27,7 +27,7 @@ class LangChainToolsAgent(BaseAgent):
     tool results.
     """
 
-    def get_tools(self) -> List[BaseTool]:
+    def get_tools(self) -> list[BaseTool]:
         """Return the three code-analysis tools."""
         return [
             RepoSearchTool(),
@@ -50,7 +50,7 @@ class LangChainToolsAgent(BaseAgent):
             "Be concise but thorough."
         )
 
-    async def execute(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
+    async def execute(self, inputs: dict[str, Any]) -> dict[str, Any]:
         """Run the tools agent and return analysis + outputs.
 
         Args:
@@ -65,8 +65,10 @@ class LangChainToolsAgent(BaseAgent):
         Raises:
             RuntimeError: If agent execution fails.
         """
-        diff = inputs.get("diff", "")
-        context = inputs.get("context", {})
+        diff_raw = inputs.get("diff", "")
+        diff = diff_raw if isinstance(diff_raw, str) else ""
+        context_raw = inputs.get("context", {})
+        context = context_raw if isinstance(context_raw, dict) else {}
 
         agent_input = (
             f"Analyse the following diff and provide a summary:\n\n"
@@ -76,7 +78,7 @@ class LangChainToolsAgent(BaseAgent):
 
         executor = self.create_executor()
 
-        base_state: Dict[str, Any] = {
+        base_state: dict[str, Any] = {
             "errors": [],
             "retry_summary": {},
             "degraded": False,
@@ -103,7 +105,7 @@ class LangChainToolsAgent(BaseAgent):
                 "intermediate_summary": base_state,
             }
 
-        async def invoke() -> Dict[str, Any]:
+        async def invoke() -> dict[str, Any] | None:
             return await asyncio.to_thread(executor.invoke, {"input": agent_input})
 
         retries = 1
@@ -133,10 +135,13 @@ class LangChainToolsAgent(BaseAgent):
         _TOOLS_AGENT_BREAKER.record_success()
         base_state["retry_summary"]["langchain_tool_agent"] = 0
 
-        output_text: str = result.get("output", "")
-        intermediate_steps = result.get("intermediate_steps", [])
+        output_text: str = ""
+        intermediate_steps: list[tuple[Any, Any]] = []
+        if result is not None:
+            output_text = result.get("output", "")
+            intermediate_steps = result.get("intermediate_steps", [])
 
-        tool_outputs: List[Dict[str, str]] = []
+        tool_outputs: list[dict[str, str]] = []
         impact_notes = ""
         for action, observation in intermediate_steps:
             tool_name = getattr(action, "tool", "unknown")
@@ -165,7 +170,7 @@ class LangChainToolsAgent(BaseAgent):
         }
 
 
-async def run_tool_agent(inputs: Dict[str, Any]) -> Dict[str, Any]:
+async def run_tool_agent(inputs: dict[str, Any]) -> dict[str, Any]:
     """Convenience wrapper that creates a ``LangChainToolsAgent`` and executes it.
 
     Args:
@@ -181,7 +186,7 @@ async def run_tool_agent(inputs: Dict[str, Any]) -> Dict[str, Any]:
 _TOOLS_AGENT_BREAKER = CircuitBreaker(threshold=2, cooldown_seconds=30.0)
 
 
-def _empty_outputs() -> Dict[str, Any]:
+def _empty_outputs() -> dict[str, Any]:
     return {
         "pr_summary": PRSummary(summary="", key_risks=[], actions=[]),
         "risk_findings": [],
