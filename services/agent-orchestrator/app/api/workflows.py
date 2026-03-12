@@ -17,6 +17,7 @@ from app.application.use_cases.analyze_log import AnalyzeLogUseCase
 from app.agents.analyzer import LogAnalyzerAgent
 from app.workflows.pr_risk_flow import run_pr_risk
 from app.workflows.code_review_flow import run_code_review
+from app.agents.langchain_tools_agent import run_tool_agent
 
 router = APIRouter(prefix="/workflows", tags=["workflows"])
 logger = logging.getLogger(__name__)
@@ -181,6 +182,9 @@ async def execute_workflow(request: WorkflowExecutionRequest) -> WorkflowExecuti
         elif request.workflow_type == "code_review":
             result = await run_code_review(request.inputs)
 
+        elif request.workflow_type == "langchain_tool_agent":
+            result = await run_tool_agent(request.inputs)
+
         elif request.workflow_type == "metrics_calculation":
             raise HTTPException(
                 status_code=status.HTTP_501_NOT_IMPLEMENTED,
@@ -252,6 +256,13 @@ async def list_workflow_types() -> Dict[str, Any]:
                 "description": "AI-powered PR review",
                 "status": "available",
                 "inputs": ["diff", "context", "coding_standards"],
+            },
+            {
+                "type": "langchain_tool_agent",
+                "name": "LangChain Tool Agent",
+                "description": "Code-change analysis using ReAct agent with tools",
+                "status": "available",
+                "inputs": ["diff", "context"],
             },
             {
                 "type": "metrics_calculation",
