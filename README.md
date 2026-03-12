@@ -212,8 +212,10 @@ docker-compose up --build
     - ✅ Created quick-redeploy-ec2.sh for one-click deployment
     - ✅ AWS cleanup completed (IAM roles preserved for reuse)
   - ✅ Day 11: Multi-agent orchestration with LangGraph (Build Failure Triage)
-  - 🎯 Day 12: Agent workflow optimization (Planned)
-- 📝 **Week 3**: Multi-agent orchestration (LangGraph)
+  - ✅ Day 12: Agent workflow optimization (Stability + graceful degradation)
+- ✅ **Week 3**: Multi-agent orchestration (LangGraph)
+  - ✅ Added PR Risk Assessment workflow
+  - ✅ Added Code Review Assistant workflow
 - 📝 **Week 4**: LangChain agent basics
 
 ### Month 2: Advanced Features (Week 5-8)
@@ -315,5 +317,5 @@ Preparing for NVIDIA Senior Software Engineer - AI Workflow (IPP) interview
 
 ---
 
-**Last Updated**: 2026-03-09 14:20 PM
-**Status**: ✅ Week 2 Day 11 Complete - LangGraph multi-agent orchestration added with structured intermediate summaries
+**Last Updated**: 2026-03-12 17:15 PM
+**Status**: ✅ Week 3 Complete - LangGraph PR risk + code review workflows added
