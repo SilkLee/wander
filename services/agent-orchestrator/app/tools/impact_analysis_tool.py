@@ -1,9 +1,10 @@
 """Impact analysis tool for mapping diffs to impacted modules and services."""
 
-from typing import Dict, Type
+from typing import Any, Dict
 
 import httpx
-from langchain_classic.tools import BaseTool
+from langchain.tools import BaseTool
+from langchain_core.tools import ArgsSchema
 from pydantic import BaseModel, Field, field_validator
 
 from app.config import settings
@@ -36,7 +37,7 @@ class ImpactAnalysisTool(BaseTool):
         "Use this tool when you need to understand which parts of the "
         "system are affected by a code change."
     )
-    args_schema: Type[BaseModel] = ImpactAnalysisInput
+    args_schema: ArgsSchema | None = ImpactAnalysisInput
 
     def _run(self, diff: str) -> str:
         """Synchronous analysis (not used in async context)."""
@@ -58,13 +59,15 @@ class ImpactAnalysisTool(BaseTool):
                     f"{settings.indexing_service_url}/impact-analysis",
                     json={"diff": diff},
                 )
-                response.raise_for_status()
+                _ = response.raise_for_status()
 
                 data = response.json()
-                modules: list[str] = data.get("modules", [])
-                services: list[str] = data.get("services", [])
+                raw_modules = data.get("modules") if isinstance(data, dict) else None
+                raw_services = data.get("services") if isinstance(data, dict) else None
+                modules: list[Any] = raw_modules if isinstance(raw_modules, list) else []
+                services: list[Any] = raw_services if isinstance(raw_services, list) else []
 
-                if not modules and not services:
+                if len(modules) == 0 and len(services) == 0:
                     return "No impacted modules or services detected in the provided diff."
 
                 formatted: list[str] = ["Impact analysis results:\n"]
@@ -88,4 +91,5 @@ class ImpactAnalysisTool(BaseTool):
 
 def impact_analysis(diff: str) -> Dict[str, list[str]]:
     """Simple synchronous wrapper kept for backward compatibility with plan tests."""
+    _ = diff
     return {"modules": [], "services": []}

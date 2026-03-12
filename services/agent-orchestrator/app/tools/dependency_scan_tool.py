@@ -1,9 +1,10 @@
 """Dependency scan tool for detecting dependency and version changes in diffs."""
 
-from typing import Type
+from typing import Any
 
 import httpx
-from langchain_classic.tools import BaseTool
+from langchain.tools import BaseTool
+from langchain_core.tools import ArgsSchema
 from pydantic import BaseModel, Field, field_validator
 
 from app.config import settings
@@ -37,7 +38,7 @@ class DependencyScanTool(BaseTool):
         "Use this tool when you need to detect added, removed, or "
         "upgraded dependencies and assess their risk level."
     )
-    args_schema: Type[BaseModel] = DependencyScanInput
+    args_schema: ArgsSchema | None = DependencyScanInput
 
     def _run(self, diff: str) -> str:
         """Synchronous scan (not used in async context)."""
@@ -59,16 +60,18 @@ class DependencyScanTool(BaseTool):
                     f"{settings.indexing_service_url}/dependency-scan",
                     json={"diff": diff},
                 )
-                response.raise_for_status()
+                _ = response.raise_for_status()
 
                 data = response.json()
-                changes = data.get("changes", [])
+                raw_changes = data.get("changes") if isinstance(data, dict) else None
+                changes: list[Any] = raw_changes if isinstance(raw_changes, list) else []
 
-                if not changes:
+                if len(changes) == 0:
                     return f"No dependency changes detected in the provided diff."
 
                 formatted: list[str] = ["Dependency changes detected:\n"]
-                for i, change in enumerate(changes, 1):
+                for i, entry in enumerate(changes, 1):
+                    change = entry if isinstance(entry, dict) else {}
                     package = change.get("package", "unknown")
                     old_ver = change.get("old_version", "N/A")
                     new_ver = change.get("new_version", "N/A")

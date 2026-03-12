@@ -1,9 +1,10 @@
 """Repo search tool for finding files and symbols in the codebase."""
 
-from typing import Type
+from typing import Any
 
 import httpx
-from langchain_classic.tools import BaseTool
+from langchain.tools import BaseTool
+from langchain_core.tools import ArgsSchema
 from pydantic import BaseModel, Field, field_validator
 
 from app.config import settings
@@ -36,7 +37,7 @@ class RepoSearchTool(BaseTool):
         "Use this tool when you need to find files or symbols relevant to "
         "a code change or investigation."
     )
-    args_schema: Type[BaseModel] = RepoSearchInput
+    args_schema: ArgsSchema | None = RepoSearchInput
 
     def _run(self, query: str) -> str:
         """Synchronous search (not used in async context)."""
@@ -58,16 +59,18 @@ class RepoSearchTool(BaseTool):
                     f"{settings.indexing_service_url}/search",
                     json={"query": query},
                 )
-                response.raise_for_status()
+                _ = response.raise_for_status()
 
                 data = response.json()
-                results = data.get("results", [])
+                raw_results = data.get("results") if isinstance(data, dict) else None
+                results: list[Any] = raw_results if isinstance(raw_results, list) else []
 
-                if not results:
+                if len(results) == 0:
                     return f"No results found for: {query}"
 
                 formatted: list[str] = [f"Search results for '{query}':\n"]
-                for i, result in enumerate(results, 1):
+                for i, entry in enumerate(results, 1):
+                    result = entry if isinstance(entry, dict) else {}
                     file_path = result.get("file_path", "unknown")
                     symbol = result.get("symbol", "")
                     content = result.get("content", "")
