@@ -1,7 +1,7 @@
 import logging
 import time
 import traceback
-from typing import Dict, Any
+from typing import Any, Dict, cast
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
@@ -23,6 +23,17 @@ router = APIRouter(prefix="/workflows", tags=["workflows"])
 logger = logging.getLogger(__name__)
 
 
+def _maybe_model_dump(value: Any) -> Any:
+    if hasattr(value, "model_dump"):
+        return value.model_dump()
+    return value
+
+
+def _maybe_get_attr(value: Any, attr: str) -> Any | None:
+    if hasattr(value, attr):
+        return getattr(value, attr)
+    return None
+
 
 @router.post("/analyze-log", response_model=LogAnalysisResponse)
 async def analyze_log(
@@ -33,14 +44,12 @@ async def analyze_log(
         # Execute analysis via use case (with DI)
         result = await use_case.execute(request.log_content)
         analysis = result.analysis
-        
+
         # Convert domain model to response DTO
         suggested_fixes = analysis.get_remediation_steps()
         severity_str = analysis.severity.name.lower()
-        root_cause_desc = (
-            analysis.root_causes[0].description if analysis.root_causes else "Unknown"
-        )
-        
+        root_cause_desc = analysis.root_causes[0].description if analysis.root_causes else "Unknown"
+
         intermediate_summary = {
             "severity": severity_str,
             "confidence_score": analysis.confidence.score,
@@ -50,31 +59,40 @@ async def analyze_log(
         }
 
         if result.langgraph_result is not None:
-            parsed = result.langgraph_result.get("parsed")
-            diagnosis = result.langgraph_result.get("diagnosis")
-            evidence = result.langgraph_result.get("evidence")
-            remediation = result.langgraph_result.get("remediation")
-            intermediate_summary.update(
-                {
-                    "parsed": parsed.model_dump() if hasattr(parsed, "model_dump") else parsed,
-                    "diagnosis": diagnosis.model_dump() if hasattr(diagnosis, "model_dump") else diagnosis,
-                    "evidence": evidence.model_dump() if hasattr(evidence, "model_dump") else evidence,
-                    "remediation": remediation.model_dump() if hasattr(remediation, "model_dump") else remediation,
-                    "errors": result.langgraph_result.get("errors", []),
-                    "retry_summary": result.langgraph_result.get("retry_summary", {}),
-                    "degraded": result.langgraph_result.get("degraded", False),
-                }
-            )
-            if hasattr(diagnosis, "confidence"):
-                intermediate_summary["diagnosis_confidence"] = diagnosis.confidence
-            if hasattr(parsed, "source"):
-                intermediate_summary["parsed_source"] = parsed.source
-            if hasattr(parsed, "error_signatures"):
-                intermediate_summary["error_signatures"] = parsed.error_signatures
-            if hasattr(remediation, "steps"):
-                intermediate_summary["remediation_steps"] = remediation.steps
-            if hasattr(evidence, "citations"):
-                intermediate_summary["evidence_citations"] = evidence.citations
+            langgraph_result = cast(dict[str, Any], result.langgraph_result)
+            parsed = langgraph_result.get("parsed")
+            diagnosis = langgraph_result.get("diagnosis")
+            evidence = langgraph_result.get("evidence")
+            remediation = langgraph_result.get("remediation")
+            parsed_dump = _maybe_model_dump(parsed)
+            diagnosis_dump = _maybe_model_dump(diagnosis)
+            evidence_dump = _maybe_model_dump(evidence)
+            remediation_dump = _maybe_model_dump(remediation)
+            enriched_summary: Dict[str, Any] = {
+                "parsed": parsed_dump,
+                "diagnosis": diagnosis_dump,
+                "evidence": evidence_dump,
+                "remediation": remediation_dump,
+                "errors": langgraph_result.get("errors", []),
+                "retry_summary": langgraph_result.get("retry_summary", {}),
+                "degraded": langgraph_result.get("degraded", False),
+            }
+            diagnosis_confidence = _maybe_get_attr(diagnosis, "confidence")
+            if diagnosis_confidence is not None:
+                enriched_summary["diagnosis_confidence"] = diagnosis_confidence
+            parsed_source = _maybe_get_attr(parsed, "source")
+            if parsed_source is not None:
+                enriched_summary["parsed_source"] = parsed_source
+            error_signatures = _maybe_get_attr(parsed, "error_signatures")
+            if error_signatures is not None:
+                enriched_summary["error_signatures"] = error_signatures
+            remediation_steps = _maybe_get_attr(remediation, "steps")
+            if remediation_steps is not None:
+                enriched_summary["remediation_steps"] = remediation_steps
+            evidence_citations = _maybe_get_attr(evidence, "citations")
+            if evidence_citations is not None:
+                enriched_summary["evidence_citations"] = evidence_citations
+            intermediate_summary.update(enriched_summary)
 
         response = LogAnalysisResponse(
             analysis_id=str(analysis.id),
@@ -85,9 +103,9 @@ async def analyze_log(
             confidence=analysis.confidence.score,
             intermediate_summary=intermediate_summary,
         )
-        
+
         return response
-        
+
     except ValueError as e:
         error_msg = f"Log analysis validation error: {str(e)}"
         error_trace = traceback.format_exc()
@@ -108,14 +126,16 @@ async def analyze_log(
             detail=f"{error_msg}\n{error_trace}",
         )
 
+
 @router.post("/analyze-log/stream")
 async def analyze_log_stream(request: LogAnalysisRequest):
     try:
+
         async def event_generator():
             try:
                 # Create agent
                 agent = LogAnalyzerAgent()
-                
+
                 # Build analysis prompt
                 prompt = f"""Analyze the following {request.log_type} log and identify:
 1. Root cause of failure
@@ -125,28 +145,30 @@ async def analyze_log_stream(request: LogAnalysisRequest):
 
 Log content:
 {request.log_content}"""
-                
+
                 # Stream LLM response
                 full_text = ""
+                import json
+
                 async for chunk in agent.llm.astream(prompt):
                     token = chunk
-                    full_text += token
-                    
+                    full_text += str(token)
+
                     # Send token event
-                    import json
                     yield f"event: token\n"
-                    yield f"data: {{\"token\": {json.dumps(token)}}}\n\n"
-                
+                    yield f'data: {{"token": {json.dumps(token)}}}\n\n'
+
                 # Send done event
                 yield f"event: done\n"
-                yield f"data: {{\"full_text\": {json.dumps(full_text)}}}\n\n"
-                
+                yield f'data: {{"full_text": {json.dumps(full_text)}}}\n\n'
+
             except Exception as e:
                 # Send error event
                 import json
+
                 yield f"event: error\n"
-                yield f"data: {{\"error\": {json.dumps(str(e))}}}\n\n"
-        
+                yield f'data: {{"error": {json.dumps(str(e))}}}\n\n'
+
         return StreamingResponse(
             event_generator(),
             media_type="text/event-stream",
@@ -156,7 +178,7 @@ Log content:
                 "X-Accel-Buffering": "no",
             },
         )
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -167,15 +189,15 @@ Log content:
 @router.post("/execute", response_model=WorkflowExecutionResponse)
 async def execute_workflow(request: WorkflowExecutionRequest) -> WorkflowExecutionResponse:
     import uuid
-    
+
     start_time = time.time()
     execution_id = str(uuid.uuid4())
-    
+
     try:
         # Route by workflow type
         if request.workflow_type == "log_analysis":
             result = await _execute_log_analysis_workflow(request.inputs)
-            
+
         elif request.workflow_type == "pr_risk":
             result = await run_pr_risk(request.inputs)
 
@@ -190,15 +212,15 @@ async def execute_workflow(request: WorkflowExecutionRequest) -> WorkflowExecuti
                 status_code=status.HTTP_501_NOT_IMPLEMENTED,
                 detail="Metrics calculation workflow not yet implemented",
             )
-            
+
         else:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Unknown workflow type: {request.workflow_type}",
             )
-        
+
         execution_time = time.time() - start_time
-        
+
         return WorkflowExecutionResponse(
             execution_id=execution_id,
             status="completed",
@@ -206,13 +228,13 @@ async def execute_workflow(request: WorkflowExecutionRequest) -> WorkflowExecuti
             execution_time=execution_time,
             error=None,
         )
-        
+
     except HTTPException:
         raise
-        
+
     except Exception as e:
         execution_time = time.time() - start_time
-        
+
         return WorkflowExecutionResponse(
             execution_id=execution_id,
             status="failed",
@@ -225,10 +247,10 @@ async def execute_workflow(request: WorkflowExecutionRequest) -> WorkflowExecuti
 async def _execute_log_analysis_workflow(inputs: Dict[str, Any]) -> Dict[str, Any]:
     if "log_content" not in inputs:
         raise ValueError("Missing required input: log_content")
-    
+
     agent = LogAnalyzerAgent()
     result = await agent.execute(inputs)
-    
+
     return result
 
 
