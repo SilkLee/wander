@@ -80,6 +80,12 @@ class Settings(BaseSettings):
         description="Local model directory path (overrides model_name)",
     )
 
+    # LoRA Configuration
+    lora_adapter_path: Optional[str] = Field(
+        default=None,
+        description="Path to LoRA adapter file for fine-tuned inference",
+    )
+
 
 # Global settings instance
 settings = Settings()

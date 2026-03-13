@@ -15,6 +15,7 @@ from app.models.requests import (
     ModelInfo,
 )
 from app.services.inference import get_inference_service
+from app.services.lora import load_lora_adapter
 
 
 @asynccontextmanager
@@ -30,6 +31,11 @@ async def lifespan(app: FastAPI):
     get_inference_service()
     print("Model ready")
     
+    # Load LoRA adapter if configured
+    if settings.lora_adapter_path:
+        loaded = load_lora_adapter(settings.lora_adapter_path)
+        print(f"LoRA adapter loaded: {loaded}")
+
     yield
     
     # Shutdown
