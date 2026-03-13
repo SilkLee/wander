@@ -216,7 +216,7 @@ docker-compose up --build
 - ✅ **Week 3**: Multi-agent orchestration (LangGraph)
   - ✅ Added PR Risk Assessment workflow
   - ✅ Added Code Review Assistant workflow
-- 📝 **Week 4**: LangChain agent basics
+- ✅ **Week 4**: LangChain agent basics
 
 ### Month 2: Advanced Features (Week 5-8)
 - 📝 **Week 5**: Fine-tuning classifier (LoRA on Qwen2.5-7B)
