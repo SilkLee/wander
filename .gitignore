@@ -62,6 +62,7 @@ data/
 datasets/
 *.h5
 *.pkl
+!services/*/app/data/
 
 # Docker
 .dockerignore
