@@ -1,6 +1,6 @@
 """Request and response models for Model service."""
 
-from typing import List, Optional, Dict, Any
+from typing import List, Literal, Optional, Dict, Any
 from pydantic import BaseModel, Field
 
 
@@ -41,3 +41,16 @@ class ModelInfo(BaseModel):
     device: str = Field(description="Device (cuda/cpu)")
     max_length: int = Field(description="Maximum sequence length")
     parameters: Dict[str, Any] = Field(description="Model parameters")
+
+
+class RiskClassifyRequest(BaseModel):
+    """PR risk classification request."""
+
+    input: str = Field(min_length=1, description="PR diff or text to classify")
+
+
+class RiskClassifyResponse(BaseModel):
+    """PR risk classification response."""
+
+    label: Literal["low", "medium", "high"] = Field(description="Risk label")
+    score: float = Field(ge=0.0, le=1.0, description="Confidence score")

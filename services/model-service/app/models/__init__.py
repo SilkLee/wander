@@ -5,6 +5,8 @@ from .requests import (
     GenerateRequest,
     GenerateResponse,
     ModelInfo,
+    RiskClassifyRequest,
+    RiskClassifyResponse,
 )
 
 __all__ = [
@@ -12,4 +14,6 @@ __all__ = [
     "GenerateRequest",
     "GenerateResponse",
     "ModelInfo",
+    "RiskClassifyRequest",
+    "RiskClassifyResponse",
 ]

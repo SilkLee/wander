@@ -13,6 +13,8 @@ from app.models.requests import (
     GenerateRequest,
     GenerateResponse,
     ModelInfo,
+    RiskClassifyRequest,
+    RiskClassifyResponse,
 )
 from app.services.inference import get_inference_service
 from app.services.lora import load_lora_adapter
@@ -205,6 +207,13 @@ async def get_model_info() -> ModelInfo:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error getting model info: {str(e)}",
         )
+
+@app.post("/classify/risk", response_model=RiskClassifyResponse)
+async def classify_risk(request: RiskClassifyRequest) -> RiskClassifyResponse:
+    """Classify PR risk from input text (diff)."""
+    # Stub: return a fixed medium-risk classification.
+    # Will be replaced with real LoRA-based inference when adapter is loaded.
+    return RiskClassifyResponse(label="medium", score=0.5)
 
 
 def main():
