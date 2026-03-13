@@ -4,6 +4,7 @@ from fastapi import FastAPI
 
 from app.api.health import router as health_router
 from app.api.train import router as train_router
+from app.api.evaluate import router as evaluate_router
 
 app = FastAPI(
     title="Finetune Service",
@@ -13,3 +14,4 @@ app = FastAPI(
 
 app.include_router(health_router)
 app.include_router(train_router)
+app.include_router(evaluate_router)
