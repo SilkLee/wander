@@ -261,7 +261,13 @@ class SearchService:
         sorted_results = sorted(combined.values(), key=lambda x: x["score"], reverse=True)
         truncated = sorted_results[:top_k]
 
-        # Rerank using RerankService
+        if not settings.rerank_enabled:
+            return {
+                "results": truncated,
+                "reranked": False,
+                "rerank_model": None,
+            }
+
         reranked_docs = self.reranker.rerank(query, truncated)
 
         return {

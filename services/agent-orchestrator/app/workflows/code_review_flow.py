@@ -11,7 +11,9 @@ from typing_extensions import TypedDict
 from langgraph.graph import END, START, StateGraph
 
 from app.agents.review_roles import diff_parser, reviewer, summarizer
+from app.config import settings
 from app.models.review import ReviewComment, ReviewSummary
+from app.services.rerank import secondary_rerank, should_rerank
 from app.workflows.stability import CircuitBreaker, run_with_retry
 
 logger = logging.getLogger(__name__)
@@ -144,4 +146,15 @@ async def run_code_review(inputs: Dict[str, Any]) -> Dict[str, Any]:
     _CODE_REVIEW_BREAKER.record_success()
     result["retry_summary"]["code_review"] = 0
     result.update(dict(node_result))
+
+    # Apply secondary rerank when enabled for code_review
+    if should_rerank(
+        "code_review",
+        enabled=settings.secondary_rerank_enabled,
+        targets=settings.secondary_rerank_targets,
+    ):
+        diff_text = result.get("diff", "")
+        await secondary_rerank([{"content": diff_text, "score": 1.0}], query=diff_text)
+        result["reranked"] = True
+
     return result

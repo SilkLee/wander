@@ -6,6 +6,8 @@ import logging
 from typing import Any, Dict
 
 from app.clients.model_service import classify_risk
+from app.config import settings
+from app.services.rerank import secondary_rerank, should_rerank
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +32,18 @@ async def run_pr_risk_agent(inputs: Dict[str, Any]) -> Dict[str, Any]:
 
     try:
         result = await classify_risk(diff_text)
-        return {"risk_label": result["label"]}
+        response: Dict[str, Any] = {"risk_label": result["label"]}
+
+        # Apply secondary rerank when enabled for pr_risk
+        if should_rerank(
+            "pr_risk",
+            enabled=settings.secondary_rerank_enabled,
+            targets=settings.secondary_rerank_targets,
+        ):
+            await secondary_rerank([{"content": diff_text, "score": 1.0}], query=diff_text)
+            response["reranked"] = True
+
+        return response
     except Exception as exc:
         logger.warning("classify_risk failed, using fallback: %s", exc)
         return {

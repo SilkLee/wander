@@ -101,11 +101,14 @@ class TestHybridSearchRerank:
         search_service.semantic_search = AsyncMock(return_value=[doc_b, doc_a])
         search_service.keyword_search = AsyncMock(return_value=[doc_b, doc_a])
 
-        result = await search_service.hybrid_search(
-            query="redis connection",
-            query_embedding=[0.1] * 384,
-            top_k=10,
-        )
+        with patch("app.services.search.settings") as settings:
+            settings.rerank_enabled = True
+            settings.rerank_model_name = "BAAI/bge-reranker-base"
+            result = await search_service.hybrid_search(
+                query="redis connection",
+                query_embedding=[0.1] * 384,
+                top_k=10,
+            )
 
         # doc_a ("redis connection pool setup") should be ranked higher for
         # query "redis connection" after reranking by keyword overlap.
@@ -117,11 +120,14 @@ class TestHybridSearchRerank:
         search_service.semantic_search = AsyncMock(return_value=[])
         search_service.keyword_search = AsyncMock(return_value=[])
 
-        result = await search_service.hybrid_search(
-            query="anything",
-            query_embedding=[0.1] * 384,
-            top_k=5,
-        )
+        with patch("app.services.search.settings") as settings:
+            settings.rerank_enabled = True
+            settings.rerank_model_name = "BAAI/bge-reranker-base"
+            result = await search_service.hybrid_search(
+                query="anything",
+                query_embedding=[0.1] * 384,
+                top_k=5,
+            )
 
         # hybrid_search should now return a dict with metadata, not just a list
         assert isinstance(result, dict)
@@ -147,11 +153,14 @@ class TestHybridSearchRerank:
         search_service.semantic_search = AsyncMock(return_value=docs)
         search_service.keyword_search = AsyncMock(return_value=[])
 
-        result = await search_service.hybrid_search(
-            query="content",
-            query_embedding=[0.1] * 384,
-            top_k=10,
-        )
+        with patch("app.services.search.settings") as settings:
+            settings.rerank_enabled = True
+            settings.rerank_model_name = "BAAI/bge-reranker-base"
+            result = await search_service.hybrid_search(
+                query="content",
+                query_embedding=[0.1] * 384,
+                top_k=10,
+            )
 
         assert len(result["results"]) == 5
 
@@ -160,10 +169,30 @@ class TestHybridSearchRerank:
         search_service.semantic_search = AsyncMock(return_value=[])
         search_service.keyword_search = AsyncMock(return_value=[])
 
-        result = await search_service.hybrid_search(
-            query="test",
-            query_embedding=[0.1] * 384,
-            top_k=5,
-        )
+        with patch("app.services.search.settings") as settings:
+            settings.rerank_enabled = True
+            settings.rerank_model_name = "BAAI/bge-reranker-base"
+            result = await search_service.hybrid_search(
+                query="test",
+                query_embedding=[0.1] * 384,
+                top_k=5,
+            )
 
         assert result["rerank_model"] == "BAAI/bge-reranker-base"
+
+    @pytest.mark.asyncio
+    async def test_hybrid_search_returns_unreranked_when_disabled(self, search_service):
+        search_service.semantic_search = AsyncMock(return_value=[])
+        search_service.keyword_search = AsyncMock(return_value=[])
+
+        with patch("app.services.search.settings") as settings:
+            settings.rerank_enabled = False
+            settings.rerank_model_name = "BAAI/bge-reranker-base"
+            result = await search_service.hybrid_search(
+                query="test",
+                query_embedding=[0.1] * 384,
+                top_k=5,
+            )
+
+        assert result["reranked"] is False
+        assert result["rerank_model"] is None
