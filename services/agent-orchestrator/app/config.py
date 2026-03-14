@@ -1,5 +1,7 @@
 """Configuration management using pydantic-settings."""
 
+from typing import List
+
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -70,6 +72,16 @@ class Settings(BaseSettings):
     agent_timeout_seconds: int = Field(
         default=300,
         description="Agent execution timeout",
+    )
+
+    # Secondary Rerank Configuration
+    secondary_rerank_enabled: bool = Field(
+        default=False,
+        description="Enable secondary reranking in agent workflows",
+    )
+    secondary_rerank_targets: List[str] = Field(
+        default_factory=list,
+        description="Agent workflow names that use secondary reranking",
     )
 
 

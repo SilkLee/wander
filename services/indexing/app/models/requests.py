@@ -85,3 +85,5 @@ class SearchResponse(BaseModel):
     results: List[SearchResult] = Field(description="Search results")
     total: int = Field(description="Total number of matches")
     search_type: str = Field(description="Search type used")
+    reranked: bool = Field(default=False, description="Whether results were reranked")
+    rerank_model: Optional[str] = Field(default=None, description="Rerank model used, if any")

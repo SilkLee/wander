@@ -6,12 +6,13 @@ from elasticsearch import AsyncElasticsearch
 from elasticsearch.helpers import async_bulk
 
 from app.config import settings
+from app.services.rerank import RerankService
 
 
 class SearchService:
     """
     Service for Elasticsearch indexing and hybrid search.
-    
+
     Combines dense vector (semantic) and sparse (keyword) retrieval.
     """
 
@@ -19,11 +20,12 @@ class SearchService:
         """Initialize Elasticsearch client."""
         self.es = AsyncElasticsearch([settings.elasticsearch_url])
         self.index = settings.elasticsearch_index
+        self.reranker = RerankService()
 
     async def ensure_index(self):
         """
         Ensure index exists with proper mappings.
-        
+
         Creates index with dense_vector field for semantic search
         and text fields for keyword search.
         """
@@ -64,14 +66,14 @@ class SearchService:
     ) -> bool:
         """
         Index a single document.
-        
+
         Args:
             doc_id: Document ID
             title: Document title
             content: Document content
             embedding: Embedding vector
             metadata: Optional metadata
-            
+
         Returns:
             True if indexed successfully
         """
@@ -97,10 +99,10 @@ class SearchService:
     ) -> tuple[int, int]:
         """
         Index multiple documents in bulk.
-        
+
         Args:
             documents: List of documents with id, title, content, embedding, metadata
-            
+
         Returns:
             Tuple of (success_count, error_count)
         """
@@ -135,12 +137,12 @@ class SearchService:
     ) -> List[Dict[str, Any]]:
         """
         Perform semantic search using vector similarity.
-        
+
         Args:
             query_embedding: Query embedding vector
             top_k: Number of results
             filters: Optional metadata filters
-            
+
         Returns:
             List of search results
         """
@@ -172,12 +174,12 @@ class SearchService:
     ) -> List[Dict[str, Any]]:
         """
         Perform keyword search using BM25.
-        
+
         Args:
             query: Search query
             top_k: Number of results
             filters: Optional metadata filters
-            
+
         Returns:
             List of search results
         """
@@ -213,21 +215,22 @@ class SearchService:
         top_k: int = 10,
         filters: Optional[Dict[str, Any]] = None,
         semantic_weight: float = 0.6,
-    ) -> List[Dict[str, Any]]:
+    ) -> Dict[str, Any]:
         """
         Perform hybrid search combining semantic and keyword search.
-        
-        Uses weighted score fusion (semantic 60%, keyword 40% by default).
-        
+
+        Uses weighted score fusion (semantic 60%, keyword 40% by default),
+        then reranks results using RerankService.
+
         Args:
             query: Search query
             query_embedding: Query embedding vector
             top_k: Number of results
             filters: Optional metadata filters
             semantic_weight: Weight for semantic search (0-1)
-            
+
         Returns:
-            List of search results ranked by combined score
+            Dict with 'results', 'reranked', and 'rerank_model' keys
         """
         # Get both result sets
         semantic_results = await self.semantic_search(query_embedding, top_k * 2, filters)
@@ -256,7 +259,16 @@ class SearchService:
 
         # Sort by combined score
         sorted_results = sorted(combined.values(), key=lambda x: x["score"], reverse=True)
-        return sorted_results[:top_k]
+        truncated = sorted_results[:top_k]
+
+        # Rerank using RerankService
+        reranked_docs = self.reranker.rerank(query, truncated)
+
+        return {
+            "results": reranked_docs,
+            "reranked": True,
+            "rerank_model": settings.rerank_model_name,
+        }
 
     def _build_filter_query(self, filters: Dict[str, Any]) -> Dict:
         """Build Elasticsearch filter query from filters dict."""
@@ -277,15 +289,17 @@ class SearchService:
         results = []
         for hit in es_result["hits"]["hits"]:
             source = hit["_source"]
-            results.append({
-                "id": hit["_id"],
-                "title": source.get("title", ""),
-                "content": source.get("content", "")[:500],  # Truncate
-                "score": hit["_score"],
-                "source": source.get("source"),
-                "url": source.get("url"),
-                "metadata": source.get("metadata", {}),
-            })
+            results.append(
+                {
+                    "id": hit["_id"],
+                    "title": source.get("title", ""),
+                    "content": source.get("content", "")[:500],  # Truncate
+                    "score": hit["_score"],
+                    "source": source.get("source"),
+                    "url": source.get("url"),
+                    "metadata": source.get("metadata", {}),
+                }
+            )
         return results
 
     async def close(self):
@@ -300,7 +314,7 @@ _search_service: SearchService = None
 async def get_search_service() -> SearchService:
     """
     Get or create global search service instance.
-    
+
     Returns:
         Search service instance
     """

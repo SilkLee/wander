@@ -143,6 +143,8 @@ async def search(request: SearchRequest) -> SearchResponse:
         search_service = await get_search_service()
         
         # Execute search based on type
+        reranked = False
+        rerank_model = None
         if request.search_type == "semantic":
             # Semantic search only
             query_embedding = embedding_service.embed_text(request.query)
@@ -163,12 +165,15 @@ async def search(request: SearchRequest) -> SearchResponse:
         else:  # hybrid (default)
             # Hybrid search
             query_embedding = embedding_service.embed_text(request.query)
-            results = await search_service.hybrid_search(
+            hybrid_result = await search_service.hybrid_search(
                 request.query,
                 query_embedding,
                 top_k,
                 request.filters,
             )
+            results = hybrid_result["results"]
+            reranked = hybrid_result.get("reranked", False)
+            rerank_model = hybrid_result.get("rerank_model")
         
         # Format response
         from app.models.requests import SearchResult
@@ -191,6 +196,8 @@ async def search(request: SearchRequest) -> SearchResponse:
             results=search_results,
             total=len(search_results),
             search_type=request.search_type,
+            reranked=reranked,
+            rerank_model=rerank_model,
         )
         
     except Exception as e:

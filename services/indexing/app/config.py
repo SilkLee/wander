@@ -57,6 +57,16 @@ class Settings(BaseSettings):
         description="Maximum number of search results",
     )
 
+    # Rerank Configuration
+    rerank_enabled: bool = Field(
+        default=True,
+        description="Enable cross-encoder reranking of search results",
+    )
+    rerank_model_name: str = Field(
+        default="BAAI/bge-reranker-base",
+        description="Cross-encoder model for reranking",
+    )
+
 
 # Global settings instance
 settings = Settings()
