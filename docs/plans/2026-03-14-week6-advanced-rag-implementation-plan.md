@@ -198,6 +198,17 @@ Expected: PASS (or existing failures noted)
 
 Add section “Verification Results” with timestamps and status.
 
+#### Verification Results (2026-03-14)
+
+- ✅ `pytest services/indexing/tests -v`
+  - Result: **17 passed**
+- ⚠️ `pytest services/agent-orchestrator/tests -v`
+  - Result: **7 collection errors** due to missing dependencies in this environment:
+    - `ModuleNotFoundError: No module named 'langchain_classic'`
+    - `ModuleNotFoundError: No module named 'langchain'`
+    - `ModuleNotFoundError: No module named 'redis'`
+  - Note: Pre-existing environment dependency gaps; not introduced by Week 6 changes.
+
 **Step 3: Commit**
 
 ```bash
