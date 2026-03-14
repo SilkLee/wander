@@ -28,6 +28,12 @@ describe('DoraTrendChart', () => {
     const bars = screen.getAllByTestId('trend-bar');
     expect(bars).toHaveLength(3);
   });
+
+  it('renders zero bars for empty data', () => {
+    render(<DoraTrendChart title="Empty" data={[]} />);
+    expect(screen.getByText('Empty')).toBeInTheDocument();
+    expect(screen.queryAllByTestId('trend-bar')).toHaveLength(0);
+  });
 });
 
 describe('DoraDashboard', () => {
