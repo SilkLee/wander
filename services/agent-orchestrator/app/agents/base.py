@@ -1,13 +1,14 @@
 """Base agent class for LangChain agents."""
 
-from typing import Any, Dict, List, Optional
+from __future__ import annotations
+
+from typing import Any
 from abc import ABC, abstractmethod
 
 from langchain.agents import create_react_agent, AgentExecutor
 from langchain_core.tools import BaseTool
 from langchain_core.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
-from langchain_core.language_models.llms import LLM
 
 from app.config import settings
 from app.llm import ModelServiceLLM
@@ -23,10 +24,10 @@ class BaseAgent(ABC):
 
     def __init__(
         self,
-        model_name: Optional[str] = None,
+        model_name: str | None = None,
         temperature: float = 0.0,
-        max_iterations: Optional[int] = None,
-        timeout: Optional[int] = None,
+        max_iterations: int | None = None,
+        timeout: int | None = None,
     ):
         """
         Initialize base agent.
@@ -56,11 +57,11 @@ class BaseAgent(ABC):
             self.llm = ChatOpenAI(
                 model=self.model_name,
                 temperature=self.temperature,
-                openai_api_key=settings.openai_api_key,
+                api_key=settings.openai_api_key,
             )
 
     @abstractmethod
-    def get_tools(self) -> List[BaseTool]:
+    def get_tools(self) -> list[BaseTool]:
         """
         Get list of tools for this agent.
 
@@ -80,7 +81,7 @@ class BaseAgent(ABC):
         pass
 
     @abstractmethod
-    async def execute(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
+    async def execute(self, inputs: dict[str, Any]) -> dict[str, Any]:
         """
         Execute agent workflow.
 

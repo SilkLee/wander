@@ -5,8 +5,10 @@ into a single ReAct agent that analyses diffs and returns structured
 analysis + tool outputs.
 """
 
+from __future__ import annotations
+
 import asyncio
-from typing import Any, Dict, Optional
+from typing import Any
 
 from langchain_core.tools import BaseTool
 
@@ -105,7 +107,7 @@ class LangChainToolsAgent(BaseAgent):
                 "intermediate_summary": base_state,
             }
 
-        async def invoke() -> Optional[Dict[str, Any]]:
+        async def invoke() -> dict[str, Any] | None:
             return await asyncio.to_thread(executor.invoke, {"input": agent_input})
 
         retries = 1
