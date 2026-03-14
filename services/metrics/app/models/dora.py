@@ -1,10 +1,17 @@
 from pydantic import BaseModel
-from typing import Literal
+
+
+class DORATrendPoint(BaseModel):
+    timestamp: str
+    deployment_frequency: float
+    lead_time: float
+    change_failure_rate: float
+    mttr: float
 
 
 class DORAResponse(BaseModel):
     deployment_frequency: float
-    lead_time_hours: float
+    lead_time: float
     change_failure_rate: float
-    mttr_hours: float
-    trend: Literal["improving", "stable", "declining"]
+    mttr: float
+    trend: list[DORATrendPoint]
