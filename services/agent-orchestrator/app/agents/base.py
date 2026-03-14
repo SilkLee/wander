@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Any
 from abc import ABC, abstractmethod
+from typing import Any
 
-from langchain.agents import create_react_agent, AgentExecutor
+from pydantic import SecretStr
+
+from langchain.agents import AgentExecutor, create_react_agent
 from langchain_core.tools import BaseTool
 from langchain_core.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
@@ -21,6 +23,12 @@ class BaseAgent(ABC):
 
     Provides common functionality for agent creation and execution.
     """
+
+    model_name: str
+    temperature: float
+    max_iterations: int
+    timeout: int
+    llm: ModelServiceLLM | ChatOpenAI
 
     def __init__(
         self,
@@ -57,7 +65,7 @@ class BaseAgent(ABC):
             self.llm = ChatOpenAI(
                 model=self.model_name,
                 temperature=self.temperature,
-                api_key=settings.openai_api_key,
+                api_key=SecretStr(settings.openai_api_key),
             )
 
     @abstractmethod
@@ -108,20 +116,20 @@ class BaseAgent(ABC):
 
         prompt = PromptTemplate.from_template(
             self.get_system_prompt() + "\n\n"
-            "You have access to the following tools:\n\n"
-            "{tools}\n\n"
-            "Use the following format:\n\n"
-            "Question: the input question you must answer\n"
-            "Thought: you should always think about what to do\n"
-            "Action: the action to take, should be one of [{tool_names}]\n"
-            "Action Input: the input to the action\n"
-            "Observation: the result of the action\n"
-            "... (this Thought/Action/Action Input/Observation can repeat N times)\n"
-            "Thought: I now know the final answer\n"
-            "Final Answer: the final answer to the original input question\n\n"
-            "Begin!\n\n"
-            "Question: {input}\n"
-            "Thought:{agent_scratchpad}"
+            + "You have access to the following tools:\n\n"
+            + "{tools}\n\n"
+            + "Use the following format:\n\n"
+            + "Question: the input question you must answer\n"
+            + "Thought: you should always think about what to do\n"
+            + "Action: the action to take, should be one of [{tool_names}]\n"
+            + "Action Input: the input to the action\n"
+            + "Observation: the result of the action\n"
+            + "... (this Thought/Action/Action Input/Observation can repeat N times)\n"
+            + "Thought: I now know the final answer\n"
+            + "Final Answer: the final answer to the original input question\n\n"
+            + "Begin!\n\n"
+            + "Question: {input}\n"
+            + "Thought:{agent_scratchpad}"
         )
 
         agent = create_react_agent(llm=self.llm, tools=tools, prompt=prompt)
