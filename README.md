@@ -219,7 +219,7 @@ docker-compose up --build
 - ✅ **Week 4**: LangChain agent basics
 
 ### Month 2: Advanced Features (Week 5-8)
-- 📝 **Week 5**: Fine-tuning classifier (LoRA on Qwen2.5-7B)
+- ✅ **Week 5**: Fine-tuning classifier (LoRA on Qwen2.5-7B)
 - 📝 **Week 6**: Advanced RAG (hybrid search, reranking)
 - 📝 **Week 7**: Multi-agent orchestration (LangGraph)
 - 📝 **Week 8**: DORA metrics + frontend integration
