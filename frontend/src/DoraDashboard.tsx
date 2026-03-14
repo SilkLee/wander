@@ -1,18 +1,37 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import DoraMetricCard from './DoraMetricCard';
 import DoraTrendChart from './DoraTrendChart';
+import { fetchDoraMetrics, DORAMetrics } from './api/metrics';
 
 function DoraDashboard() {
+  const [metrics, setMetrics] = useState<DORAMetrics | null>(null);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    fetchDoraMetrics()
+      .then((data) => setMetrics(data))
+      .catch(() => setError(true));
+  }, []);
+
   return (
     <div style={{ padding: 24, fontFamily: 'system-ui, sans-serif' }}>
       <h1>DORA Metrics</h1>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
-        <DoraMetricCard name="Deployment Frequency" value="3.2/day" rating="Elite" />
-        <DoraMetricCard name="Lead Time for Changes" value="2.5 hrs" rating="Elite" />
-        <DoraMetricCard name="Change Failure Rate" value="4.2%" rating="Elite" />
-        <DoraMetricCard name="Mean Time to Recovery" value="0.8 hrs" rating="Elite" />
-      </div>
-      <DoraTrendChart title="Deployment Frequency Trend" data={[2.1, 2.5, 2.8, 3.0, 3.2, 3.1, 3.2]} />
+      {error ? (
+        <p>No data available</p>
+      ) : metrics ? (
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
+            <DoraMetricCard name="Deployment Frequency" value={`${metrics.deployment_frequency}/day`} rating="Elite" />
+            <DoraMetricCard name="Lead Time for Changes" value={`${metrics.lead_time} hrs`} rating="Elite" />
+            <DoraMetricCard name="Change Failure Rate" value={`${(metrics.change_failure_rate * 100).toFixed(1)}%`} rating="Elite" />
+            <DoraMetricCard name="Mean Time to Recovery" value={`${metrics.mttr} hrs`} rating="Elite" />
+          </div>
+          <DoraTrendChart
+            title="Deployment Frequency Trend"
+            data={metrics.trend.map((t) => t.deployment_frequency)}
+          />
+        </>
+      ) : null}
     </div>
   );
 }
