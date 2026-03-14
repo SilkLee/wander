@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import time
 import traceback
@@ -18,6 +20,7 @@ from app.agents.analyzer import LogAnalyzerAgent
 from app.workflows.pr_risk_flow import run_pr_risk
 from app.workflows.code_review_flow import run_code_review
 from app.agents.langchain_tools_agent import run_tool_agent
+from app.workflows.incident_response_flow import run_incident_response
 
 router = APIRouter(prefix="/workflows", tags=["workflows"])
 logger = logging.getLogger(__name__)
@@ -207,6 +210,8 @@ async def execute_workflow(request: WorkflowExecutionRequest) -> WorkflowExecuti
         elif request.workflow_type == "langchain_tool_agent":
             result = await run_tool_agent(request.inputs)
 
+        elif request.workflow_type == "incident_response":
+            result = await run_incident_response(request.inputs)
         elif request.workflow_type == "metrics_calculation":
             raise HTTPException(
                 status_code=status.HTTP_501_NOT_IMPLEMENTED,
@@ -285,6 +290,13 @@ async def list_workflow_types() -> Dict[str, Any]:
                 "description": "Code-change analysis using ReAct agent with tools",
                 "status": "available",
                 "inputs": ["diff", "context"],
+            },
+            {
+                "type": "incident_response",
+                "name": "Incident Response",
+                "description": "Automated incident triage with log parsing, metrics analysis, impact assessment, and remediation",
+                "status": "available",
+                "inputs": ["log_content", "alerts", "deploy_context"],
             },
             {
                 "type": "metrics_calculation",
