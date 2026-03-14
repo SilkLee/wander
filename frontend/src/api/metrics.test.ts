@@ -25,7 +25,7 @@ describe('fetchDoraMetrics', () => {
 
     const result = await fetchDoraMetrics();
     expect(result).toEqual(mockData);
-    expect(global.fetch).toHaveBeenCalledWith('/api/metrics/dora');
+    expect(global.fetch).toHaveBeenCalledWith('/api/metrics/dora', { signal: undefined });
   });
 
   it('throws on non-ok response', async () => {

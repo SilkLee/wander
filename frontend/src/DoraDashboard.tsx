@@ -1,16 +1,24 @@
 import React, { useEffect, useState } from 'react';
+import { fetchDoraMetrics } from './api/metrics';
+import type { DORAMetrics } from './api/metrics';
 import DoraMetricCard from './DoraMetricCard';
 import DoraTrendChart from './DoraTrendChart';
-import { fetchDoraMetrics, DORAMetrics } from './api/metrics';
 
 function DoraDashboard() {
   const [metrics, setMetrics] = useState<DORAMetrics | null>(null);
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    fetchDoraMetrics()
+    const controller = new AbortController();
+    fetchDoraMetrics(controller.signal)
       .then((data) => setMetrics(data))
-      .catch(() => setError(true));
+      .catch((err) => {
+        if (!controller.signal.aborted) {
+          console.error('DORA fetch failed:', err);
+          setError(true);
+        }
+      });
+    return () => controller.abort();
   }, []);
 
   return (

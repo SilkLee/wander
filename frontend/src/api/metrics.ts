@@ -14,8 +14,8 @@ export interface DORAMetrics {
   trend: DORATrendPoint[];
 }
 
-export async function fetchDoraMetrics(): Promise<DORAMetrics> {
-  const response = await fetch('/api/metrics/dora');
+export async function fetchDoraMetrics(signal?: AbortSignal): Promise<DORAMetrics> {
+  const response = await fetch('/api/metrics/dora', { signal });
   if (!response.ok) {
     throw new Error('Failed to fetch DORA metrics');
   }

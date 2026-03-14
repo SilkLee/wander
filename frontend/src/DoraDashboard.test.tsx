@@ -18,7 +18,6 @@ beforeEach(() => {
 
 afterEach(() => {
   jest.restoreAllMocks();
-  (global.fetch as jest.Mock).mockRestore?.();
 });
 
 describe('DoraMetricCard', () => {
@@ -97,6 +96,7 @@ describe('DoraDashboard', () => {
   });
 
   it('shows empty state on fetch failure', async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
     (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
 
     render(<DoraDashboard />);
@@ -107,6 +107,7 @@ describe('DoraDashboard', () => {
   });
 
   it('shows empty state on non-ok response', async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
     (global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: false,
       status: 500,
