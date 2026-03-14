@@ -228,6 +228,13 @@ Expected: PASS (or existing failures noted)
 
 Add section “Verification Results” with timestamps and status.
 
+#### Verification Results
+
+- 2026-03-14 10:07: `pytest tests/test_incident_models.py -v` (PASS)
+- 2026-03-14 10:07: `pytest tests/test_incident_roles.py -v` (PASS)
+- 2026-03-14 10:07: `pytest tests/test_incident_response_flow.py -v` (PASS)
+- 2026-03-14 10:08: `pytest tests/test_workflow_execute_incident_response.py` (PASS; warning about `python_multipart` deprecation in starlette)
+
 **Step 3: Commit**
 
 ```bash
