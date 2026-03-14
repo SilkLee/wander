@@ -7,14 +7,13 @@ from typing import Any
 
 from pydantic import SecretStr
 
-from langchain.agents import AgentExecutor, create_react_agent
+from langchain.agents import create_agent
+from langchain.chat_models import init_chat_model
+from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.tools import BaseTool
-from langchain_core.prompts import PromptTemplate
-from langchain_openai import ChatOpenAI
 
 from app.config import settings
 from app.llm import ModelServiceLLM
-from app.agents.output_parser import create_lenient_parsing_error_handler
 
 
 class BaseAgent(ABC):
@@ -28,7 +27,7 @@ class BaseAgent(ABC):
     temperature: float
     max_iterations: int
     timeout: int
-    llm: ModelServiceLLM | ChatOpenAI
+    llm: BaseChatModel
 
     def __init__(
         self,
@@ -52,21 +51,12 @@ class BaseAgent(ABC):
         self.timeout = timeout or settings.agent_timeout_seconds
 
         # Initialize LLM based on backend selection
-        if settings.use_local_model:
-            # Use local Model Service
-            self.llm = ModelServiceLLM(
-                model_service_url=settings.model_service_url,
-                temperature=self.temperature,
-                max_tokens=512,
-                timeout=300,  # Increased for CPU inference (Qwen2.5-1.5B: ~30-60s per call)
-            )
-        else:
-            # Use OpenAI
-            self.llm = ChatOpenAI(
-                model=self.model_name,
-                temperature=self.temperature,
-                api_key=SecretStr(settings.openai_api_key),
-            )
+        self.llm = init_chat_model(
+            model_provider="openai",
+            model=self.model_name,
+            temperature=self.temperature,
+            api_key=SecretStr(settings.openai_api_key),
+        )
 
     @abstractmethod
     def get_tools(self) -> list[BaseTool]:
@@ -101,46 +91,22 @@ class BaseAgent(ABC):
         """
         pass
 
-    def create_executor(self) -> AgentExecutor:
+    def create_executor(self) -> object:
         """
-        Create AgentExecutor with configured tools and settings.
-        
-        Uses ReAct agent framework which works with any LLM (including GPT-2).
-        ReAct agents use text-based reasoning instead of function calling.
-        
+        Create a compiled agent graph with configured tools and settings.
+
+        Uses langchain create_agent which builds a tool-calling loop.
+
         Returns:
-            Configured AgentExecutor
+            Compiled agent graph
         """
 
         tools = self.get_tools()
 
-        prompt = PromptTemplate.from_template(
-            self.get_system_prompt() + "\n\n"
-            + "You have access to the following tools:\n\n"
-            + "{tools}\n\n"
-            + "Use the following format:\n\n"
-            + "Question: the input question you must answer\n"
-            + "Thought: you should always think about what to do\n"
-            + "Action: the action to take, should be one of [{tool_names}]\n"
-            + "Action Input: the input to the action\n"
-            + "Observation: the result of the action\n"
-            + "... (this Thought/Action/Action Input/Observation can repeat N times)\n"
-            + "Thought: I now know the final answer\n"
-            + "Final Answer: the final answer to the original input question\n\n"
-            + "Begin!\n\n"
-            + "Question: {input}\n"
-            + "Thought:{agent_scratchpad}"
-        )
-
-        agent = create_react_agent(llm=self.llm, tools=tools, prompt=prompt)
-
-        executor = AgentExecutor(
-            agent=agent,
+        agent = create_agent(
+            model=self.llm,
             tools=tools,
-            max_iterations=self.max_iterations,
-            verbose=True,
-            return_intermediate_steps=True,
-            handle_parsing_errors=create_lenient_parsing_error_handler(),
+            system_prompt=self.get_system_prompt(),
         )
 
-        return executor
+        return agent
