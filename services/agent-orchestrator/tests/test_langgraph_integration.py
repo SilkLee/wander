@@ -9,6 +9,8 @@ Tests cover:
 """
 
 from typing import Any, Dict, Optional
+
+import pytest
 from unittest.mock import AsyncMock
 
 from app.application.ports import AgentPort, LanggraphPort, ParserPort
@@ -202,7 +204,8 @@ class TestBackwardCompatibility:
 class TestUseCaseAcceptsLanggraphPort:
     """AnalyzeLogUseCase constructor accepts optional langgraph parameter."""
 
-    def test_constructor_accepts_langgraph_kwarg(self):
+    @pytest.mark.asyncio
+    async def test_constructor_accepts_langgraph_kwarg(self):
         agent = _make_mock_agent()
         parser = _make_mock_parser()
         repo = MemoryAnalysisRepository()
@@ -218,7 +221,8 @@ class TestUseCaseAcceptsLanggraphPort:
         )
         assert uc.langgraph is lg
 
-    def test_constructor_langgraph_defaults_to_none(self):
+    @pytest.mark.asyncio
+    async def test_constructor_langgraph_defaults_to_none(self):
         agent = _make_mock_agent()
         parser = _make_mock_parser()
         repo = MemoryAnalysisRepository()

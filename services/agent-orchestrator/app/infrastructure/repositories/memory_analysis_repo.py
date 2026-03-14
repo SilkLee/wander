@@ -5,7 +5,6 @@ Thread-safe implementation using asyncio.Lock for concurrent access.
 
 import asyncio
 from typing import Optional
-from uuid import UUID
 
 from app.application.ports import RepositoryPort
 from app.domain.models.log_analysis import LogAnalysis
@@ -13,11 +12,11 @@ from app.domain.models.log_analysis import LogAnalysis
 
 class MemoryAnalysisRepository(RepositoryPort):
     """In-memory implementation of analysis repository.
-    
+
     Provides thread-safe persistence for LogAnalysis aggregates using asyncio.Lock.
     Suitable for testing and development; replace with database implementation
     (PostgreSQL, MongoDB, etc.) for production.
-    
+
     Thread Safety:
     - Uses asyncio.Lock to protect dictionary mutations
     - Safe for concurrent async access from multiple coroutines
@@ -28,25 +27,22 @@ class MemoryAnalysisRepository(RepositoryPort):
         """Initialize empty in-memory repository with lock."""
         self._storage: dict[str, LogAnalysis] = {}
         self._lock: asyncio.Lock = asyncio.Lock()
-        self._lock = asyncio.Lock()
 
     async def save(self, analysis: LogAnalysis) -> None:
         """Persist a log analysis to in-memory storage.
-        
+
         Thread-safe save operation using asyncio.Lock.
         Overwrites existing analysis with same ID.
-        
+
         Args:
             analysis: LogAnalysis domain model to save
-            
+
         Raises:
             TypeError: If analysis is not a LogAnalysis instance
             Exception: For unexpected errors during save
         """
         if not isinstance(analysis, LogAnalysis):
-            raise TypeError(
-                f"Expected LogAnalysis instance, got {type(analysis).__name__}"
-            )
+            raise TypeError(f"Expected LogAnalysis instance, got {type(analysis).__name__}")
 
         try:
             async with self._lock:
@@ -57,16 +53,16 @@ class MemoryAnalysisRepository(RepositoryPort):
 
     async def get_by_id(self, analysis_id: str) -> Optional[LogAnalysis]:
         """Retrieve a log analysis by ID from in-memory storage.
-        
+
         Thread-safe retrieval operation using asyncio.Lock.
         Returns None if analysis not found (not an error).
-        
+
         Args:
             analysis_id: Unique identifier of analysis (string or UUID)
-            
+
         Returns:
             LogAnalysis if found, None if not found
-            
+
         Raises:
             ValueError: If analysis_id format is invalid
             Exception: For unexpected errors during retrieval
@@ -84,13 +80,11 @@ class MemoryAnalysisRepository(RepositoryPort):
         except ValueError:
             raise
         except Exception as e:
-            raise RuntimeError(
-                f"Failed to retrieve analysis: {type(e).__name__}: {e}"
-            )
+            raise RuntimeError(f"Failed to retrieve analysis: {type(e).__name__}: {e}")
 
     async def list_all(self) -> list[LogAnalysis]:
         """Get all analyses from storage (utility method for testing).
-        
+
         Returns:
             List of all stored LogAnalysis objects
         """
@@ -99,10 +93,10 @@ class MemoryAnalysisRepository(RepositoryPort):
 
     async def delete_by_id(self, analysis_id: str) -> bool:
         """Delete analysis by ID (utility method).
-        
+
         Args:
             analysis_id: ID of analysis to delete
-            
+
         Returns:
             True if deleted, False if not found
         """
