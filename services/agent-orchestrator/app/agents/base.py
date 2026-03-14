@@ -3,17 +3,18 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any
 
 from pydantic import SecretStr
 
-from langchain.agents import create_agent
+from langchain.agents import AgentExecutor, create_react_agent
 from langchain.chat_models import init_chat_model
 from langchain_core.language_models.chat_models import BaseChatModel
+from langchain_core.prompts import PromptTemplate
 from langchain_core.tools import BaseTool
 
 from app.config import settings
 from app.llm import ModelServiceLLM
+from app.agents.output_parser import create_lenient_parsing_error_handler
 
 
 class BaseAgent(ABC):
@@ -27,7 +28,7 @@ class BaseAgent(ABC):
     temperature: float
     max_iterations: int
     timeout: int
-    llm: BaseChatModel
+    llm: BaseChatModel | ModelServiceLLM
 
     def __init__(
         self,
@@ -50,13 +51,20 @@ class BaseAgent(ABC):
         self.max_iterations = max_iterations or settings.agent_max_iterations
         self.timeout = timeout or settings.agent_timeout_seconds
 
-        # Initialize LLM based on backend selection
-        self.llm = init_chat_model(
-            model_provider="openai",
-            model=self.model_name,
-            temperature=self.temperature,
-            api_key=SecretStr(settings.openai_api_key),
-        )
+        if settings.use_local_model or not settings.openai_api_key:
+            self.llm = ModelServiceLLM(
+                model_service_url=settings.model_service_url,
+                temperature=self.temperature,
+                max_tokens=512,
+                timeout=300,
+            )
+        else:
+            self.llm = init_chat_model(
+                model_provider="openai",
+                model=self.model_name,
+                temperature=self.temperature,
+                api_key=SecretStr(settings.openai_api_key),
+            )
 
     @abstractmethod
     def get_tools(self) -> list[BaseTool]:
@@ -79,7 +87,7 @@ class BaseAgent(ABC):
         pass
 
     @abstractmethod
-    async def execute(self, inputs: dict[str, Any]) -> dict[str, Any]:
+    async def execute(self, inputs: dict[str, object]) -> dict[str, object]:
         """
         Execute agent workflow.
 
@@ -91,7 +99,7 @@ class BaseAgent(ABC):
         """
         pass
 
-    def create_executor(self) -> object:
+    def create_executor(self) -> AgentExecutor:
         """
         Create a compiled agent graph with configured tools and settings.
 
@@ -103,10 +111,34 @@ class BaseAgent(ABC):
 
         tools = self.get_tools()
 
-        agent = create_agent(
-            model=self.llm,
-            tools=tools,
-            system_prompt=self.get_system_prompt(),
+        prompt = PromptTemplate.from_template(
+            self.get_system_prompt()
+            + "\n\n"
+            + "You have access to the following tools:\n\n"
+            + "{tools}\n\n"
+            + "Use the following format:\n\n"
+            + "Question: the input question you must answer\n"
+            + "Thought: you should always think about what to do\n"
+            + "Action: the action to take, should be one of [{tool_names}]\n"
+            + "Action Input: the input to the action\n"
+            + "Observation: the result of the action\n"
+            + "... (this Thought/Action/Action Input/Observation can repeat N times)\n"
+            + "Thought: I now know the final answer\n"
+            + "Final Answer: the final answer to the original input question\n\n"
+            + "Begin!\n\n"
+            + "Question: {input}\n"
+            + "Thought:{agent_scratchpad}"
         )
 
-        return agent
+        agent = create_react_agent(llm=self.llm, tools=tools, prompt=prompt)
+
+        executor = AgentExecutor(
+            agent=agent,
+            tools=tools,
+            max_iterations=self.max_iterations,
+            verbose=True,
+            return_intermediate_steps=True,
+            handle_parsing_errors=create_lenient_parsing_error_handler(),
+        )
+
+        return executor

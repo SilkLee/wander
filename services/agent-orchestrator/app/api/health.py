@@ -2,7 +2,8 @@
 
 from fastapi import APIRouter, HTTPException
 from redis import asyncio as aioredis
-from elasticsearch import AsyncElasticsearch
+import elasticsearch
+import inspect
 
 from app.config import settings
 from app.models import HealthResponse
@@ -27,7 +28,9 @@ async def health_check():
             encoding="utf-8",
             decode_responses=True,
         )
-        await redis_client.ping()
+        ping_result = redis_client.ping()
+        if inspect.isawaitable(ping_result):
+            await ping_result
         redis_connected = True
         await redis_client.aclose()
     except Exception as e:
@@ -35,7 +38,7 @@ async def health_check():
 
     # Check Elasticsearch connection
     try:
-        es_client = AsyncElasticsearch([settings.elasticsearch_url])
+        es_client = elasticsearch.AsyncElasticsearch([settings.elasticsearch_url])
         await es_client.info()
         elasticsearch_connected = True
         await es_client.close()
@@ -61,7 +64,9 @@ async def readiness_check():
     # Check critical dependencies
     try:
         redis_client = aioredis.from_url(settings.redis_url)
-        await redis_client.ping()
+        ping_result = redis_client.ping()
+        if inspect.isawaitable(ping_result):
+            await ping_result
         await redis_client.aclose()
     except Exception:
         raise HTTPException(status_code=503, detail="Redis not available")
