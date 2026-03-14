@@ -6,9 +6,9 @@ analysis + tool outputs.
 """
 
 import asyncio
-from typing import Any
+from typing import Any, Dict, Optional
 
-from langchain.tools import BaseTool
+from langchain_core.tools import BaseTool
 
 from app.agents.base import BaseAgent
 from app.models.agent_reports import ImpactReport, PRSummary
@@ -105,7 +105,7 @@ class LangChainToolsAgent(BaseAgent):
                 "intermediate_summary": base_state,
             }
 
-        async def invoke() -> dict[str, Any] | None:
+        async def invoke() -> Optional[Dict[str, Any]]:
             return await asyncio.to_thread(executor.invoke, {"input": agent_input})
 
         retries = 1

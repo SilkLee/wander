@@ -1,6 +1,6 @@
 """Dependency scan tool for detecting dependency and version changes in diffs."""
 
-from typing import Any
+from typing import Any, Optional
 
 import httpx
 from langchain.tools import BaseTool
@@ -38,7 +38,7 @@ class DependencyScanTool(BaseTool):
         "Use this tool when you need to detect added, removed, or "
         "upgraded dependencies and assess their risk level."
     )
-    args_schema: ArgsSchema | None = DependencyScanInput
+    args_schema: Optional[ArgsSchema] = DependencyScanInput
 
     def _run(self, diff: str) -> str:
         """Synchronous scan (not used in async context)."""

@@ -3,8 +3,9 @@
 from typing import Any, Dict, List, Optional
 from abc import ABC, abstractmethod
 
-from langchain_classic.agents import AgentExecutor, initialize_agent, AgentType
-from langchain.tools import BaseTool
+from langchain.agents import create_react_agent, AgentExecutor
+from langchain_core.tools import BaseTool
+from langchain_core.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
 from langchain_core.language_models.llms import LLM
 
@@ -103,21 +104,34 @@ class BaseAgent(ABC):
         """
 
         tools = self.get_tools()
-        
-        # Create ReAct agent using initialize_agent (LangChain 1.x standard)
-        # AgentType.ZERO_SHOT_REACT_DESCRIPTION works with any LLM (text-based reasoning)
-        
-        executor = initialize_agent(
+
+        prompt = PromptTemplate.from_template(
+            self.get_system_prompt() + "\n\n"
+            "You have access to the following tools:\n\n"
+            "{tools}\n\n"
+            "Use the following format:\n\n"
+            "Question: the input question you must answer\n"
+            "Thought: you should always think about what to do\n"
+            "Action: the action to take, should be one of [{tool_names}]\n"
+            "Action Input: the input to the action\n"
+            "Observation: the result of the action\n"
+            "... (this Thought/Action/Action Input/Observation can repeat N times)\n"
+            "Thought: I now know the final answer\n"
+            "Final Answer: the final answer to the original input question\n\n"
+            "Begin!\n\n"
+            "Question: {input}\n"
+            "Thought:{agent_scratchpad}"
+        )
+
+        agent = create_react_agent(llm=self.llm, tools=tools, prompt=prompt)
+
+        executor = AgentExecutor(
+            agent=agent,
             tools=tools,
-            llm=self.llm,
-            agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
             max_iterations=self.max_iterations,
             verbose=True,
             return_intermediate_steps=True,
             handle_parsing_errors=create_lenient_parsing_error_handler(),
-            agent_kwargs={
-                "prefix": self.get_system_prompt(),
-            }
         )
-        
+
         return executor

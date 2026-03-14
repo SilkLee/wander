@@ -1,6 +1,6 @@
 """Repo search tool for finding files and symbols in the codebase."""
 
-from typing import Any
+from typing import Any, Optional
 
 import httpx
 from langchain.tools import BaseTool
@@ -37,7 +37,7 @@ class RepoSearchTool(BaseTool):
         "Use this tool when you need to find files or symbols relevant to "
         "a code change or investigation."
     )
-    args_schema: ArgsSchema | None = RepoSearchInput
+    args_schema: Optional[ArgsSchema] = RepoSearchInput
 
     def _run(self, query: str) -> str:
         """Synchronous search (not used in async context)."""

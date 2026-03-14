@@ -1,6 +1,6 @@
 """Impact analysis tool for mapping diffs to impacted modules and services."""
 
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import httpx
 from langchain.tools import BaseTool
@@ -37,7 +37,7 @@ class ImpactAnalysisTool(BaseTool):
         "Use this tool when you need to understand which parts of the "
         "system are affected by a code change."
     )
-    args_schema: ArgsSchema | None = ImpactAnalysisInput
+    args_schema: Optional[ArgsSchema] = ImpactAnalysisInput
 
     def _run(self, diff: str) -> str:
         """Synchronous analysis (not used in async context)."""

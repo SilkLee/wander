@@ -2,7 +2,7 @@
 
 from typing import Optional, Type
 
-from langchain_classic.tools import BaseTool
+from langchain_core.tools import BaseTool
 from pydantic import BaseModel, Field
 import httpx
 
