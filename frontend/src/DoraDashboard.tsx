@@ -1,6 +1,6 @@
+import type { DORAMetrics } from './api/metrics';
 import React, { useEffect, useState } from 'react';
 import { fetchDoraMetrics } from './api/metrics';
-import type { DORAMetrics } from './api/metrics';
 import DoraMetricCard from './DoraMetricCard';
 import DoraTrendChart from './DoraTrendChart';
 
