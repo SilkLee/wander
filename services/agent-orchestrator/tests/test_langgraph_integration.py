@@ -7,6 +7,7 @@ Tests cover:
 - analyze-log endpoint intermediate_summary enrichment
 - Dependency injection wiring
 """
+
 from typing import Any, Dict, Optional
 from unittest.mock import AsyncMock
 
@@ -100,8 +101,6 @@ def _mock_optional_deps():
     sys.modules.setdefault("langchain.tools", MagicMock())
     sys.modules.setdefault("langchain_community", MagicMock())
     sys.modules.setdefault("langchain_openai", MagicMock())
-    sys.modules.setdefault("langchain_classic", MagicMock())
-    sys.modules.setdefault("langchain_classic.agents", MagicMock())
 
 
 class TestLanggraphPortProtocol:
@@ -155,7 +154,6 @@ class TestAnalysisResult:
         assert result.langgraph_result is lg_result
         assert "parsed" in result.langgraph_result
         assert "diagnosis" in result.langgraph_result
-
 
 
 class TestAnalyzeLogEndpointIntermediateSummary:
@@ -245,8 +243,10 @@ class TestUseCaseExecuteReturnsAnalysisResult:
 
     async def test_returns_analysis_result_type(self):
         uc = AnalyzeLogUseCase(
-            agent=_make_mock_agent(), parser=_make_mock_parser(),
-            repository=MemoryAnalysisRepository(), event_bus=MemoryEventBus(),
+            agent=_make_mock_agent(),
+            parser=_make_mock_parser(),
+            repository=MemoryAnalysisRepository(),
+            event_bus=MemoryEventBus(),
             langgraph=_make_mock_langgraph(),
         )
         result = await uc.execute("ERROR: connection refused at db:5432")
@@ -254,8 +254,10 @@ class TestUseCaseExecuteReturnsAnalysisResult:
 
     async def test_result_contains_analysis(self):
         uc = AnalyzeLogUseCase(
-            agent=_make_mock_agent(), parser=_make_mock_parser(),
-            repository=MemoryAnalysisRepository(), event_bus=MemoryEventBus(),
+            agent=_make_mock_agent(),
+            parser=_make_mock_parser(),
+            repository=MemoryAnalysisRepository(),
+            event_bus=MemoryEventBus(),
             langgraph=_make_mock_langgraph(),
         )
         result = await uc.execute("ERROR: connection refused at db:5432")
@@ -264,8 +266,10 @@ class TestUseCaseExecuteReturnsAnalysisResult:
 
     async def test_result_contains_langgraph_result(self):
         uc = AnalyzeLogUseCase(
-            agent=_make_mock_agent(), parser=_make_mock_parser(),
-            repository=MemoryAnalysisRepository(), event_bus=MemoryEventBus(),
+            agent=_make_mock_agent(),
+            parser=_make_mock_parser(),
+            repository=MemoryAnalysisRepository(),
+            event_bus=MemoryEventBus(),
             langgraph=_make_mock_langgraph(),
         )
         result = await uc.execute("ERROR: connection refused at db:5432")
@@ -276,8 +280,10 @@ class TestUseCaseExecuteReturnsAnalysisResult:
     async def test_langgraph_called_with_log_content(self):
         lg = _make_mock_langgraph()
         uc = AnalyzeLogUseCase(
-            agent=_make_mock_agent(), parser=_make_mock_parser(),
-            repository=MemoryAnalysisRepository(), event_bus=MemoryEventBus(),
+            agent=_make_mock_agent(),
+            parser=_make_mock_parser(),
+            repository=MemoryAnalysisRepository(),
+            event_bus=MemoryEventBus(),
             langgraph=lg,
         )
         await uc.execute("ERROR: connection refused at db:5432")
@@ -287,8 +293,10 @@ class TestUseCaseExecuteReturnsAnalysisResult:
         lg = _make_mock_langgraph()
         lg.run.side_effect = RuntimeError("langgraph down")
         uc = AnalyzeLogUseCase(
-            agent=_make_mock_agent(), parser=_make_mock_parser(),
-            repository=MemoryAnalysisRepository(), event_bus=MemoryEventBus(),
+            agent=_make_mock_agent(),
+            parser=_make_mock_parser(),
+            repository=MemoryAnalysisRepository(),
+            event_bus=MemoryEventBus(),
             langgraph=lg,
         )
         result = await uc.execute("ERROR: connection refused at db:5432")
@@ -306,8 +314,10 @@ class TestUseCaseWithoutLanggraph:
 
     async def test_returns_analysis_result_with_none_langgraph(self):
         uc = AnalyzeLogUseCase(
-            agent=_make_mock_agent(), parser=_make_mock_parser(),
-            repository=MemoryAnalysisRepository(), event_bus=MemoryEventBus(),
+            agent=_make_mock_agent(),
+            parser=_make_mock_parser(),
+            repository=MemoryAnalysisRepository(),
+            event_bus=MemoryEventBus(),
         )
         result = await uc.execute("ERROR: something failed")
         assert isinstance(result, AnalysisResult)
@@ -331,7 +341,13 @@ def _endpoint_test_with_langgraph(check_fn):
         log_content="ERROR: connection refused",
         severity=Severity.HIGH,
         confidence=Confidence(score=0.85),
-        root_causes=[RootCause(description="Connection timeout", component="database", remediation="Increase pool size")],
+        root_causes=[
+            RootCause(
+                description="Connection timeout",
+                component="database",
+                remediation="Increase pool size",
+            )
+        ],
         summary="DB connection timeout",
     )
     lg_result = _fake_langgraph_result()
@@ -358,6 +374,7 @@ class TestEndpointIntermediateSummary:
     def test_endpoint_returns_200(self):
         def check(resp):
             assert resp.status_code == 200
+
         _endpoint_test_with_langgraph(check)
 
     def test_intermediate_summary_has_diagnosis_confidence(self):
@@ -365,19 +382,24 @@ class TestEndpointIntermediateSummary:
             data = resp.json()
             assert "diagnosis_confidence" in data["intermediate_summary"]
             assert data["intermediate_summary"]["diagnosis_confidence"] == 0.6
+
         _endpoint_test_with_langgraph(check)
 
     def test_intermediate_summary_has_parsed_source(self):
         def check(resp):
             data = resp.json()
             assert data["intermediate_summary"]["parsed_source"] == "build"
+
         _endpoint_test_with_langgraph(check)
 
     def test_intermediate_summary_has_error_signatures(self):
         def check(resp):
             data = resp.json()
             assert "error_signatures" in data["intermediate_summary"]
-            assert "connection refused at db:5432" in data["intermediate_summary"]["error_signatures"]
+            assert (
+                "connection refused at db:5432" in data["intermediate_summary"]["error_signatures"]
+            )
+
         _endpoint_test_with_langgraph(check)
 
     def test_intermediate_summary_has_remediation_steps(self):
@@ -385,13 +407,18 @@ class TestEndpointIntermediateSummary:
             data = resp.json()
             assert "remediation_steps" in data["intermediate_summary"]
             assert len(data["intermediate_summary"]["remediation_steps"]) > 0
+
         _endpoint_test_with_langgraph(check)
 
     def test_intermediate_summary_has_evidence_citations(self):
         def check(resp):
             data = resp.json()
             assert "evidence_citations" in data["intermediate_summary"]
-            assert "https://docs.example.com/stub" in data["intermediate_summary"]["evidence_citations"]
+            assert (
+                "https://docs.example.com/stub"
+                in data["intermediate_summary"]["evidence_citations"]
+            )
+
         _endpoint_test_with_langgraph(check)
 
 
@@ -450,6 +477,6 @@ class TestDependencyInjection:
 
     def test_get_langgraph_returns_adapter(self):
         from app.dependencies import get_langgraph
+
         adapter = get_langgraph()
         assert hasattr(adapter, "run")
-
