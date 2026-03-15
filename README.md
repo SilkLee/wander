@@ -248,9 +248,55 @@ docker-compose up --build
   - ✅ Frontend: nginx-based Dockerfile with gzip, caching, security headers
   - ✅ Docker Compose: resource limits (CPU + memory) for all services
   - ✅ Full suite: 470 tests, 458 pass, 12 skip, 0 fail (no regressions)
-- 📝 **Week 11**: CI/CD pipeline + cloud deployment
+- ✅ **Week 11**: CI/CD pipeline + cloud deployment
+  - ✅ GitHub Actions CI (matrix: Go ×2, Python ×4, Frontend — tests + lint)
+  - ✅ GitHub Actions CD (OIDC auth, ECR push, kustomize image update, ArgoCD auto-sync)
+  - ✅ Terraform IaC (VPC, EKS, ECR ×8, IAM OIDC + IRSA — ap-southeast-1)
+  - ✅ Kubernetes manifests (Kustomize: Deployments, Services, StatefulSets, Ingress, HPA, PVCs)
+  - ✅ ArgoCD GitOps (app-of-apps, automated sync + prune + selfHeal)
+  - ✅ Finetune service Dockerfile added (multi-stage, gunicorn, port 8006)
+  - ✅ Cluster bootstrap (ALB Controller, ArgoCD, kube-prometheus-stack via Helm)
+  - ✅ Root Makefile (terraform, deploy, status, test-ci, docker-build, clean targets)
 - 📝 **Week 12**: Portfolio packaging + interview prep
 ---
+
+## 🚀 Cloud Deployment
+
+### Deploy to AWS EKS from Scratch
+
+```bash
+# 1. Bootstrap Terraform state backend (S3 + DynamoDB)
+cd infra/terraform/bootstrap && terraform init && terraform apply -auto-approve
+
+# 2. Provision VPC, EKS, ECR, IAM
+make terraform-init
+make terraform-plan   # review plan
+make terraform-apply  # ~15-25 min
+
+# 3. Set required secrets as environment variables
+export POSTGRES_PASSWORD=<strong-password>
+export JWT_SECRET=<strong-secret>
+export OPENAI_API_KEY=<your-key>
+
+# 4. Bootstrap cluster (ALB Controller, ArgoCD, Prometheus) + apply ArgoCD root app
+make bootstrap
+
+# 5. Check deployment status
+make status
+```
+
+### Teardown
+
+```bash
+# Delete workflowai namespace and destroy all AWS resources
+make clean
+```
+
+### GitOps CD Flow
+
+Push to `main` -> GitHub Actions CI -> on success, CD builds Docker images,
+pushes to ECR with `sha-<commit>` tag, updates `k8s/overlays/production/kustomization.yaml`,
+commits back to main -> ArgoCD detects git change and auto-syncs the cluster.
 
 ## 🧪 Testing
 
@@ -338,5 +384,5 @@ Preparing for NVIDIA Senior Software Engineer - AI Workflow (IPP) interview
 
 ---
 
-**Last Updated**: 2026-03-15
-**Status**: ✅ Week 10 Complete - Performance optimization (connection pooling, caching, multi-worker, code splitting)
+**Last Updated**: 2026-03-15  
+**Status**: ✅ Week 11 Complete - CI/CD pipeline + AWS EKS deployment (GitHub Actions, Terraform, Kustomize, ArgoCD GitOps)
