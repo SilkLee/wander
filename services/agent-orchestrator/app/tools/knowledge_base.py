@@ -39,7 +39,7 @@ Input should be a clear, specific search query describing the issue or informati
     
     def _run(self, query: str) -> str:
         """
-        Synchronous search (not used in async context).
+        Synchronous search against knowledge base.
         
         Args:
             query: Search query
@@ -47,8 +47,56 @@ Input should be a clear, specific search query describing the issue or informati
         Returns:
             Search results as formatted string
         """
-        # Not implemented - use async version
-        raise NotImplementedError("Use async version (arun)")
+        try:
+            # Hardcode top_k=5 (ZeroShotAgent requires single-input tools)
+            top_k = 5
+            
+            # Call Indexing Service search endpoint (sync)
+            with httpx.Client(timeout=30.0) as client:
+                response = client.post(
+                    f"{settings.indexing_service_url}/search",
+                    json={
+                        "query": query,
+                        "top_k": top_k,
+                        "search_type": "hybrid",
+                    },
+                )
+                response.raise_for_status()
+                
+                results = response.json()
+                
+                # Format results for agent consumption
+                if not results.get("results"):
+                    return f"No relevant results found for: {query}"
+                
+                formatted_results = [f"Search results for '{query}':\n"]
+                
+                for i, result in enumerate(results["results"], 1):
+                    title = result.get("title", "Untitled")
+                    content = result.get("content", "")[:300]
+                    score = result.get("score", 0.0)
+                    source = result.get("source", "unknown")
+                    url = result.get("url", "")
+                    
+                    formatted_results.append(
+                        f"{i}. **{title}** (score: {score:.2f}, source: {source})\n"
+                        f"   {content}...\n"
+                        f"   {url}\n"
+                    )
+                
+                return "\n".join(formatted_results)
+                
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 404:
+                return self._fallback_elasticsearch_search(query)
+            return f"Error searching knowledge base: {str(e)}"
+            
+        except httpx.RequestError:
+            # Network errors - try direct Elasticsearch as fallback
+            return self._fallback_elasticsearch_search(query)
+            
+        except Exception as e:
+            return f"Unexpected error during search: {str(e)}"
     
     async def _arun(self, query: str) -> str:
         """
