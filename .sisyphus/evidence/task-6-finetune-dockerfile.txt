@@ -1,0 +1,4 @@
+OK: base image
+OK: port
+OK: gunicorn
+OK: app entry point

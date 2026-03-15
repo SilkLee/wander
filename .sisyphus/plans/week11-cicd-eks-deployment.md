@@ -215,7 +215,7 @@ Max Concurrent: 6 (Wave 1)
 
 ### Wave 1 — Foundation (Start Immediately, 6 tasks parallel)
 
-- [ ] 1. GitHub Actions CI Pipeline
+- [x] 1. GitHub Actions CI Pipeline ✅ (commit e67278d)
 
   **What to do**:
   - Create `.github/workflows/ci.yml` with matrix strategy
@@ -303,7 +303,7 @@ Max Concurrent: 6 (Wave 1)
   - Message: `feat(ci): add GitHub Actions CI pipeline with matrix testing`
   - Files: `.github/workflows/ci.yml`
 
-- [ ] 2. Terraform AWS Infrastructure (VPC, EKS, ECR, IAM)
+- [x] 2. Terraform AWS Infrastructure (VPC, EKS, ECR, IAM) ✅ (commit fada403)
 
   **What to do**:
   - Create `infra/terraform/versions.tf`: AWS provider ~> 5.0, Kubernetes provider, Helm provider. S3 backend configuration for state (bucket: `workflowai-terraform-state`, DynamoDB: `workflowai-terraform-locks`)
@@ -388,7 +388,7 @@ Max Concurrent: 6 (Wave 1)
   - Message: `feat(infra): add Terraform IaC for VPC, EKS, ECR, IAM`
   - Files: `infra/terraform/**`
 
-- [ ] 3. K8s Base Manifests — Infrastructure (PostgreSQL, Redis, Elasticsearch)
+- [x] 3. K8s Base Manifests — Infrastructure (PostgreSQL, Redis, Elasticsearch) ✅ (commit 9f6d5fb)
 
   **What to do**:
   - Create `k8s/base/kustomization.yaml`: Resource list of all base manifests
@@ -504,7 +504,7 @@ Max Concurrent: 6 (Wave 1)
   - Message: `feat(k8s): add Kubernetes base manifests with Kustomize`
   - Files: `k8s/base/**`
 
-- [ ] 4. K8s Base Manifests — Go Services (API Gateway, Ingestion)
+- [x] 4. K8s Base Manifests — Go Services (API Gateway, Ingestion) ✅ (commit 9f6d5fb)
 
   **What to do**:
   - Create `k8s/base/api-gateway-deployment.yaml`: api-gateway Deployment
@@ -584,7 +584,7 @@ Max Concurrent: 6 (Wave 1)
   - Message: `feat(k8s): add Kubernetes base manifests with Kustomize`
   - Files: `k8s/base/api-gateway-*.yaml`, `k8s/base/ingestion-*.yaml`
 
-- [ ] 5. K8s Base Manifests — Python Services (Agent, Indexing, Model, Metrics, Finetune)
+- [x] 5. K8s Base Manifests — Python Services (Agent, Indexing, Model, Metrics, Finetune) ✅ (commit 9f6d5fb)
 
   **What to do**:
   - Create `k8s/base/agent-orchestrator-deployment.yaml`: agent-orchestrator Deployment
@@ -703,7 +703,7 @@ Max Concurrent: 6 (Wave 1)
   - Message: `feat(k8s): add Kubernetes base manifests with Kustomize`
   - Files: `k8s/base/*-deployment.yaml`, `k8s/base/*-service.yaml`, `k8s/base/*-pvc.yaml`
 
-- [ ] 6. Finetune Dockerfile + K8s Base Manifests — Frontend
+- [x] 6. Finetune Dockerfile + K8s Base Manifests — Frontend ✅ (commits dafa245, 9f6d5fb)
 
   **What to do**:
   - Create `services/finetune/Dockerfile`:
@@ -799,7 +799,7 @@ Max Concurrent: 6 (Wave 1)
 
 ### Wave 2 — Overlay + GitOps + CD (After Wave 1, 4 tasks parallel)
 
-- [ ] 7. K8s Production Overlay (Kustomization, Ingress, HPA)
+- [x] 7. K8s Production Overlay (Kustomization, Ingress, HPA) ✅ (commit 1396278)
 
   **What to do**:
   - Create `k8s/overlays/production/kustomization.yaml`:
@@ -896,7 +896,7 @@ Max Concurrent: 6 (Wave 1)
   - Message: `feat(k8s): add production overlay, ingress, and HPA`
   - Files: `k8s/overlays/production/**`
 
-- [ ] 8. ArgoCD Configuration (App-of-Apps Pattern)
+- [x] 8. ArgoCD Configuration (App-of-Apps Pattern) ✅ (commit 955b0bc)
 
   **What to do**:
   - Create `k8s/argocd/namespace.yaml`: argocd namespace (if not created by helm install)
@@ -993,7 +993,7 @@ Max Concurrent: 6 (Wave 1)
   - Message: `feat(cd): add ArgoCD config and CD pipeline`
   - Files: `k8s/argocd/**`
 
-- [ ] 9. GitHub Actions CD Pipeline
+- [x] 9. GitHub Actions CD Pipeline ✅ (commit 955b0bc)
 
   **What to do**:
   - Create `.github/workflows/cd.yml`:
@@ -1084,7 +1084,7 @@ Max Concurrent: 6 (Wave 1)
   - Message: `feat(cd): add ArgoCD config and CD pipeline`
   - Files: `.github/workflows/cd.yml`
 
-- [ ] 10. Cluster Bootstrap Script + Makefile
+- [x] 10. Cluster Bootstrap Script + Makefile ✅ (commit 955b0bc)
 
   **What to do**:
   - Create `infra/scripts/bootstrap-cluster.sh`:
@@ -1478,7 +1478,7 @@ Max Concurrent: 6 (Wave 1)
 
   **Commit**: NO (verification only, no file changes)
 
-- [ ] 14. Update README + Final Commit + Push
+- [x] 14. Update README + Final Commit + Push ✅ (commit 569cc64)
 
   **What to do**:
   - Update `README.md` Week 11 section:
@@ -1635,4 +1635,4 @@ curl -s http://localhost:9090/api/v1/targets | jq '.data.activeTargets | length'
 - [ ] All "Must NOT Have" absent
 - [ ] All existing 470 tests still pass in CI
 - [ ] Live URL accessible from browser
-- [ ] README updated with Week 11 section
+- [x] README updated with Week 11 section

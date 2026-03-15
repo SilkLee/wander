@@ -33,7 +33,7 @@ images:
     newTag: sha-47a7fbd
   - name: 589528730663.dkr.ecr.ap-southeast-1.amazonaws.com/workflowai/model-service
     newName: 589528730663.dkr.ecr.ap-southeast-1.amazonaws.com/workflowai/model-service
-    newTag: sha-47a7fbd
+    newTag: sha-7af4f76
   - name: 589528730663.dkr.ecr.ap-southeast-1.amazonaws.com/workflowai/metrics
     newName: 589528730663.dkr.ecr.ap-southeast-1.amazonaws.com/workflowai/metrics
     newTag: sha-47a7fbd

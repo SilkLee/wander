@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: model-service
-          image: 589528730663.dkr.ecr.ap-southeast-1.amazonaws.com/workflowai/model-service:sha-47a7fbd
+          image: 589528730663.dkr.ecr.ap-southeast-1.amazonaws.com/workflowai/model-service:sha-7af4f76
           ports:
             - containerPort: 8004
               name: http
@@ -54,18 +54,18 @@ spec:
             httpGet:
               path: /health
               port: 8004
-            initialDelaySeconds: 10
+            initialDelaySeconds: 60
             periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 5
+            timeoutSeconds: 10
+            failureThreshold: 10
           livenessProbe:
             httpGet:
               path: /live
               port: 8004
-            initialDelaySeconds: 15
+            initialDelaySeconds: 120
             periodSeconds: 15
-            timeoutSeconds: 5
-            failureThreshold: 5
+            timeoutSeconds: 10
+            failureThreshold: 10
           resources:
             requests:
               memory: "1Gi"

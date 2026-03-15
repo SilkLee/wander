@@ -1,0 +1,82 @@
+F4: Scope Fidelity Check
+Date: 2026-03-15
+Reviewer: Sisyphus (main session)
+
+=== TASK-BY-TASK SPEC COMPLIANCE ===
+
+T1: GitHub Actions CI Pipeline — COMPLIANT
+  - .github/workflows/ci.yml created with matrix strategy
+  - Matrix: api-gateway, ingestion (Go) + agent-orchestrator, indexing, model-service, metrics, finetune (Python) + frontend + linting
+  - Concurrency: cancel-in-progress: true
+  - Caching: 10 cache references
+  - Service containers: PostgreSQL for metrics tests
+  - Triggers: push (all branches), pull_request (main)
+
+T2: Terraform IaC — COMPLIANT
+  - All 8 specified files created: versions.tf, variables.tf, vpc.tf, eks.tf, ecr.tf, iam.tf, outputs.tf, terraform.tfvars.example
+  - bootstrap/main.tf created
+  - VPC: single NAT gateway (cost optimization confirmed)
+  - EKS: managed node groups
+  - ECR: 8 repos via for_each (api-gateway, ingestion, agent-orchestrator, indexing, model-service, metrics, finetune, frontend)
+  - IAM: OIDC for GitHub Actions + ALB Controller IRSA
+  - Outputs: 8 output blocks
+
+T3: K8s Base Infrastructure — COMPLIANT
+  - namespace.yaml, secrets.yaml, configmap.yaml, postgres-init-configmap.yaml created
+  - postgres-statefulset.yaml + postgres-service.yaml with PVC
+  - redis-statefulset.yaml + redis-service.yaml with PVC
+  - elasticsearch-statefulset.yaml + elasticsearch-service.yaml with PVC
+  - init.sql has 36 IF NOT EXISTS statements (idempotent)
+
+T4: K8s Go Services — COMPLIANT
+  - api-gateway-deployment.yaml: port 8000, httpGet probes (no exec — scratch image safe)
+  - api-gateway-service.yaml, ingestion-deployment.yaml: port 8001, ingestion-service.yaml
+
+T5: K8s Python Services — COMPLIANT
+  - 5 deployments + 5 services for agent-orchestrator, indexing, model-service, metrics, finetune
+  - 3 PVCs: agent-cache, indexing-cache, model-cache
+  - model-service memory limit: 2Gi (matches docker-compose)
+
+T6: Finetune Dockerfile + Frontend — COMPLIANT
+  - services/finetune/Dockerfile: multi-stage, python:3.11-slim, EXPOSE 8006, gunicorn CMD
+  - frontend-deployment.yaml + frontend-service.yaml + frontend-nginx-configmap.yaml
+  - nginx proxy_pass to api-gateway confirmed
+
+T7: Production Overlay — COMPLIANT
+  - kustomization.yaml, ingress.yaml, hpa-api-gateway.yaml, hpa-frontend.yaml
+  - Ingress: 3 path rules (/api, /health, /)
+  - HPA api-gateway: min 2, max 5
+  - HPA frontend: min 2, max 4
+
+T8: ArgoCD Configuration — COMPLIANT
+  - root-app.yaml: path k8s/argocd/apps
+  - apps/workflowai.yaml: path k8s/overlays/production, repoURL https://github.com/SilkLee/workflow-ai.git
+  - projects/workflowai-project.yaml
+
+T9: CD Pipeline — COMPLIANT
+  - .github/workflows/cd.yml: OIDC auth (2 role-to-assume), docker push, kustomize edit, git commit back
+
+T10: Bootstrap + Makefile — COMPLIANT
+  - bootstrap-cluster.sh: 3 helm installs (ALB Controller, ArgoCD, Prometheus)
+  - Makefile: 11 targets (10 required + help)
+
+T14: README Update — COMPLIANT
+  - Week 11 marked ✅ with 8 bullet points
+  - Deployment section added
+  - Teardown ("make clean") documented
+
+=== SCOPE CREEP CHECK ===
+Extra files outside task specs: 7 (all .sisyphus/ internal state files)
+  - .sisyphus/boulder.json, plans/, evidence/, notepads/, drafts/
+  - These are agent workspace files, NOT project code
+Application source changes: NONE (only services/finetune/Dockerfile added — explicitly allowed)
+
+=== GUARDRAILS COMPLIANCE ===
+- No app code changes: CLEAN
+- No Helm charts for app: CLEAN (Helm only in bootstrap for 3rd-party)
+- No :latest tags: CLEAN
+- No hardcoded secrets: CLEAN (placeholder comments only)
+
+VERDICT: APPROVE
+Tasks [11/11 compliant] | Guardrails [CLEAN / 0 violations]
+(Tasks 11-13 not yet executed — require live deployment)

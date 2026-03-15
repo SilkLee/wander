@@ -46,3 +46,10 @@
 - Helm ONLY for 3rd-party tools (ArgoCD, kube-prometheus-stack, ALB controller)
 - Image tags: `sha-<commit>` (never `:latest`)
 - Single `workflowai` namespace (no multi-env)
+
+### [2026-03-15] Task 4: Go Manifests Created
+- kustomization.yaml did NOT previously exist — created fresh (task said 'update existing' but it didn't exist)
+- api-gateway: 2 replicas, 7 env vars (6 from ConfigMap, 1 from Secret), httpGet probes only
+- ingestion: 1 replica, 2 env vars (PORT literal, REDIS_URL from ConfigMap), httpGet probes
+- Both services: requests 128Mi/250m, limits 256Mi/500m (matches docker-compose resource limits)
+- kustomization.yaml includes all 4 new resource files
