@@ -51,6 +51,17 @@ class Settings(BaseSettings):
         default=True,
         description="Use local Model Service instead of OpenAI",
     )
+
+    # OpenRouter Configuration (OpenAI-compatible API for tool-calling agents)
+    openrouter_api_key: str = Field(default="", description="OpenRouter API key")
+    openrouter_base_url: str = Field(
+        default="https://openrouter.ai/api/v1",
+        description="OpenRouter base URL",
+    )
+    openrouter_model: str = Field(
+        default="qwen/qwen3-4b:free",
+        description="OpenRouter model name",
+    )
     
     # Redis Streams configuration
     stream_name: str = Field(default="workflowai:logs")

@@ -48,6 +48,21 @@ spec:
                 secretKeyRef:
                   name: workflowai-secrets
                   key: OPENAI_API_KEY
+            - name: OPENROUTER_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: workflowai-secrets
+                  key: OPENROUTER_API_KEY
+            - name: OPENROUTER_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: workflowai-config
+                  key: OPENROUTER_BASE_URL
+            - name: OPENROUTER_MODEL
+              valueFrom:
+                configMapKeyRef:
+                  name: workflowai-config
+                  key: OPENROUTER_MODEL
           readinessProbe:
             httpGet:
               path: /health

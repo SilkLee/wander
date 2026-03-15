@@ -83,19 +83,30 @@ class BaseAgent(ABC):
         self.max_iterations = max_iterations or settings.agent_max_iterations
         self.timeout = timeout or settings.agent_timeout_seconds
 
-        if settings.use_local_model or not settings.openai_api_key:
-            self.llm = ModelServiceLLM(
-                model_service_url=settings.model_service_url,
+        # Priority: OpenRouter (tool-calling via ChatOpenAI) > OpenAI > ModelServiceLLM
+        if settings.openrouter_api_key:
+            from langchain_openai import ChatOpenAI
+            self.llm = ChatOpenAI(
+                base_url=settings.openrouter_base_url,
+                api_key=SecretStr(settings.openrouter_api_key),
+                model=settings.openrouter_model,
                 temperature=self.temperature,
                 max_tokens=512,
                 timeout=300,
             )
-        else:
+        elif settings.openai_api_key and not settings.use_local_model:
             self.llm = init_chat_model(
                 model_provider="openai",
                 model=self.model_name,
                 temperature=self.temperature,
                 api_key=SecretStr(settings.openai_api_key),
+            )
+        else:
+            self.llm = ModelServiceLLM(
+                model_service_url=settings.model_service_url,
+                temperature=self.temperature,
+                max_tokens=512,
+                timeout=300,
             )
 
     @abstractmethod
