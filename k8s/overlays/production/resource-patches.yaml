@@ -86,11 +86,11 @@ spec:
         - name: model-service
           resources:
             requests:
-              cpu: 50m
+              cpu: 100m
               memory: 256Mi
             limits:
-              cpu: 500m
-              memory: 512Mi
+              cpu: 1000m
+              memory: 768Mi
 ---
 apiVersion: apps/v1
 kind: Deployment
