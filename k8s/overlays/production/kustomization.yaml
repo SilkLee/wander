@@ -15,8 +15,9 @@ resources:
   - hpa-api-gateway.yaml
   - hpa-frontend.yaml
 
-patchesStrategicMerge:
-  - resource-patches.yaml
+patches:
+  - path: resource-patches.yaml
+
 images:
   - name: 589528730663.dkr.ecr.ap-southeast-1.amazonaws.com/workflowai/api-gateway
     newName: 589528730663.dkr.ecr.ap-southeast-1.amazonaws.com/workflowai/api-gateway

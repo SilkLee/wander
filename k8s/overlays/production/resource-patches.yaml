@@ -6,6 +6,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: api-gateway
+  namespace: workflowai
 spec:
   template:
     spec:
@@ -23,6 +24,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ingestion
+  namespace: workflowai
 spec:
   template:
     spec:
@@ -40,6 +42,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: agent-orchestrator
+  namespace: workflowai
 spec:
   template:
     spec:
@@ -57,6 +60,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: indexing
+  namespace: workflowai
 spec:
   template:
     spec:
@@ -74,6 +78,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: model-service
+  namespace: workflowai
 spec:
   template:
     spec:
@@ -91,6 +96,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: metrics
+  namespace: workflowai
 spec:
   template:
     spec:
@@ -108,6 +114,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: finetune
+  namespace: workflowai
 spec:
   template:
     spec:
@@ -125,6 +132,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: frontend
+  namespace: workflowai
 spec:
   template:
     spec:
@@ -143,6 +151,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: postgres
+  namespace: workflowai
 spec:
   template:
     spec:
@@ -160,6 +169,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: redis
+  namespace: workflowai
 spec:
   template:
     spec:
@@ -177,6 +187,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: elasticsearch
+  namespace: workflowai
 spec:
   template:
     spec:
