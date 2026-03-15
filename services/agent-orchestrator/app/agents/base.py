@@ -3,18 +3,50 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from typing import Any
 
 from pydantic import SecretStr
 
-from langchain.agents import AgentExecutor, create_react_agent
+from langchain.agents import create_agent
 from langchain.chat_models import init_chat_model
 from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.prompts import PromptTemplate
 from langchain_core.tools import BaseTool
 
 from app.config import settings
 from app.llm import ModelServiceLLM
-from app.agents.output_parser import create_lenient_parsing_error_handler
+
+
+class _AgentExecutorCompat:
+    """
+    Compatibility wrapper around LangChain 1.x create_agent graph.
+
+    Translates the old AgentExecutor interface:
+        executor.invoke({"input": str}) -> {"output": str, "intermediate_steps": []}
+    to the new CompiledStateGraph interface:
+        graph.invoke({"messages": [...]}) -> {"messages": [...]}
+    """
+
+    def __init__(self, graph: Any) -> None:
+        self.graph = graph
+
+    def invoke(self, inputs: dict[str, Any]) -> dict[str, Any]:
+        """Invoke agent with old-style {"input": str} interface."""
+        user_input = inputs.get("input", "")
+        result = self.graph.invoke(
+            {"messages": [{"role": "user", "content": user_input}]}
+        )
+        # Extract the final assistant message as "output"
+        messages = result.get("messages", [])
+        output = ""
+        for msg in reversed(messages):
+            # Check for AIMessage or dict with role=assistant
+            if hasattr(msg, "content") and hasattr(msg, "type") and msg.type == "ai":
+                output = msg.content
+                break
+            elif isinstance(msg, dict) and msg.get("role") == "assistant":
+                output = msg.get("content", "")
+                break
+        return {"output": output, "intermediate_steps": []}
 
 
 class BaseAgent(ABC):
@@ -99,46 +131,23 @@ class BaseAgent(ABC):
         """
         pass
 
-    def create_executor(self) -> AgentExecutor:
+    def create_executor(self) -> _AgentExecutorCompat:
         """
         Create a compiled agent graph with configured tools and settings.
 
-        Uses langchain create_agent which builds a tool-calling loop.
+        Uses LangChain 1.x create_agent which builds a tool-calling loop.
+        Returns a compatibility wrapper matching the old AgentExecutor interface.
 
         Returns:
-            Compiled agent graph
+            Compatibility wrapper with .invoke({"input": str}) interface
         """
-
         tools = self.get_tools()
+        system_prompt = self.get_system_prompt()
 
-        prompt = PromptTemplate.from_template(
-            self.get_system_prompt()
-            + "\n\n"
-            + "You have access to the following tools:\n\n"
-            + "{tools}\n\n"
-            + "Use the following format:\n\n"
-            + "Question: the input question you must answer\n"
-            + "Thought: you should always think about what to do\n"
-            + "Action: the action to take, should be one of [{tool_names}]\n"
-            + "Action Input: the input to the action\n"
-            + "Observation: the result of the action\n"
-            + "... (this Thought/Action/Action Input/Observation can repeat N times)\n"
-            + "Thought: I now know the final answer\n"
-            + "Final Answer: the final answer to the original input question\n\n"
-            + "Begin!\n\n"
-            + "Question: {input}\n"
-            + "Thought:{agent_scratchpad}"
-        )
-
-        agent = create_react_agent(llm=self.llm, tools=tools, prompt=prompt)
-
-        executor = AgentExecutor(
-            agent=agent,
+        graph = create_agent(
+            model=self.llm,
             tools=tools,
-            max_iterations=self.max_iterations,
-            verbose=True,
-            return_intermediate_steps=True,
-            handle_parsing_errors=create_lenient_parsing_error_handler(),
+            system_prompt=system_prompt,
         )
 
-        return executor
+        return _AgentExecutorCompat(graph)
