@@ -20,3 +20,10 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+  ignoreDifferences:
+    - group: ""
+      kind: Secret
+      name: workflowai-secrets
+      namespace: workflowai
+      jsonPointers:
+        - /data
