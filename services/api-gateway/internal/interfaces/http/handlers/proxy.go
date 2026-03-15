@@ -71,3 +71,20 @@ func (h *ProxyHandler) ProxyMetrics(c *gin.Context) {
 func (h *ProxyHandler) ProxyMetricsHealth(c *gin.Context) {
 	utils.ProxyToService(h.config.MetricsServiceURL + "/health")(c)
 }
+
+// Workflow endpoints (proxy to Agent Orchestrator with exact URL rewrite)
+func (h *ProxyHandler) ProxyWorkflowAnalyzeLog(c *gin.Context) {
+	utils.ProxyToExactURL(h.config.AgentServiceURL + "/workflows/analyze-log")(c)
+}
+
+func (h *ProxyHandler) ProxyWorkflowAnalyzeLogStream(c *gin.Context) {
+	utils.ProxyToExactURL(h.config.AgentServiceURL + "/workflows/analyze-log/stream")(c)
+}
+
+func (h *ProxyHandler) ProxyWorkflowExecute(c *gin.Context) {
+	utils.ProxyToExactURL(h.config.AgentServiceURL + "/workflows/execute")(c)
+}
+
+func (h *ProxyHandler) ProxyWorkflowTypes(c *gin.Context) {
+	utils.ProxyToExactURL(h.config.AgentServiceURL + "/workflows/types")(c)
+}

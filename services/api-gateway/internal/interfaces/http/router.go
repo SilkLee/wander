@@ -79,9 +79,16 @@ func (r *Router) setupRoutes() {
 
 		// Metrics Service (cached GET, pass-through others)
 		api.Any("/metrics/*path", middleware.CacheResponse(30*time.Second), proxyHandler.ProxyMetrics)
+	}
 
-		// Placeholder workflows endpoint
-		api.GET("/workflows", handlers.WorkflowsHandler)
+	// Public workflow routes (no JWT required — frontend has no auth)
+	workflows := r.engine.Group("/api/v1/workflows")
+	workflows.Use(middleware.RateLimit(cfg.RateLimitRPS))
+	{
+		workflows.POST("/analyze-log", proxyHandler.ProxyWorkflowAnalyzeLog)
+		workflows.POST("/analyze-log/stream", proxyHandler.ProxyWorkflowAnalyzeLogStream)
+		workflows.POST("/execute", proxyHandler.ProxyWorkflowExecute)
+		workflows.GET("/types", proxyHandler.ProxyWorkflowTypes)
 	}
 
 	// Admin routes (require admin role)
