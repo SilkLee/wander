@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demo Script — WorkflowAI Portfolio</title>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<nav class="top-nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand"><div class="logo-icon">W</div><span>WorkflowAI</span></a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="architecture.html">Architecture</a></li>
+      <li><a href="demo.html">Demo</a></li>
+      <li><a href="performance.html">Performance</a></li>
+      <li><a href="interview.html">Interview Q&A</a></li>
+      <li><a href="cost.html">Cost Analysis</a></li>
+      <li><a href="teardown.html">Teardown</a></li>
+    </ul>
+    <button class="nav-hamburger" aria-label="Menu">&#9776;</button>
+  </div>
+</nav>
+
+<div class="page-body">
+  <section class="hero" style="padding-bottom: 2rem;">
+    <h1>Demo Walkthrough</h1>
+    <p class="subtitle">A 2-3 minute guided tour through WorkflowAI's four AI-powered workflows, from API to dashboard</p>
+  </section>
+
+  <!-- Pre-requisites -->
+  <section class="section">
+    <div class="callout">
+      <strong>Live Endpoint:</strong> <code>http://k8s-workflow-workflow-40cd3e1fe4-525208112.ap-southeast-1.elb.amazonaws.com</code><br>
+      <strong>Local:</strong> <code>docker-compose up --build</code> &rarr; <code>http://localhost:8000</code> (API) / <code>http://localhost:3000</code> (Frontend)
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- Demo 1: Health Check -->
+  <section class="section">
+    <div class="section-header">
+      <h2>Step 0: Verify System Health</h2>
+      <p>Confirm all services are running before starting the demo</p>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-marker"><div class="step-number">&#10003;</div><div class="step-line"></div></div>
+        <div class="step-content">
+          <h3>API Gateway Health</h3>
+          <pre><code>curl http://localhost:8000/health</code></pre>
+          <div class="callout" style="margin-top: 0.75rem;">
+            <strong>Expected Response:</strong><br>
+            <code>{"redis":"connected","status":"healthy"}</code>
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-marker"><div class="step-number">&#10003;</div><div class="step-line"></div></div>
+        <div class="step-content">
+          <h3>Frontend Dashboard</h3>
+          <p>Open <code>http://localhost:3000</code> — you should see the WorkflowAI dashboard with navigation to all 6 pages: Dashboard, Log Analysis, PR Risk, Code Review, Incident Response, DORA Metrics.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- Demo 1: Build Failure Triage -->
+  <section class="section">
+    <div class="section-header">
+      <h2>Demo 1: Build Failure Triage (RAG)</h2>
+      <p>Submit a CI build failure log and get AI-powered root cause analysis</p>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-marker"><div class="step-number">1</div><div class="step-line"></div></div>
+        <div class="step-content">
+          <h3>Navigate to Log Analysis Page</h3>
+          <p>Click <strong>"Log Analysis"</strong> in the sidebar. This page accepts CI build logs for automated triage.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-marker"><div class="step-number">2</div><div class="step-line"></div></div>
+        <div class="step-content">
+          <h3>Submit a Build Log via API</h3>
+          <pre><code>curl -X POST http://localhost:8000/api/v1/agent/analyze \
+  -H "Content-Type: application/json" \
+  -d '{
+    "log_content": "FAIL: TestDatabaseConnection - connection refused localhost:5432\nError: dial tcp 127.0.0.1:5432: connect: connection refused\npanic: runtime error: invalid memory address",
+    "source": "github-actions",
+    "repository": "myorg/backend-service",
+    "build_id": "run-12345"
+  }'</code></pre>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-marker"><div class="step-number">3</div><div class="step-line"></div></div>
+        <div class="step-content">
+          <h3>AI Response (RAG Pipeline)</h3>
+          <p>The system performs:</p>
+          <ol style="color: var(--text-secondary); padding-left: 1.25rem; margin-top: 0.5rem;">
+            <li><strong>Classification</strong> — Fine-tuned classifier categorizes the failure type</li>
+            <li><strong>Retrieval</strong> — Hybrid search (BM25 + vector) finds similar past failures</li>
+            <li><strong>Generation</strong> — LLM generates root cause analysis with fix steps</li>
+          </ol>
+          <div class="callout" style="margin-top: 0.75rem;">
+            <strong>Expected Output:</strong><br>
+            <code>{<br>
+            &nbsp;&nbsp;"analysis": {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;"root_cause": "PostgreSQL connection refused - database service not running or port blocked",<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;"severity": "HIGH",<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;"category": "infrastructure",<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;"fix_steps": ["Verify PostgreSQL service is running", "Check port 5432 availability", "Review Docker Compose health checks"],<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;"similar_failures": [...],<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;"confidence": 0.92<br>
+            &nbsp;&nbsp;}<br>
+            }</code>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout callout-blue">
+      <strong>What's happening under the hood:</strong> The request flows through Go API Gateway &rarr; Agent Orchestrator (LangGraph) &rarr; Indexing Service (Faiss + ES hybrid search) &rarr; Model Service (Qwen via OpenRouter) &rarr; streamed back via SSE.
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- Demo 2: PR Risk Assessment -->
+  <section class="section">
+    <div class="section-header">
+      <h2>Demo 2: PR Risk Assessment</h2>
+      <p>Analyze a pull request for risk level and get actionable recommendations</p>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-marker"><div class="step-number">1</div><div class="step-line"></div></div>
+        <div class="step-content">
+          <h3>Navigate to PR Risk Page</h3>
+          <p>Click <strong>"PR Risk"</strong> in the sidebar.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-marker"><div class="step-number">2</div><div class="step-line"></div></div>
+        <div class="step-content">
+          <h3>Submit a PR for Risk Analysis</h3>
+          <pre><code>curl -X POST http://localhost:8000/api/v1/agent/pr-risk \
+  -H "Content-Type: application/json" \
+  -d '{
+    "pr_number": 42,
+    "title": "Refactor database connection pooling",
+    "diff": "--- a/db/pool.go\n+++ b/db/pool.go\n@@ -15,8 +15,20 @@\n-  maxConn: 10\n+  maxConn: 100\n+  idleTimeout: 30s",
+    "files_changed": 8,
+    "additions": 245,
+    "deletions": 120,
+    "author": "developer-a"
+  }'</code></pre>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-marker"><div class="step-number">3</div><div class="step-line"></div></div>
+        <div class="step-content">
+          <h3>Risk Assessment Output</h3>
+          <div class="callout" style="margin-top: 0.5rem;">
+            <strong>Expected:</strong><br>
+            <code>{<br>
+            &nbsp;&nbsp;"risk_score": 0.72,<br>
+            &nbsp;&nbsp;"risk_level": "HIGH",<br>
+            &nbsp;&nbsp;"factors": ["Large change scope (8 files, 365 lines)", "Database infrastructure change", "Connection pool config modification"],<br>
+            &nbsp;&nbsp;"recommendations": ["Add load testing before merge", "Review connection pool exhaustion scenarios", "Add monitoring for connection metrics"]<br>
+            }</code>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- Demo 3: Code Review -->
+  <section class="section">
+    <div class="section-header">
+      <h2>Demo 3: Code Review Assistant</h2>
+      <p>Automated code review with LLM-powered analysis</p>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-marker"><div class="step-number">1</div><div class="step-line"></div></div>
+        <div class="step-content">
+          <h3>Navigate to Code Review Page</h3>
+          <p>Click <strong>"Code Review"</strong> in the sidebar.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-marker"><div class="step-number">2</div><div class="step-line"></div></div>
+        <div class="step-content">
+          <h3>Submit Code for Review</h3>
+          <pre><code>curl -X POST http://localhost:8000/api/v1/agent/code-review \
+  -H "Content-Type: application/json" \
+  -d '{
+    "diff": "--- a/auth/handler.go\n+++ b/auth/handler.go\n@@ -1,5 +1,10 @@\n+func Login(c *gin.Context) {\n+  password := c.PostForm(\"password\")\n+  if password == \"admin123\" {\n+    token := jwt.New()\n+    c.JSON(200, token)\n+  }\n+}",
+    "language": "go",
+    "pr_title": "Add login endpoint"
+  }'</code></pre>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-marker"><div class="step-number">3</div><div class="step-line"></div></div>
+        <div class="step-content">
+          <h3>Review Output</h3>
+          <div class="callout callout-red" style="margin-top: 0.5rem;">
+            <strong>Expected Issues Found:</strong>
+            <ul style="margin-top: 0.5rem; padding-left: 1.25rem; color: var(--text-secondary);">
+              <li><strong>CRITICAL:</strong> Hardcoded password — use bcrypt hashed comparison</li>
+              <li><strong>HIGH:</strong> No error handling for JWT creation</li>
+              <li><strong>MEDIUM:</strong> Missing rate limiting on auth endpoint</li>
+              <li><strong>LOW:</strong> Use proper HTTP status codes (200 &rarr; 201 for creation)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- Demo 4: DORA Metrics -->
+  <section class="section">
+    <div class="section-header">
+      <h2>Demo 4: DORA Metrics Dashboard</h2>
+      <p>Engineering efficiency tracking with four key DevOps metrics</p>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-marker"><div class="step-number">1</div><div class="step-line"></div></div>
+        <div class="step-content">
+          <h3>Navigate to DORA Metrics Page</h3>
+          <p>Click <strong>"DORA Metrics"</strong> in the sidebar. The dashboard shows four key metrics tracked over time.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-marker"><div class="step-number">2</div><div class="step-line"></div></div>
+        <div class="step-content">
+          <h3>Record a Deployment Event</h3>
+          <pre><code>curl -X POST http://localhost:8000/api/v1/metrics/events \
+  -H "Content-Type: application/json" \
+  -d '{
+    "event_type": "deployment",
+    "repository": "workflow-ai",
+    "commit_sha": "abc123",
+    "timestamp": "2026-03-15T10:30:00Z",
+    "success": true,
+    "duration_seconds": 180
+  }'</code></pre>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-marker"><div class="step-number">3</div><div class="step-line"></div></div>
+        <div class="step-content">
+          <h3>View DORA Metrics</h3>
+          <pre><code>curl http://localhost:8000/api/v1/metrics/dora?period=weekly</code></pre>
+          <div class="callout" style="margin-top: 0.75rem;">
+            <strong>Four DORA Metrics:</strong>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 0.75rem;">
+              <div><strong style="color: var(--accent);">Deployment Frequency</strong><br><span style="color: var(--text-secondary);">How often code is deployed to production</span></div>
+              <div><strong style="color: var(--accent-blue);">Lead Time for Changes</strong><br><span style="color: var(--text-secondary);">Time from commit to production deploy</span></div>
+              <div><strong style="color: var(--accent-orange);">Change Failure Rate</strong><br><span style="color: var(--text-secondary);">Percentage of deployments causing failures</span></div>
+              <div><strong style="color: var(--accent-red);">Mean Time to Recovery</strong><br><span style="color: var(--text-secondary);">Time to restore service after an incident</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout callout-blue mt-2">
+      <strong>Impact:</strong> Automated failure triage reduces MTTR from 45 min (manual) to 8 min (AI-assisted) &mdash; a <strong>5.6&times; improvement</strong> quantifiable in the DORA dashboard.
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- Demo 5: Incident Response -->
+  <section class="section">
+    <div class="section-header">
+      <h2>Demo 5: Incident Response (Multi-Agent)</h2>
+      <p>LangGraph multi-agent workflow for automated incident triage</p>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-marker"><div class="step-number">1</div><div class="step-line"></div></div>
+        <div class="step-content">
+          <h3>Navigate to Incident Response Page</h3>
+          <p>Click <strong>"Incident Response"</strong> in the sidebar.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-marker"><div class="step-number">2</div><div class="step-line"></div></div>
+        <div class="step-content">
+          <h3>Submit an Incident</h3>
+          <pre><code>curl -X POST http://localhost:8000/api/v1/agent/incident \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Database connection pool exhaustion",
+    "description": "PostgreSQL max connections reached. API returning 503 errors. Affected: payment-service, order-service.",
+    "severity": "P1",
+    "affected_services": ["payment-service", "order-service"],
+    "error_logs": "FATAL: too many connections for role \"app_user\"\nremaining connection slots reserved for superuser"
+  }'</code></pre>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-marker"><div class="step-number">3</div><div class="step-line"></div></div>
+        <div class="step-content">
+          <h3>Multi-Agent Response</h3>
+          <p>The LangGraph orchestrator spawns multiple specialized agents:</p>
+          <div style="margin-top: 0.75rem;">
+            <div class="card" style="margin-bottom: 0.75rem;">
+              <h3 style="color: #ef4444; font-size: 0.95rem;">Triage Agent</h3>
+              <p>Classifies severity, identifies blast radius, assigns priority</p>
+            </div>
+            <div class="card" style="margin-bottom: 0.75rem;">
+              <h3 style="color: #f59e0b; font-size: 0.95rem;">Diagnosis Agent</h3>
+              <p>Analyzes error logs, queries historical incidents, identifies root cause</p>
+            </div>
+            <div class="card" style="margin-bottom: 0.75rem;">
+              <h3 style="color: #3b82f6; font-size: 0.95rem;">Resolution Agent</h3>
+              <p>Generates runbook steps, suggests immediate mitigations, recommends long-term fixes</p>
+            </div>
+            <div class="card">
+              <h3 style="color: #76b900; font-size: 0.95rem;">Communication Agent</h3>
+              <p>Drafts stakeholder updates, creates incident timeline, prepares postmortem template</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <p><strong>WorkflowAI</strong> &mdash; Built by <strong>Ren</strong> for NVIDIA IPP &bull; <a href="https://github.com/SilkLee/workflow-ai">GitHub</a></p>
+  </footer>
+</div>
+
+<script src="scripts.js"></script>
+</body>
+</html>

@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cost Analysis — WorkflowAI Portfolio</title>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<nav class="top-nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand"><div class="logo-icon">W</div><span>WorkflowAI</span></a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="architecture.html">Architecture</a></li>
+      <li><a href="demo.html">Demo</a></li>
+      <li><a href="performance.html">Performance</a></li>
+      <li><a href="interview.html">Interview Q&A</a></li>
+      <li><a href="cost.html">Cost Analysis</a></li>
+      <li><a href="teardown.html">Teardown</a></li>
+    </ul>
+    <button class="nav-hamburger" aria-label="Menu">&#9776;</button>
+  </div>
+</nav>
+
+<div class="page-body">
+  <section class="hero" style="padding-bottom: 2rem;">
+    <h1>Cost Analysis</h1>
+    <p class="subtitle">AWS EKS running cost breakdown for the WorkflowAI production deployment in ap-southeast-1</p>
+  </section>
+
+  <!-- Summary Stats -->
+  <section class="section">
+    <div class="stats-row animate-in">
+      <div class="stat-card">
+        <div class="stat-value">~$220</div>
+        <div class="stat-label">Estimated Monthly Cost</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">~$7.30</div>
+        <div class="stat-label">Daily Cost</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">2</div>
+        <div class="stat-label">EC2 Nodes (t3.large)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">13</div>
+        <div class="stat-label">Running Pods</div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- Detailed Breakdown -->
+  <section class="section">
+    <div class="section-header">
+      <h2>Monthly Cost Breakdown</h2>
+      <p>All prices are for ap-southeast-1 (Singapore) region, On-Demand pricing</p>
+    </div>
+
+    <div class="table-wrapper animate-in">
+      <table>
+        <thead>
+          <tr>
+            <th>Resource</th>
+            <th>Specification</th>
+            <th>Unit Price</th>
+            <th>Quantity</th>
+            <th>Monthly Cost</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>EKS Control Plane</strong></td>
+            <td>Managed Kubernetes control plane</td>
+            <td>$0.10/hr</td>
+            <td>1 cluster</td>
+            <td style="color: var(--accent); font-weight: 600;">$73.00</td>
+          </tr>
+          <tr>
+            <td><strong>EC2 Instances</strong></td>
+            <td>t3.large (2 vCPU, 8GB RAM)</td>
+            <td>$0.1056/hr</td>
+            <td>2 nodes</td>
+            <td style="color: var(--accent); font-weight: 600;">$154.10</td>
+          </tr>
+          <tr>
+            <td><strong>EBS Volumes</strong></td>
+            <td>gp3 (root + PVCs for PG, Redis, ES)</td>
+            <td>$0.096/GB/mo</td>
+            <td>~80GB total</td>
+            <td style="color: var(--accent); font-weight: 600;">$7.68</td>
+          </tr>
+          <tr>
+            <td><strong>ALB (Application LB)</strong></td>
+            <td>ALB + LCU hours</td>
+            <td>$0.0252/hr + LCU</td>
+            <td>1 ALB</td>
+            <td style="color: var(--accent); font-weight: 600;">$20.00</td>
+          </tr>
+          <tr>
+            <td><strong>NAT Gateway</strong></td>
+            <td>Data transfer from private subnets</td>
+            <td>$0.059/hr + $0.059/GB</td>
+            <td>1 NAT GW</td>
+            <td style="color: var(--accent); font-weight: 600;">$43.50</td>
+          </tr>
+          <tr>
+            <td><strong>ECR Storage</strong></td>
+            <td>8 Docker image repos</td>
+            <td>$0.10/GB/mo</td>
+            <td>~5GB</td>
+            <td style="color: var(--accent); font-weight: 600;">$0.50</td>
+          </tr>
+          <tr>
+            <td><strong>CloudWatch Logs</strong></td>
+            <td>Pod logs + metrics</td>
+            <td>$0.57/GB ingested</td>
+            <td>~5GB/mo</td>
+            <td style="color: var(--accent); font-weight: 600;">$2.85</td>
+          </tr>
+          <tr>
+            <td><strong>Data Transfer</strong></td>
+            <td>Internet egress (minimal)</td>
+            <td>$0.12/GB</td>
+            <td>~10GB</td>
+            <td style="color: var(--accent); font-weight: 600;">$1.20</td>
+          </tr>
+          <tr style="background: rgba(118, 185, 0, 0.08);">
+            <td><strong>OpenRouter API</strong></td>
+            <td>qwen/qwen3-4b:free tier</td>
+            <td>$0.00</td>
+            <td>-</td>
+            <td style="color: var(--accent); font-weight: 600;">$0.00</td>
+          </tr>
+          <tr style="background: var(--bg-secondary);">
+            <td colspan="4"><strong>Estimated Total (Monthly)</strong></td>
+            <td style="color: var(--accent); font-weight: 800; font-size: 1.1rem;">~$302.83</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout callout-orange mt-2">
+      <strong>Note:</strong> NAT Gateway is the hidden cost killer. If VPC is configured with public subnets only (acceptable for a demo), NAT Gateway cost ($43.50/mo) can be eliminated. Similarly, switching to t3.medium nodes ($0.0528/hr) would save ~$77/mo with reduced pod capacity.
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- Visual Cost Distribution -->
+  <section class="section">
+    <div class="section-header">
+      <h2>Cost Distribution</h2>
+      <p>Where the money goes</p>
+    </div>
+
+    <div class="bar-chart animate-in">
+      <div class="bar-row">
+        <div class="bar-label">EC2 Instances</div>
+        <div class="bar-track">
+          <div class="bar-fill green" data-width="51%">$154.10 (51%)</div>
+        </div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">EKS Control Plane</div>
+        <div class="bar-track">
+          <div class="bar-fill blue" data-width="24%">$73.00 (24%)</div>
+        </div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">NAT Gateway</div>
+        <div class="bar-track">
+          <div class="bar-fill orange" data-width="14%">$43.50 (14%)</div>
+        </div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">ALB</div>
+        <div class="bar-track">
+          <div class="bar-fill purple" data-width="7%">$20.00 (7%)</div>
+        </div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">EBS + ECR + Other</div>
+        <div class="bar-track">
+          <div class="bar-fill cyan" data-width="4%">$12.23 (4%)</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- Cost Optimization -->
+  <section class="section">
+    <div class="section-header">
+      <h2>Cost Optimization Strategies</h2>
+      <p>How to reduce costs for different environments</p>
+    </div>
+
+    <div class="card-grid">
+      <div class="card animate-in">
+        <h3 style="color: var(--accent);">Savings Plan / Reserved</h3>
+        <p>1-year Compute Savings Plan for t3.large: ~40% discount. Reduces EC2 from $154 to ~$92/mo.</p>
+        <div class="callout mt-1" style="font-size: 0.85rem;">
+          <strong>Savings:</strong> ~$62/mo ($744/yr)
+        </div>
+      </div>
+
+      <div class="card animate-in">
+        <h3 style="color: var(--accent-blue);">Spot Instances</h3>
+        <p>Use Spot for worker nodes (up to 70% savings). With 2 node groups (1 on-demand + 1 spot), maintain availability while cutting costs.</p>
+        <div class="callout callout-blue mt-1" style="font-size: 0.85rem;">
+          <strong>Savings:</strong> ~$54/mo on 1 spot node
+        </div>
+      </div>
+
+      <div class="card animate-in">
+        <h3 style="color: var(--accent-orange);">Remove NAT Gateway</h3>
+        <p>For demo/portfolio use, public subnets are acceptable. Eliminates $43.50/mo NAT Gateway cost entirely.</p>
+        <div class="callout callout-orange mt-1" style="font-size: 0.85rem;">
+          <strong>Savings:</strong> $43.50/mo
+        </div>
+      </div>
+
+      <div class="card animate-in">
+        <h3 style="color: var(--accent-purple);">Fargate Profile</h3>
+        <p>Replace EC2 nodes with EKS Fargate for workloads with variable demand. Pay only for pod-level vCPU/memory instead of full node allocation.</p>
+        <div class="callout mt-1" style="font-size: 0.85rem; background: rgba(139,92,246,0.1); border-left-color: var(--accent-purple);">
+          <strong>Trade-off:</strong> Higher per-pod cost but no idle capacity waste
+        </div>
+      </div>
+
+      <div class="card animate-in">
+        <h3 style="color: var(--accent-cyan);">Schedule-Based Scaling</h3>
+        <p>Scale down to 0 nodes during off-hours (nights/weekends). For a demo cluster, this alone saves 65%+ on EC2.</p>
+        <div class="callout mt-1" style="font-size: 0.85rem; background: rgba(6,182,212,0.1); border-left-color: var(--accent-cyan);">
+          <strong>Savings:</strong> ~$100/mo (assuming 8hr/day usage)
+        </div>
+      </div>
+
+      <div class="card animate-in">
+        <h3 style="color: var(--accent-red);">EKS on EC2 Alternative</h3>
+        <p>Self-managed K8s (k3s) on EC2 eliminates the $73/mo EKS control plane fee. Trade-off: more operational overhead.</p>
+        <div class="callout callout-red mt-1" style="font-size: 0.85rem;">
+          <strong>Savings:</strong> $73/mo (but adds ops burden)
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- Optimized Scenario -->
+  <section class="section">
+    <div class="section-header">
+      <h2>Optimized Cost Scenario</h2>
+      <p>With reasonable optimizations applied</p>
+    </div>
+
+    <div class="table-wrapper animate-in">
+      <table>
+        <thead>
+          <tr>
+            <th>Scenario</th>
+            <th>Monthly Cost</th>
+            <th>Savings</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Current (On-Demand, full-time)</td>
+            <td>~$303</td>
+            <td>-</td>
+          </tr>
+          <tr>
+            <td>+ Remove NAT Gateway</td>
+            <td>~$259</td>
+            <td style="color: var(--accent);">-$44</td>
+          </tr>
+          <tr>
+            <td>+ 1-year Savings Plan</td>
+            <td>~$197</td>
+            <td style="color: var(--accent);">-$106</td>
+          </tr>
+          <tr>
+            <td>+ Schedule (8hr/day weekdays)</td>
+            <td>~$125</td>
+            <td style="color: var(--accent);">-$178</td>
+          </tr>
+          <tr style="background: rgba(118, 185, 0, 0.08);">
+            <td><strong>+ Spot for 1 worker node</strong></td>
+            <td style="color: var(--accent); font-weight: 700;">~$100</td>
+            <td style="color: var(--accent); font-weight: 700;">-$203 (67% reduction)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <p><strong>WorkflowAI</strong> &mdash; Built by <strong>Ren</strong> for NVIDIA IPP &bull; <a href="https://github.com/SilkLee/workflow-ai">GitHub</a></p>
+  </footer>
+</div>
+
+<script src="scripts.js"></script>
+</body>
+</html>

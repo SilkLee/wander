@@ -257,7 +257,14 @@ docker-compose up --build
   - ✅ Finetune service Dockerfile added (multi-stage, gunicorn, port 8006)
   - ✅ Cluster bootstrap (ALB Controller, ArgoCD, kube-prometheus-stack via Helm)
   - ✅ Root Makefile (terraform, deploy, status, test-ci, docker-build, clean targets)
-- 📝 **Week 12**: Portfolio packaging + interview prep
+- ✅ **Week 12**: Portfolio packaging + interview prep
+  - ✅ Interactive portfolio website (8 pages: HTML/CSS/JS, NVIDIA-themed dark mode)
+  - ✅ Architecture diagram (interactive SVG with clickable service details)
+  - ✅ Demo walkthrough (step-by-step curl commands for all 4 AI workflows)
+  - ✅ Performance report (throughput charts, latency profiles, optimization history)
+  - ✅ Interview Q&A (13 deep-dive questions across 5 NVIDIA IPP categories)
+  - ✅ AWS cost analysis (line-item breakdown + optimization strategies)
+  - ✅ Teardown guide (6-step safe decommission procedure)
 ---
 
 ## 🚀 Cloud Deployment
@@ -336,6 +343,7 @@ locust -f locustfile.py --host=http://localhost:8000 --users=1000 --spawn-rate=1
 - **[API Documentation](docs/api.md)** - OpenAPI/Swagger specs
 - **[Interview Preparation](docs/interview-prep/)** - Technical Q&A, demo script
 - **[Performance Report](docs/performance-report.md)** - Benchmarks & optimizations
+- **[Portfolio Website](docs/portfolio/index.html)** - Interactive project showcase (open in browser)
 
 ---
 
@@ -385,4 +393,4 @@ Preparing for NVIDIA Senior Software Engineer - AI Workflow (IPP) interview
 ---
 
 **Last Updated**: 2026-03-15  
-**Status**: ✅ Week 11 Complete - CI/CD pipeline + AWS EKS deployment (GitHub Actions, Terraform, Kustomize, ArgoCD GitOps)
+**Status**: ✅ Week 12 Complete - Portfolio packaging + interview prep (all 12 weeks done)

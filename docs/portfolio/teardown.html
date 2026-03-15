@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teardown Guide — WorkflowAI Portfolio</title>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<nav class="top-nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand"><div class="logo-icon">W</div><span>WorkflowAI</span></a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="architecture.html">Architecture</a></li>
+      <li><a href="demo.html">Demo</a></li>
+      <li><a href="performance.html">Performance</a></li>
+      <li><a href="interview.html">Interview Q&amp;A</a></li>
+      <li><a href="cost.html">Cost Analysis</a></li>
+      <li><a href="teardown.html">Teardown</a></li>
+    </ul>
+    <button class="nav-hamburger" aria-label="Menu">&#9776;</button>
+  </div>
+</nav>
+
+<div class="page-body">
+  <section class="hero" style="padding-bottom: 2rem;">
+    <h1>Teardown Guide</h1>
+    <p class="subtitle">Step-by-step instructions to safely decommission the WorkflowAI production environment on AWS EKS</p>
+  </section>
+
+  <!-- Warning Banner -->
+  <section class="section">
+    <div class="card" style="border-left: 4px solid #ff6b6b; background: rgba(255,107,107,0.06);">
+      <h3 style="color: #ff6b6b; margin-bottom: 0.5rem;">&#9888; Destructive Operations Ahead</h3>
+      <p style="margin: 0; color: var(--text-muted);">
+        This guide permanently deletes all AWS resources created by Terraform and Kubernetes.
+        Ensure you have exported any data, logs, or configurations you want to preserve <strong>before</strong> proceeding.
+        All commands should be run from the repository root (<code>workflow-ai/</code>).
+      </p>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- Prerequisites -->
+  <section class="section">
+    <h2 class="section-title">Prerequisites</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Tool</th><th>Minimum Version</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>aws</code></td><td>2.x</td><td>AWS CLI — credential access &amp; resource queries</td></tr>
+          <tr><td><code>kubectl</code></td><td>1.28+</td><td>Kubernetes cluster operations</td></tr>
+          <tr><td><code>helm</code></td><td>3.x</td><td>Uninstall Helm-managed releases</td></tr>
+          <tr><td><code>terraform</code></td><td>1.6+</td><td>Infrastructure destruction</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card" style="margin-top: 1rem;">
+      <p style="margin: 0; color: var(--text-muted);">
+        <strong>AWS credentials</strong> must be configured for account <code>589528730663</code> with IAM user <code>Silk</code>
+        (or equivalent admin access). Region: <code>ap-southeast-1</code>.
+      </p>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- Overview Diagram -->
+  <section class="section">
+    <h2 class="section-title">Teardown Order</h2>
+    <p class="subtitle" style="margin-bottom: 1.5rem;">Resources must be deleted in reverse dependency order to avoid orphaned resources and failed deletions.</p>
+
+    <div style="display: flex; flex-direction: column; gap: 1rem; max-width: 700px; margin: 0 auto;">
+
+      <div class="card" style="display: flex; align-items: center; gap: 1rem; border-left: 4px solid var(--accent);">
+        <div style="background: var(--accent); color: #000; font-weight: 800; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">1</div>
+        <div>
+          <strong>Application Workloads</strong>
+          <div style="color: var(--text-muted); font-size: 0.85rem;">Delete the workflowai namespace (pods, services, ingress, PVCs)</div>
+        </div>
+      </div>
+
+      <div style="text-align: center; color: var(--text-muted);">&#9660;</div>
+
+      <div class="card" style="display: flex; align-items: center; gap: 1rem; border-left: 4px solid var(--accent);">
+        <div style="background: var(--accent); color: #000; font-weight: 800; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">2</div>
+        <div>
+          <strong>ArgoCD Root Application</strong>
+          <div style="color: var(--text-muted); font-size: 0.85rem;">Remove ArgoCD app-of-apps to stop GitOps reconciliation</div>
+        </div>
+      </div>
+
+      <div style="text-align: center; color: var(--text-muted);">&#9660;</div>
+
+      <div class="card" style="display: flex; align-items: center; gap: 1rem; border-left: 4px solid var(--accent);">
+        <div style="background: var(--accent); color: #000; font-weight: 800; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">3</div>
+        <div>
+          <strong>Cluster Tooling (Helm)</strong>
+          <div style="color: var(--text-muted); font-size: 0.85rem;">Uninstall ALB Controller, ArgoCD, kube-prometheus-stack</div>
+        </div>
+      </div>
+
+      <div style="text-align: center; color: var(--text-muted);">&#9660;</div>
+
+      <div class="card" style="display: flex; align-items: center; gap: 1rem; border-left: 4px solid var(--accent);">
+        <div style="background: var(--accent); color: #000; font-weight: 800; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">4</div>
+        <div>
+          <strong>Terraform Infrastructure</strong>
+          <div style="color: var(--text-muted); font-size: 0.85rem;">Destroy VPC, EKS cluster, ECR repos, IAM roles, KMS, CloudWatch</div>
+        </div>
+      </div>
+
+      <div style="text-align: center; color: var(--text-muted);">&#9660;</div>
+
+      <div class="card" style="display: flex; align-items: center; gap: 1rem; border-left: 4px solid var(--accent);">
+        <div style="background: var(--accent); color: #000; font-weight: 800; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">5</div>
+        <div>
+          <strong>Terraform State Backend</strong>
+          <div style="color: var(--text-muted); font-size: 0.85rem;">Optionally remove the S3 bucket + DynamoDB lock table</div>
+        </div>
+      </div>
+
+      <div style="text-align: center; color: var(--text-muted);">&#9660;</div>
+
+      <div class="card" style="display: flex; align-items: center; gap: 1rem; border-left: 4px solid #76b900;">
+        <div style="background: #76b900; color: #000; font-weight: 800; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">&#10003;</div>
+        <div>
+          <strong>Verification</strong>
+          <div style="color: var(--text-muted); font-size: 0.85rem;">Confirm zero remaining resources in AWS console</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- Step 1: Application Workloads -->
+  <section class="section">
+    <h2 class="section-title">Step 1 — Delete Application Workloads</h2>
+    <p>Remove all 13 pods, services, ingress rules, PVCs, and ConfigMaps in the <code>workflowai</code> namespace.</p>
+
+    <div class="card">
+      <h4>1a. Verify current state</h4>
+      <pre><code># List all resources in the namespace
+kubectl get all -n workflowai
+kubectl get pvc -n workflowai
+kubectl get ingress -n workflowai
+kubectl get configmap -n workflowai
+kubectl get secret -n workflowai</code></pre>
+    </div>
+
+    <div class="card" style="margin-top: 1rem;">
+      <h4>1b. Delete the namespace</h4>
+      <pre><code># This cascades — deletes ALL resources within the namespace
+kubectl delete namespace workflowai --ignore-not-found
+
+# Wait for namespace termination (may take 1-2 minutes for PVC/ALB cleanup)
+kubectl wait --for=delete namespace/workflowai --timeout=120s 2>/dev/null || true</code></pre>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem;">
+        <strong>Note:</strong> If namespace gets stuck in <code>Terminating</code> state, it's usually because a
+        finalizer is waiting for the ALB to be deprovisioned. Wait 2-3 minutes for the ALB Controller to clean up
+        the load balancer, then the namespace will terminate.
+      </p>
+    </div>
+
+    <div class="card" style="margin-top: 1rem;">
+      <h4>What gets deleted</h4>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Resource Type</th><th>Count</th><th>Examples</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Deployments</td><td>8</td><td>api-gateway, frontend, agent-orchestrator, indexing, model-service, metrics, finetune, ingestion</td></tr>
+            <tr><td>StatefulSets</td><td>2</td><td>postgresql, redis</td></tr>
+            <tr><td>Services</td><td>10</td><td>ClusterIP per deployment + headless for StatefulSets</td></tr>
+            <tr><td>Ingress</td><td>1</td><td>ALB Ingress (triggers ALB deletion in AWS)</td></tr>
+            <tr><td>PVCs</td><td>3</td><td>postgresql-data, redis-data, elasticsearch-data</td></tr>
+            <tr><td>HPA</td><td>3</td><td>api-gateway, agent-orchestrator, frontend</td></tr>
+            <tr><td>Secrets</td><td>1</td><td>workflowai-secrets (DB password, JWT, API key)</td></tr>
+            <tr><td>ConfigMaps</td><td>~3</td><td>nginx config, service environment configs</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- Step 2: ArgoCD Root Application -->
+  <section class="section">
+    <h2 class="section-title">Step 2 — Remove ArgoCD Root Application</h2>
+    <p>Delete the ArgoCD app-of-apps to prevent it from recreating the workflowai namespace after deletion.</p>
+
+    <div class="card">
+      <pre><code># Delete the root application and project
+kubectl delete -f k8s/argocd/root-app.yaml --ignore-not-found
+kubectl delete -f k8s/argocd/projects/workflowai-project.yaml --ignore-not-found
+
+# Verify no ArgoCD apps remain for workflowai
+kubectl get applications -n argocd 2>/dev/null || echo "ArgoCD namespace already gone"</code></pre>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem;">
+        <strong>Why this matters:</strong> ArgoCD's <code>selfHeal: true</code> setting means it will automatically
+        recreate any resources you delete if the root app is still present. Always remove the ArgoCD app <em>before</em>
+        or immediately <em>after</em> deleting the namespace.
+      </p>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- Step 3: Cluster Tooling -->
+  <section class="section">
+    <h2 class="section-title">Step 3 — Uninstall Cluster Tooling</h2>
+    <p>Remove Helm-managed cluster-level components installed by the bootstrap script.</p>
+
+    <div class="card">
+      <h4>3a. Uninstall kube-prometheus-stack</h4>
+      <pre><code>helm uninstall prometheus -n monitoring 2>/dev/null || true
+kubectl delete namespace monitoring --ignore-not-found</code></pre>
+    </div>
+
+    <div class="card" style="margin-top: 1rem;">
+      <h4>3b. Uninstall ArgoCD</h4>
+      <pre><code>helm uninstall argocd -n argocd 2>/dev/null || true
+kubectl delete namespace argocd --ignore-not-found</code></pre>
+    </div>
+
+    <div class="card" style="margin-top: 1rem;">
+      <h4>3c. Uninstall AWS Load Balancer Controller</h4>
+      <pre><code>helm uninstall aws-load-balancer-controller -n kube-system 2>/dev/null || true</code></pre>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem;">
+        <strong>Important:</strong> The ALB Controller must be uninstalled <em>before</em> destroying the EKS cluster.
+        If the controller is still running when the cluster is deleted, the AWS ALB it created may become orphaned
+        and require manual deletion in the EC2 &gt; Load Balancers console.
+      </p>
+    </div>
+
+    <div class="card" style="margin-top: 1rem;">
+      <h4>3d. Clean up CRDs (optional)</h4>
+      <pre><code># Prometheus CRDs
+kubectl delete crd alertmanagerconfigs.monitoring.coreos.com \
+  alertmanagers.monitoring.coreos.com podmonitors.monitoring.coreos.com \
+  probes.monitoring.coreos.com prometheuses.monitoring.coreos.com \
+  prometheusrules.monitoring.coreos.com servicemonitors.monitoring.coreos.com \
+  thanosrulers.monitoring.coreos.com 2>/dev/null || true
+
+# ArgoCD CRDs
+kubectl delete crd applications.argoproj.io applicationsets.argoproj.io \
+  appprojects.argoproj.io 2>/dev/null || true</code></pre>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- Step 4: Terraform Destroy -->
+  <section class="section">
+    <h2 class="section-title">Step 4 — Destroy Terraform Infrastructure</h2>
+    <p>This is the most impactful step — it deletes the VPC, EKS cluster, ECR repositories, IAM roles, and all associated AWS resources.</p>
+
+    <div class="card">
+      <h4>4a. Review what will be destroyed</h4>
+      <pre><code>cd infra/terraform
+terraform plan -destroy</code></pre>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem;">
+        Review the output carefully. You should see ~40-50 resources marked for destruction.
+      </p>
+    </div>
+
+    <div class="card" style="margin-top: 1rem;">
+      <h4>4b. Execute destruction</h4>
+      <pre><code># Destroy all Terraform-managed resources (~10-15 minutes)
+cd infra/terraform
+terraform destroy -auto-approve
+
+# Or use the Makefile shortcut:
+make terraform-destroy</code></pre>
+    </div>
+
+    <div class="card" style="margin-top: 1rem;">
+      <h4>Resources destroyed by Terraform</h4>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Category</th><th>Resources</th><th>Terraform File</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>VPC</strong></td><td>VPC, 2 public subnets, 2 private subnets, IGW, NAT Gateway, route tables</td><td><code>vpc.tf</code></td></tr>
+            <tr><td><strong>EKS</strong></td><td>EKS cluster, managed node group (2&times; t3.large), cluster security group, OIDC provider</td><td><code>eks.tf</code></td></tr>
+            <tr><td><strong>ECR</strong></td><td>8 repositories (api-gateway, ingestion, agent-orchestrator, indexing, model-service, metrics, finetune, frontend)</td><td><code>ecr.tf</code></td></tr>
+            <tr><td><strong>IAM</strong></td><td>OIDC provider, IRSA roles (ALB Controller, EBS CSI Driver), GitHub Actions CD role</td><td><code>iam.tf</code></td></tr>
+            <tr><td><strong>Networking</strong></td><td>Elastic IP (NAT Gateway), security groups, subnet associations</td><td><code>vpc.tf</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top: 1rem; border-left: 4px solid #ff6b6b; background: rgba(255,107,107,0.06);">
+      <h4 style="color: #ff6b6b;">Common failure: ENI stuck in use</h4>
+      <p style="color: var(--text-muted); margin: 0;">
+        If <code>terraform destroy</code> hangs on VPC/subnet deletion, it's usually because an Elastic Network Interface
+        (ENI) is still attached to a deleted load balancer. Wait 5 minutes for AWS to release it, then re-run
+        <code>terraform destroy -auto-approve</code>. If it persists, manually detach and delete the ENI in the
+        EC2 &gt; Network Interfaces console.
+      </p>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- Step 5: State Backend -->
+  <section class="section">
+    <h2 class="section-title">Step 5 — Remove Terraform State Backend (Optional)</h2>
+    <p>The Terraform state backend (S3 + DynamoDB) was created by a separate bootstrap Terraform config. Delete it only if you're fully done with the project.</p>
+
+    <div class="card">
+      <pre><code># Empty the S3 bucket first (required before deletion)
+aws s3 rm s3://workflowai-terraform-state --recursive
+
+# Destroy the bootstrap resources
+cd infra/terraform/bootstrap
+terraform destroy -auto-approve</code></pre>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem;">
+        This removes the <code>workflowai-terraform-state</code> S3 bucket and <code>workflowai-terraform-locks</code>
+        DynamoDB table in <code>ap-southeast-1</code>.
+      </p>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- Step 6: Verification -->
+  <section class="section">
+    <h2 class="section-title">Step 6 — Verification Checklist</h2>
+    <p>Confirm all resources have been successfully deleted to avoid unexpected AWS charges.</p>
+
+    <div class="card">
+      <h4>CLI Verification</h4>
+      <pre><code># EKS cluster should be gone
+aws eks list-clusters --region ap-southeast-1
+# Expected: { "clusters": [] }
+
+# ECR repositories should be gone
+aws ecr describe-repositories --region ap-southeast-1 2>/dev/null || echo "No ECR repos"
+# Expected: error or empty list
+
+# VPC should be gone (check for workflowai VPC)
+aws ec2 describe-vpcs --region ap-southeast-1 \
+  --filters "Name=tag:Name,Values=*workflowai*"
+# Expected: { "Vpcs": [] }
+
+# No orphaned load balancers
+aws elbv2 describe-load-balancers --region ap-southeast-1
+# Expected: No load balancers with "workflowai" in the name
+
+# No orphaned EBS volumes
+aws ec2 describe-volumes --region ap-southeast-1 \
+  --filters "Name=tag:kubernetes.io/cluster/workflowai,Values=owned"
+# Expected: { "Volumes": [] }</code></pre>
+    </div>
+
+    <div class="card" style="margin-top: 1rem;">
+      <h4>AWS Console Verification</h4>
+      <p style="color: var(--text-muted); margin-bottom: 0.75rem;">Check these console pages in <code>ap-southeast-1</code>:</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Service</th><th>Console Path</th><th>Expected State</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>EKS</td><td>EKS &gt; Clusters</td><td>No <code>workflowai</code> cluster</td></tr>
+            <tr><td>EC2</td><td>EC2 &gt; Instances</td><td>No running instances tagged <code>workflowai</code></td></tr>
+            <tr><td>EC2</td><td>EC2 &gt; Load Balancers</td><td>No ALB with <code>k8s-workflow</code> prefix</td></tr>
+            <tr><td>VPC</td><td>VPC &gt; Your VPCs</td><td>No <code>workflowai-vpc</code></td></tr>
+            <tr><td>ECR</td><td>ECR &gt; Repositories</td><td>No <code>workflowai/</code> repos</td></tr>
+            <tr><td>IAM</td><td>IAM &gt; Roles</td><td>No <code>workflowai-*</code> roles</td></tr>
+            <tr><td>NAT Gateway</td><td>VPC &gt; NAT Gateways</td><td>No active NAT gateway</td></tr>
+            <tr><td>Elastic IPs</td><td>EC2 &gt; Elastic IPs</td><td>No unassociated EIPs</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- Quick Teardown -->
+  <section class="section">
+    <h2 class="section-title">Quick Teardown (One Command)</h2>
+    <p>For a fast teardown that handles steps 1 + 4 in a single command:</p>
+
+    <div class="card">
+      <pre><code># From the repository root:
+make clean</code></pre>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem;">
+        This runs <code>kubectl delete namespace workflowai --ignore-not-found</code> followed by
+        <code>terraform destroy -auto-approve</code>. Note: it does <strong>not</strong> uninstall Helm
+        releases (step 3) or clean up the state backend (step 5). For a complete teardown, follow the
+        full step-by-step guide above.
+      </p>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- Cost After Teardown -->
+  <section class="section">
+    <h2 class="section-title">Expected Cost After Teardown</h2>
+    <div class="stats-row animate-in">
+      <div class="stat-card">
+        <div class="stat-value" style="color: var(--accent);">$0.00</div>
+        <div class="stat-label">Monthly Cost (full teardown)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">~$0.50</div>
+        <div class="stat-label">If S3 state bucket remains</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="color: #ff6b6b;">~$35</div>
+        <div class="stat-label">If NAT Gateway is orphaned</div>
+      </div>
+    </div>
+    <p style="color: var(--text-muted); text-align: center; margin-top: 1rem;">
+      The most expensive resource to accidentally leave running is the <strong>NAT Gateway</strong> (~$35/mo).
+      Always verify it was deleted in the VPC console.
+    </p>
+  </section>
+
+</div><!-- .page-body -->
+
+<footer>
+  <p>WorkflowAI — NVIDIA IPP Senior Software Engineer Portfolio</p>
+  <p>&copy; 2026 Ren. Built with Go, Python, React, Terraform &amp; Kubernetes.</p>
+</footer>
+
+<script src="scripts.js"></script>
+</body>
+</html>

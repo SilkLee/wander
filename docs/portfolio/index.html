@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WorkflowAI — AI-Powered DevOps Platform</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="top-nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand">
+      <div class="logo-icon">W</div>
+      <span>WorkflowAI</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="architecture.html">Architecture</a></li>
+      <li><a href="demo.html">Demo</a></li>
+      <li><a href="performance.html">Performance</a></li>
+      <li><a href="interview.html">Interview Q&A</a></li>
+      <li><a href="cost.html">Cost Analysis</a></li>
+      <li><a href="teardown.html">Teardown</a></li>
+    </ul>
+    <button class="nav-hamburger" aria-label="Menu">&#9776;</button>
+  </div>
+</nav>
+
+<div class="page-body">
+
+  <!-- Hero -->
+  <section class="hero">
+    <h1>WorkflowAI</h1>
+    <p class="subtitle">
+      A production-grade AI platform that automates DevOps workflows using RAG, LLM fine-tuning, 
+      and multi-agent systems — built as an NVIDIA IPP Senior Software Engineer interview portfolio.
+    </p>
+    <div class="badge-row">
+      <span class="badge go">Go 1.22</span>
+      <span class="badge python">Python 3.11</span>
+      <span class="badge react">React 18</span>
+      <span class="badge aws">AWS EKS</span>
+      <span class="badge k8s">Kubernetes</span>
+      <span class="badge nvidia">NVIDIA IPP</span>
+    </div>
+  </section>
+
+  <!-- Key Stats -->
+  <section class="section">
+    <div class="stats-row animate-in">
+      <div class="stat-card">
+        <div class="stat-value">8</div>
+        <div class="stat-label">Microservices</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">40k</div>
+        <div class="stat-label">RPS (API Gateway)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">470</div>
+        <div class="stat-label">Tests (0 failures)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">13/13</div>
+        <div class="stat-label">Pods Running (EKS)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">4</div>
+        <div class="stat-label">AI Workflows</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">12</div>
+        <div class="stat-label">Weeks of Development</div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- AI Workflows -->
+  <section class="section">
+    <div class="section-header">
+      <h2>AI-Powered Workflows</h2>
+      <p>Four production workflows powered by RAG, LLM fine-tuning, and multi-agent orchestration</p>
+    </div>
+
+    <div class="card-grid">
+      <div class="card animate-in">
+        <div class="card-icon" style="background: rgba(139, 92, 246, 0.15);">&#128269;</div>
+        <h3>Build Failure Triage</h3>
+        <p>Ingests CI logs, retrieves similar past failures via hybrid search (Elasticsearch + Faiss), and generates root cause analysis with fix recommendations using RAG + fine-tuned classifier.</p>
+        <div style="margin-top: 0.75rem;">
+          <span class="tag tag-ai">RAG</span>
+          <span class="tag tag-ai">Fine-tuned Classifier</span>
+          <span class="tag tag-python">LangChain</span>
+        </div>
+      </div>
+
+      <div class="card animate-in">
+        <div class="card-icon" style="background: rgba(245, 158, 11, 0.15);">&#9888;&#65039;</div>
+        <h3>PR Risk Assessment</h3>
+        <p>Analyzes PR diff and metadata to predict risk score with actionable recommendations. Uses ML prediction model with features like file count, line changes, and historical patterns.</p>
+        <div style="margin-top: 0.75rem;">
+          <span class="tag tag-ai">ML Model</span>
+          <span class="tag tag-python">LangGraph</span>
+          <span class="tag tag-go">Go Gateway</span>
+        </div>
+      </div>
+
+      <div class="card animate-in">
+        <div class="card-icon" style="background: rgba(59, 130, 246, 0.15);">&#128221;</div>
+        <h3>Code Review Assistant</h3>
+        <p>Performs automated code review on PR diffs — identifies issues, suggests improvements, and checks against best practices using LLM + static analysis patterns.</p>
+        <div style="margin-top: 0.75rem;">
+          <span class="tag tag-ai">LLM</span>
+          <span class="tag tag-python">Static Analysis</span>
+          <span class="tag tag-python">LangGraph</span>
+        </div>
+      </div>
+
+      <div class="card animate-in">
+        <div class="card-icon" style="background: rgba(239, 68, 68, 0.15);">&#128680;</div>
+        <h3>Incident Response</h3>
+        <p>Multi-agent LangGraph workflow for automated incident triage — classifies severity, identifies affected services, generates runbooks, and coordinates response across teams.</p>
+        <div style="margin-top: 0.75rem;">
+          <span class="tag tag-ai">LangGraph</span>
+          <span class="tag tag-ai">Multi-Agent</span>
+          <span class="tag tag-python">FastAPI</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- Architecture Overview (Summary) -->
+  <section class="section">
+    <div class="section-header">
+      <h2>Polyglot Architecture</h2>
+      <p>Strategic Go + Python design — network performance meets AI ecosystem</p>
+    </div>
+
+    <div class="grid-2">
+      <div class="card animate-in">
+        <h3 style="color: #00ADD8;">Go Network Layer</h3>
+        <p>API Gateway (Gin) and Ingestion Service handle all incoming traffic. JWT auth, rate limiting, connection pooling — achieving 40k RPS with only 30MB memory.</p>
+        <div style="margin-top: 0.75rem;">
+          <span class="tag tag-go">Gin Framework</span>
+          <span class="tag tag-go">40k RPS</span>
+          <span class="tag tag-go">30MB Memory</span>
+        </div>
+      </div>
+      <div class="card animate-in">
+        <h3 style="color: #3776AB;">Python AI Layer</h3>
+        <p>Agent Orchestrator, Indexing, Model, and Metrics services power the AI core. LangChain + LangGraph for orchestration, Sentence Transformers for embeddings, PEFT for fine-tuning.</p>
+        <div style="margin-top: 0.75rem;">
+          <span class="tag tag-python">FastAPI</span>
+          <span class="tag tag-python">LangChain</span>
+          <span class="tag tag-ai">vLLM / PEFT</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 2rem;">
+      <a href="architecture.html" class="card-link" style="font-size: 1rem;">
+        View Full Architecture Diagram &rarr;
+      </a>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- Technology Stack -->
+  <section class="section">
+    <div class="section-header">
+      <h2>Technology Stack</h2>
+      <p>Production-grade technologies across every layer</p>
+    </div>
+
+    <div class="table-wrapper animate-in">
+      <table>
+        <thead>
+          <tr>
+            <th>Layer</th>
+            <th>Technology</th>
+            <th>Version</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Network</td><td>Go (Gin)</td><td>1.22 / 1.9.1</td><td>API Gateway, Ingestion</td></tr>
+          <tr><td>AI Core</td><td>Python (FastAPI)</td><td>3.11 / 0.104.1</td><td>Agent, Indexing, Model, Metrics</td></tr>
+          <tr><td>Frontend</td><td>React + TypeScript</td><td>18 / 5.0</td><td>Dashboard UI (6 pages)</td></tr>
+          <tr><td>Orchestration</td><td>LangChain + LangGraph</td><td>0.1.0 / 0.0.20</td><td>Multi-agent workflows</td></tr>
+          <tr><td>Inference</td><td>vLLM / OpenRouter</td><td>0.2.6</td><td>LLM serving (Qwen2.5-7B)</td></tr>
+          <tr><td>Fine-tuning</td><td>PEFT (LoRA)</td><td>0.7.0</td><td>Low-rank adaptation on Qwen</td></tr>
+          <tr><td>Embeddings</td><td>Sentence Transformers</td><td>2.2.2</td><td>Vector generation (all-MiniLM-L6-v2)</td></tr>
+          <tr><td>Search</td><td>Elasticsearch + Faiss</td><td>8.11 / 1.7.4</td><td>Hybrid BM25 + vector retrieval</td></tr>
+          <tr><td>Database</td><td>PostgreSQL</td><td>15</td><td>Structured data, DORA metrics</td></tr>
+          <tr><td>Cache/Queue</td><td>Redis</td><td>7</td><td>Rate limiting, Streams, caching</td></tr>
+          <tr><td>IaC</td><td>Terraform</td><td>1.7+</td><td>VPC, EKS, ECR, IAM (ap-southeast-1)</td></tr>
+          <tr><td>CI/CD</td><td>GitHub Actions</td><td>-</td><td>Matrix CI + ArgoCD GitOps CD</td></tr>
+          <tr><td>Orchestration</td><td>Kubernetes (EKS)</td><td>1.29</td><td>Production container orchestration</td></tr>
+          <tr><td>GitOps</td><td>ArgoCD</td><td>2.10+</td><td>Auto-sync, prune, selfHeal</td></tr>
+          <tr><td>Observability</td><td>Prometheus + Grafana + Jaeger</td><td>-</td><td>Metrics, dashboards, tracing</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- Development Timeline -->
+  <section class="section">
+    <div class="section-header">
+      <h2>12-Week Development Timeline</h2>
+      <p>From zero to production in 12 weeks, ~250-300 hours of hands-on engineering</p>
+    </div>
+
+    <div class="timeline">
+      <div class="timeline-item completed">
+        <span class="week-label">Month 1: Foundation</span>
+        <h3>Weeks 1-4 — Infrastructure + Agent Core</h3>
+        <p>Go API Gateway (Gin), Docker Compose, JWT auth, Redis rate limiting, Python FastAPI services, LangChain agent orchestration, LangGraph multi-agent, RAG pipeline with EC2 deployment.</p>
+      </div>
+      <div class="timeline-item completed">
+        <span class="week-label">Month 2: Advanced Features</span>
+        <h3>Weeks 5-8 — AI + Frontend</h3>
+        <p>LoRA fine-tuning on Qwen2.5-7B, advanced RAG (hybrid search + reranking), Incident Response multi-agent workflow, DORA metrics service, React frontend with 6 pages.</p>
+      </div>
+      <div class="timeline-item completed">
+        <span class="week-label">Month 3: Production Ready</span>
+        <h3>Weeks 9-11 — Testing + Optimization + Deployment</h3>
+        <p>470 tests (0 failures), performance optimization (connection pooling, caching, code splitting), GitHub Actions CI/CD, Terraform IaC, AWS EKS deployment, ArgoCD GitOps. 13/13 pods healthy.</p>
+      </div>
+      <div class="timeline-item current">
+        <span class="week-label">Final Week</span>
+        <h3>Week 12 — Portfolio Packaging</h3>
+        <p>Architecture diagrams, performance reports, interview Q&A, cost analysis, demo documentation, and this portfolio website you're viewing now.</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- Portfolio Pages -->
+  <section class="section">
+    <div class="section-header">
+      <h2>Explore the Portfolio</h2>
+      <p>Deep-dive into every aspect of the project</p>
+    </div>
+
+    <div class="card-grid">
+      <a href="architecture.html" class="card animate-in" style="text-decoration: none; color: inherit;">
+        <div class="card-icon" style="background: rgba(6, 182, 212, 0.15);">&#127959;</div>
+        <h3>Architecture</h3>
+        <p>Interactive diagram of 8 microservices, data flow, infrastructure layers, and AI components.</p>
+        <span class="card-link">View Diagram &rarr;</span>
+      </a>
+
+      <a href="demo.html" class="card animate-in" style="text-decoration: none; color: inherit;">
+        <div class="card-icon" style="background: rgba(139, 92, 246, 0.15);">&#127916;</div>
+        <h3>Demo Script</h3>
+        <p>2-3 minute walkthrough of all 4 AI workflows with API examples and expected outputs.</p>
+        <span class="card-link">View Demo &rarr;</span>
+      </a>
+
+      <a href="performance.html" class="card animate-in" style="text-decoration: none; color: inherit;">
+        <div class="card-icon" style="background: rgba(118, 185, 0, 0.15);">&#128200;</div>
+        <h3>Performance Report</h3>
+        <p>Benchmarks, optimization results, before/after comparisons, and throughput analysis.</p>
+        <span class="card-link">View Report &rarr;</span>
+      </a>
+
+      <a href="interview.html" class="card animate-in" style="text-decoration: none; color: inherit;">
+        <div class="card-icon" style="background: rgba(245, 158, 11, 0.15);">&#127908;</div>
+        <h3>Interview Q&A</h3>
+        <p>NVIDIA IPP-specific technical questions covering RAG, fine-tuning, K8s, and system design.</p>
+        <span class="card-link">View Q&A &rarr;</span>
+      </a>
+
+      <a href="cost.html" class="card animate-in" style="text-decoration: none; color: inherit;">
+        <div class="card-icon" style="background: rgba(59, 130, 246, 0.15);">&#128176;</div>
+        <h3>Cost Analysis</h3>
+        <p>AWS EKS running cost breakdown — EC2, control plane, ALB, EBS, and data transfer.</p>
+        <span class="card-link">View Costs &rarr;</span>
+      </a>
+
+      <a href="teardown.html" class="card animate-in" style="text-decoration: none; color: inherit;">
+        <div class="card-icon" style="background: rgba(239, 68, 68, 0.15);">&#128465;</div>
+        <h3>Teardown Guide</h3>
+        <p>Complete cleanup instructions — destroy EKS, Terraform resources, and all AWS infrastructure.</p>
+        <span class="card-link">View Guide &rarr;</span>
+      </a>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- Live Deployment -->
+  <section class="section">
+    <div class="section-header">
+      <h2>Live Deployment</h2>
+      <p>Running on AWS EKS in ap-southeast-1</p>
+    </div>
+
+    <div class="callout">
+      <strong>ALB Endpoint:</strong>
+      <code>http://k8s-workflow-workflow-40cd3e1fe4-525208112.ap-southeast-1.elb.amazonaws.com</code>
+      <br><br>
+      <strong>Health Check:</strong> <code>GET /health</code> &rarr; <code>{"redis":"connected","status":"healthy"}</code>
+      <br><br>
+      <strong>Cluster:</strong> 2&times; t3.large nodes &bull; 13/13 pods Running &bull; ArgoCD auto-sync enabled
+    </div>
+
+    <div class="callout callout-blue mt-2">
+      <strong>GitOps CD Flow:</strong><br>
+      Push to <code>main</code> &rarr; GitHub Actions CI (matrix tests) &rarr; CD builds Docker images &rarr; 
+      pushes to ECR with <code>sha-&lt;commit&gt;</code> tag &rarr; updates Kustomize overlay &rarr; 
+      ArgoCD auto-syncs cluster.
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <p>
+      <strong>WorkflowAI</strong> &mdash; Built by <strong>Ren</strong> for NVIDIA IPP Senior Software Engineer Interview
+      <br>
+      <a href="https://github.com/SilkLee/workflow-ai" target="_blank">GitHub</a> &bull;
+      Feb 2026 &ndash; May 2026 &bull; MIT License
+    </p>
+  </footer>
+
+</div>
+
+<script src="scripts.js"></script>
+</body>
+</html>

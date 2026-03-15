@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interview Q&A — WorkflowAI Portfolio</title>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<nav class="top-nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand"><div class="logo-icon">W</div><span>WorkflowAI</span></a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="architecture.html">Architecture</a></li>
+      <li><a href="demo.html">Demo</a></li>
+      <li><a href="performance.html">Performance</a></li>
+      <li><a href="interview.html">Interview Q&A</a></li>
+      <li><a href="cost.html">Cost Analysis</a></li>
+      <li><a href="teardown.html">Teardown</a></li>
+    </ul>
+    <button class="nav-hamburger" aria-label="Menu">&#9776;</button>
+  </div>
+</nav>
+
+<div class="page-body">
+  <section class="hero" style="padding-bottom: 2rem;">
+    <h1>Interview Q&A</h1>
+    <p class="subtitle">Technical questions tailored for the NVIDIA IPP Senior Software Engineer role — covering RAG, fine-tuning, system design, and Kubernetes</p>
+  </section>
+
+  <!-- Category 1: Architecture & System Design -->
+  <section class="section">
+    <div class="section-header">
+      <h2>Architecture & System Design</h2>
+    </div>
+
+    <div class="accordion-item open">
+      <button class="accordion-header">
+        <span>Q: Why did you choose a polyglot Go + Python architecture?</span>
+        <span class="arrow">&#9660;</span>
+      </button>
+      <div class="accordion-body">
+        <div class="accordion-body-inner">
+          <p>I separated network I/O from AI compute based on objective performance requirements.</p>
+          <p><strong>Go for the Network Layer:</strong> The API Gateway needed to handle high-throughput webhook traffic from GitHub/CI systems. Go with Gin achieved 40,000 RPS with 30MB memory — that's 5&times; throughput and 6&times; memory efficiency vs an equivalent Python (FastAPI) implementation. For a service that's essentially proxying and rate-limiting, Go's goroutine model is ideal.</p>
+          <p><strong>Python for AI:</strong> There's no viable alternative. LangChain, LangGraph, Sentence Transformers, PEFT, vLLM — the entire ML/AI ecosystem is Python-first. Fighting that ecosystem would cost more than the polyglot overhead.</p>
+          <p><strong>Integration:</strong> Standard microservice patterns (HTTP + Redis Streams + OpenTelemetry) made the language boundary transparent. The 30-40 hour overhead of maintaining two languages paid for itself in the 4&times; Gateway performance gain — critical when running 13 pods on 2 small nodes.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <button class="accordion-header">
+        <span>Q: How do your microservices communicate?</span>
+        <span class="arrow">&#9660;</span>
+      </button>
+      <div class="accordion-body">
+        <div class="accordion-body-inner">
+          <p>Two patterns depending on the use case:</p>
+          <p><strong>Synchronous (HTTP):</strong> API Gateway proxies requests to backend services (agent-orchestrator, metrics, indexing) via HTTP. Simple, debuggable, with built-in retry logic. Used for all user-facing request-response flows.</p>
+          <p><strong>Asynchronous (Redis Streams):</strong> The Ingestion Service publishes webhook events to Redis Streams. The Agent Orchestrator consumes events asynchronously. This decouples ingestion throughput from AI processing latency — critical because LLM inference takes 1-3 seconds vs the 5ms webhook acknowledgment SLA.</p>
+          <p><strong>Why not Kafka/RabbitMQ?</strong> Redis Streams provides exactly-once semantics with consumer groups, and we already had Redis for rate limiting and caching. Adding another message broker would increase operational complexity for a system that processes hundreds, not millions, of events per minute.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <button class="accordion-header">
+        <span>Q: How would you scale this system to 100x the current load?</span>
+        <span class="arrow">&#9660;</span>
+      </button>
+      <div class="accordion-body">
+        <div class="accordion-body-inner">
+          <p><strong>Horizontal scaling (immediate):</strong> HPA is already configured for all services. The Go Gateway scales linearly — add replicas. Python services scale with gunicorn workers per pod plus more pods.</p>
+          <p><strong>Inference bottleneck:</strong> At 100x, LLM inference becomes the bottleneck. I'd move from single OpenRouter calls to batched inference with vLLM on GPU nodes (g5.xlarge). vLLM's continuous batching can serve 50-100 concurrent requests on a single A10G.</p>
+          <p><strong>Data layer:</strong> PostgreSQL would need read replicas for the metrics service. Elasticsearch already shards well. Redis would need cluster mode for the cache layer.</p>
+          <p><strong>Architecture changes:</strong> I'd add a request queue (SQS/Kafka) in front of the agent orchestrator to absorb traffic spikes, and implement circuit breakers (already have Redis-based rate limiting as a foundation).</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <button class="accordion-header">
+        <span>Q: What trade-offs did you make and what would you change?</span>
+        <span class="arrow">&#9660;</span>
+      </button>
+      <div class="accordion-body">
+        <div class="accordion-body-inner">
+          <p><strong>Trade-offs made:</strong></p>
+          <ul>
+            <li><strong>OpenRouter vs local inference:</strong> Production uses OpenRouter API proxy because t3.large nodes lack GPU. This adds ~500ms network latency but eliminates the $0.50/hr per GPU node cost. For a portfolio project, this was the right call.</li>
+            <li><strong>Kustomize vs Helm:</strong> Used Kustomize for application manifests (simpler, less templating complexity) and Helm only for third-party tools (ArgoCD, ALB Controller, Prometheus). Some teams prefer all-Helm; I value readability for interview discussions.</li>
+            <li><strong>No service mesh:</strong> Istio/Linkerd would add mTLS and observability but also 200MB+ sidecar overhead per pod. With 13 pods on 16GB, that's not viable. OpenTelemetry manual instrumentation was sufficient.</li>
+          </ul>
+          <p><strong>What I'd change:</strong></p>
+          <ul>
+            <li>Add proper end-to-end integration tests that actually call the live cluster</li>
+            <li>Implement proper secret management (AWS Secrets Manager + External Secrets Operator) instead of K8s Secrets</li>
+            <li>Add Grafana dashboards with pre-configured alerts for DORA metrics</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- Category 2: RAG & AI -->
+  <section class="section">
+    <div class="section-header">
+      <h2>RAG & AI Architecture</h2>
+    </div>
+
+    <div class="accordion-item">
+      <button class="accordion-header">
+        <span>Q: Explain your RAG pipeline architecture</span>
+        <span class="arrow">&#9660;</span>
+      </button>
+      <div class="accordion-body">
+        <div class="accordion-body-inner">
+          <p>The RAG pipeline has three stages:</p>
+          <p><strong>1. Indexing (offline):</strong> Build failure logs are embedded using <code>all-MiniLM-L6-v2</code> (384-dim vectors) and stored in both Faiss (vector index) and Elasticsearch (full-text BM25 index). This dual-index approach enables hybrid search.</p>
+          <p><strong>2. Retrieval (online):</strong> When a new failure arrives, I run parallel queries — BM25 keyword search on Elasticsearch and cosine similarity search on Faiss. Results are merged using reciprocal rank fusion (RRF), then reranked for relevance. This hybrid approach catches failures that share technical terms (BM25) AND semantic meaning (vector) — catching cases each method alone would miss.</p>
+          <p><strong>3. Generation:</strong> The top-k retrieved documents (similar past failures + their resolutions) are concatenated with the new failure log and sent to the LLM. The prompt is structured to generate: root cause, severity classification, fix steps, and confidence score.</p>
+          <p><strong>Why hybrid over pure vector search?</strong> In DevOps logs, exact error codes and package names matter. Vector search alone might miss "ECONNREFUSED" matching "connection refused" at the keyword level. BM25 catches exact matches; vectors catch semantic similarity. Combined, they achieve higher recall.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <button class="accordion-header">
+        <span>Q: How did you approach LLM fine-tuning?</span>
+        <span class="arrow">&#9660;</span>
+      </button>
+      <div class="accordion-body">
+        <div class="accordion-body-inner">
+          <p><strong>Model:</strong> Qwen2.5-7B as the base model — strong multilingual capability, good reasoning for code analysis.</p>
+          <p><strong>Method:</strong> LoRA (Low-Rank Adaptation) via PEFT library. Rank-16 adapters on attention layers only. This reduces trainable parameters from 7B to ~4M (0.06%) while preserving the base model's general capabilities.</p>
+          <p><strong>Task:</strong> Fine-tuned a classifier for build failure categorization — infrastructure, dependency, test, configuration, code. This runs before RAG retrieval to route failures to the most relevant index partition.</p>
+          <p><strong>Training:</strong> 500 labeled examples of CI failures, augmented with GPT-4 generated variations. 3 epochs, learning rate 2e-4, batch size 4 with gradient accumulation. Training takes ~30min on a single A10G GPU.</p>
+          <p><strong>Why LoRA over full fine-tuning?</strong> Memory efficiency (fits on a single 24GB GPU), faster training (30 min vs 8+ hours), and the adapter is only 16MB — easy to version, deploy, and swap for different classification tasks.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <button class="accordion-header">
+        <span>Q: How does LangGraph improve over basic LangChain?</span>
+        <span class="arrow">&#9660;</span>
+      </button>
+      <div class="accordion-body">
+        <div class="accordion-body-inner">
+          <p><strong>The problem:</strong> LangChain's basic chain/agent paradigm is linear. Real incident response requires multiple specialized agents collaborating with conditional logic — if severity is P1, escalate immediately; if diagnosis is uncertain, loop back for more evidence.</p>
+          <p><strong>LangGraph solution:</strong> It provides a state machine / directed graph for agent orchestration. Each node is a specialized agent (triage, diagnosis, resolution, communication). Edges have conditions. State is passed between nodes and persisted.</p>
+          <p><strong>Concrete example — Incident Response:</strong></p>
+          <ol>
+            <li>Triage Agent classifies severity → if P1, parallel-execute Diagnosis + Communication</li>
+            <li>Diagnosis Agent analyzes logs → if low confidence, loop back with additional data</li>
+            <li>Resolution Agent generates runbook → depends on Diagnosis output</li>
+            <li>Communication Agent drafts updates → incorporates all prior agent outputs</li>
+          </ol>
+          <p><strong>Key advantage:</strong> LangGraph gives me control flow (conditionals, loops, parallel execution) that basic chains can't express. The incident workflow has a state schema with typed fields, making it debuggable and testable — unlike opaque chain outputs.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <button class="accordion-header">
+        <span>Q: How do you evaluate RAG quality?</span>
+        <span class="arrow">&#9660;</span>
+      </button>
+      <div class="accordion-body">
+        <div class="accordion-body-inner">
+          <p><strong>Retrieval metrics:</strong></p>
+          <ul>
+            <li><strong>Recall@k:</strong> What percentage of relevant documents appear in the top-k results. Target: &gt;0.85 at k=5.</li>
+            <li><strong>MRR (Mean Reciprocal Rank):</strong> How high the first relevant result appears. Target: &gt;0.7.</li>
+          </ul>
+          <p><strong>Generation metrics:</strong></p>
+          <ul>
+            <li><strong>Faithfulness:</strong> Does the answer only use information from retrieved docs? Manual spot-checking + automated LLM-as-judge evaluation.</li>
+            <li><strong>Relevance:</strong> Does the answer address the actual failure? Measured by comparing generated root cause against known resolutions in our test set.</li>
+          </ul>
+          <p><strong>End-to-end:</strong> Confidence score from the model itself (calibrated against test set). Tracked via DORA metrics — MTTR reduction is the ultimate evaluation: 45 min manual → 8 min AI-assisted = 5.6&times; improvement.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- Category 3: Kubernetes & DevOps -->
+  <section class="section">
+    <div class="section-header">
+      <h2>Kubernetes & DevOps</h2>
+    </div>
+
+    <div class="accordion-item">
+      <button class="accordion-header">
+        <span>Q: Walk me through your CI/CD pipeline</span>
+        <span class="arrow">&#9660;</span>
+      </button>
+      <div class="accordion-body">
+        <div class="accordion-body-inner">
+          <p><strong>CI (GitHub Actions):</strong></p>
+          <ul>
+            <li>Triggered on push to main and PRs</li>
+            <li>Matrix strategy: Go ×2 services (test + lint), Python ×4 services (test + lint), Frontend (test + build)</li>
+            <li>Each service tested independently — failure in one doesn't block others</li>
+            <li>Total: 470 tests, ~3-4 min wall clock</li>
+          </ul>
+          <p><strong>CD (GitHub Actions → ArgoCD):</strong></p>
+          <ol>
+            <li>On CI success, CD workflow triggers</li>
+            <li>OIDC authentication to AWS (no stored credentials)</li>
+            <li>Docker build + push to ECR with <code>sha-&lt;commit&gt;</code> tag (no :latest)</li>
+            <li>Updates <code>k8s/overlays/production/kustomization.yaml</code> with new image tags</li>
+            <li>Commits kustomization change back to main</li>
+            <li>ArgoCD detects git change, auto-syncs cluster</li>
+          </ol>
+          <p><strong>Why this approach?</strong> ArgoCD as the single source of truth for cluster state. No <code>kubectl apply</code> in CI — all changes go through Git. Rollback = revert the kustomization commit.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <button class="accordion-header">
+        <span>Q: How did you handle secrets management in Kubernetes?</span>
+        <span class="arrow">&#9660;</span>
+      </button>
+      <div class="accordion-body">
+        <div class="accordion-body-inner">
+          <p><strong>Current approach:</strong> Kubernetes Secret objects with base64-encoded values, deployed via <code>kubectl create secret</code>. ArgoCD is configured with <code>ignoreDifferences</code> on secret data to prevent selfHeal from overwriting manually-set secrets.</p>
+          <p><strong>Challenges encountered:</strong> ArgoCD's selfHeal kept reverting secrets to the Git-stored (empty/placeholder) values. Solved with:</p>
+          <pre><code>ignoreDifferences:
+- group: ""
+  kind: Secret
+  jsonPointers:
+  - /data</code></pre>
+          <p>Plus <code>RespectIgnoreDifferences=true</code> sync option.</p>
+          <p><strong>Production improvement:</strong> In a real environment, I'd use AWS Secrets Manager + External Secrets Operator to sync secrets from AWS into K8s Secret objects automatically. This eliminates manual secret management and provides audit trails.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <button class="accordion-header">
+        <span>Q: Why Kustomize instead of Helm for your application?</span>
+        <span class="arrow">&#9660;</span>
+      </button>
+      <div class="accordion-body">
+        <div class="accordion-body-inner">
+          <p><strong>Decision criteria:</strong></p>
+          <ul>
+            <li><strong>Readability:</strong> Kustomize uses plain YAML with overlays. During an interview, I can show the exact K8s manifest that runs in production — no template rendering step.</li>
+            <li><strong>Simplicity:</strong> 8 services with similar deployment patterns. Kustomize's strategic merge patches are sufficient. Helm's templating power (conditionals, loops, helpers) isn't needed.</li>
+            <li><strong>ArgoCD native:</strong> ArgoCD has first-class Kustomize support. No Helm release management overhead.</li>
+          </ul>
+          <p><strong>Helm for third-party:</strong> I use Helm for ALB Controller, ArgoCD, and kube-prometheus-stack because these charts manage complex CRD installations and version upgrades that would be painful to maintain as raw YAML.</p>
+          <p><strong>Structure:</strong> <code>k8s/base/</code> (8 deployments, services, configmaps) + <code>k8s/overlays/production/</code> (resource patches, HPA, ingress). Clean separation of concerns.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <button class="accordion-header">
+        <span>Q: How does ArgoCD selfHeal work and what issues did you face?</span>
+        <span class="arrow">&#9660;</span>
+      </button>
+      <div class="accordion-body">
+        <div class="accordion-body-inner">
+          <p><strong>selfHeal:</strong> ArgoCD continuously compares the live cluster state against the Git-declared desired state. If someone manually changes a resource (kubectl edit, kubectl scale), selfHeal automatically reverts it within seconds. This enforces GitOps — Git is the single source of truth.</p>
+          <p><strong>Issue encountered:</strong> selfHeal was overwriting the Secret's data field. The Kubernetes Secret had been manually patched with the real API keys/passwords (not stored in Git for security). Every selfHeal cycle would reset these to the placeholder values from Git.</p>
+          <p><strong>Solution:</strong> Three-part fix:</p>
+          <ol>
+            <li><code>ignoreDifferences</code> on Secret data in the ArgoCD Application spec</li>
+            <li><code>RespectIgnoreDifferences=true</code> in syncOptions (makes selfHeal honor the ignore rules)</li>
+            <li>Documented that secrets must be applied manually after initial deploy</li>
+          </ol>
+          <p><strong>Lesson:</strong> GitOps purists would say "everything in Git, use sealed-secrets or external-secrets." Pragmatically, for a portfolio project with a single cluster, the ignoreDifferences approach is simpler and sufficient.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- Category 4: Performance & Optimization -->
+  <section class="section">
+    <div class="section-header">
+      <h2>Performance & Optimization</h2>
+    </div>
+
+    <div class="accordion-item">
+      <button class="accordion-header">
+        <span>Q: How did you achieve 40k RPS on the API Gateway?</span>
+        <span class="arrow">&#9660;</span>
+      </button>
+      <div class="accordion-body">
+        <div class="accordion-body-inner">
+          <p>Four key factors:</p>
+          <ol>
+            <li><strong>Go + goroutines:</strong> Each request gets its own goroutine. No thread pool exhaustion, no GIL. The Go runtime schedules goroutines across OS threads efficiently.</li>
+            <li><strong>Connection pooling:</strong> Both Redis and HTTP backend connections are pooled. The Redis pool maintains 100 persistent connections; HTTP clients reuse TCP connections with keep-alive. This eliminates the TCP handshake + TLS overhead per request.</li>
+            <li><strong>Response caching:</strong> Redis-backed cache middleware with configurable TTL. For repeated health checks and read-heavy endpoints, cache hit rate is ~90%. Cache miss falls through to the backend service.</li>
+            <li><strong>Minimal allocation:</strong> Gin framework is designed for zero-allocation routing. We pre-allocate response buffers and reuse JSON encoders. The 30MB memory footprint means the garbage collector rarely pauses.</li>
+          </ol>
+          <p><strong>Measurement:</strong> <code>wrk -t4 -c100 -d30s http://localhost:8000/health</code> consistently produces 40k+ RPS on a 4-core machine.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <button class="accordion-header">
+        <span>Q: How did you ensure optimizations didn't introduce regressions?</span>
+        <span class="arrow">&#9660;</span>
+      </button>
+      <div class="accordion-body">
+        <div class="accordion-body-inner">
+          <p><strong>Test suite as safety net:</strong> All 470 tests ran before and after every optimization. Zero test failures post-optimization (Week 10).</p>
+          <p><strong>Incremental approach:</strong> Each optimization was applied and tested independently — connection pooling first, then caching, then gunicorn workers. Never multiple changes at once.</p>
+          <p><strong>Behavioral verification:</strong> Integration tests verify that API contracts haven't changed. A cached response must be identical to an uncached response (verified by test).</p>
+          <p><strong>Resource monitoring:</strong> Docker Compose resource limits prevent any service from starving others. The metrics service caches were tested for memory growth over 24-hour simulated loads.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- Category 5: NVIDIA-Specific -->
+  <section class="section">
+    <div class="section-header">
+      <h2>NVIDIA IPP-Specific</h2>
+    </div>
+
+    <div class="accordion-item">
+      <button class="accordion-header">
+        <span>Q: How does this project relate to NVIDIA's AI workflow platform?</span>
+        <span class="arrow">&#9660;</span>
+      </button>
+      <div class="accordion-body">
+        <div class="accordion-body-inner">
+          <p>NVIDIA's IPP (Intelligent Pipeline Platform) orchestrates AI/ML workflows at scale. My project directly mirrors these challenges:</p>
+          <ul>
+            <li><strong>Multi-agent orchestration:</strong> LangGraph workflows are analogous to NVIDIA's pipeline DAGs — coordinating multiple AI models with conditional logic and state management</li>
+            <li><strong>Model serving:</strong> The model-service with vLLM/OpenRouter reflects NVIDIA's Triton Inference Server patterns — model loading, batching, GPU memory management</li>
+            <li><strong>Scale concerns:</strong> Running 8 AI services on constrained hardware (2× t3.large) required the same resource optimization thinking that GPU cluster management demands</li>
+            <li><strong>RAG pipelines:</strong> NVIDIA's NeMo Retriever and my Elasticsearch + Faiss hybrid search solve the same retrieval problem at different scales</li>
+          </ul>
+          <p><strong>Key differentiator:</strong> This isn't a tutorial project. It runs in production on AWS, handles real webhook events, and has been optimized across every layer. I've made engineering trade-offs (not toy decisions) and can discuss them in depth.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <button class="accordion-header">
+        <span>Q: What's the hardest technical problem you solved?</span>
+        <span class="arrow">&#9660;</span>
+      </button>
+      <div class="accordion-body">
+        <div class="accordion-body-inner">
+          <p><strong>ArgoCD selfHeal + secrets management on EKS.</strong></p>
+          <p>The system was live with 13 pods, but ArgoCD kept reverting the OpenRouter API key secret every 3 minutes. The model-service would crash, agent-orchestrator would timeout, and the entire AI pipeline would go down.</p>
+          <p><strong>Debugging process:</strong></p>
+          <ol>
+            <li>Identified the issue via <code>kubectl logs</code> on argocd-application-controller</li>
+            <li>Realized selfHeal was comparing Git (placeholder) vs live (real key) and "healing" back to placeholder</li>
+            <li>First fix: <code>ignoreDifferences</code> — didn't work because selfHeal ignores ignoreDifferences by default</li>
+            <li>Second fix: Added <code>RespectIgnoreDifferences=true</code> syncOption — this was the key insight</li>
+            <li>Also had to increase model-service resources (100m→1000m CPU) because torch startup was getting OOMKilled</li>
+          </ol>
+          <p><strong>Why it was hard:</strong> Multiple failure modes overlapping — secret overwrite + resource starvation + probe timeouts all looked like "model-service crashing." Had to isolate each issue independently while the cluster was live.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <button class="accordion-header">
+        <span>Q: How do you quantify the business impact of AI automation?</span>
+        <span class="arrow">&#9660;</span>
+      </button>
+      <div class="accordion-body">
+        <div class="accordion-body-inner">
+          <p>Through DORA metrics — the industry-standard framework for measuring DevOps performance:</p>
+          <ul>
+            <li><strong>MTTR reduction:</strong> 45 min (manual triage) → 8 min (AI-assisted) = 5.6× improvement. This is the primary ROI metric.</li>
+            <li><strong>Deployment frequency:</strong> With automated PR risk assessment and code review, teams can merge faster with confidence. Tracks from weekly to daily deployment cadence.</li>
+            <li><strong>Change failure rate:</strong> AI-assisted code review catches issues before merge. Measuring the percentage of deployments that cause production incidents.</li>
+            <li><strong>Lead time:</strong> From commit to production deployment. The CI/CD pipeline (3-4 min CI + 2 min CD + instant ArgoCD sync) provides baseline data.</li>
+          </ul>
+          <p><strong>Concrete example:</strong> If an engineering team of 20 spends an average of 45 min per build failure, and they have 3 failures per day, that's 45 hours/week of engineer time. At 5.6× improvement, AI triage recovers ~37 hours/week — nearly a full engineer's capacity.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <p><strong>WorkflowAI</strong> &mdash; Built by <strong>Ren</strong> for NVIDIA IPP &bull; <a href="https://github.com/SilkLee/workflow-ai">GitHub</a></p>
+  </footer>
+</div>
+
+<script src="scripts.js"></script>
+</body>
+</html>
