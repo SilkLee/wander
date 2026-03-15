@@ -47,3 +47,22 @@ module "eks" {
     }
   }
 }
+
+# ─────────────────────────────────────────────────────────────────
+# EKS Access Entry: Grant cluster-admin to the deploying IAM user
+# ─────────────────────────────────────────────────────────────────
+resource "aws_eks_access_entry" "deployer" {
+  cluster_name  = module.eks.cluster_name
+  principal_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/Silk"
+  type          = "STANDARD"
+}
+
+resource "aws_eks_access_policy_association" "deployer_admin" {
+  cluster_name  = module.eks.cluster_name
+  principal_arn = aws_eks_access_entry.deployer.principal_arn
+  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+
+  access_scope {
+    type = "cluster"
+  }
+}

@@ -4,9 +4,8 @@ data "aws_caller_identity" "current" {}
 # GitHub Actions OIDC Provider + Role
 # Allows GitHub Actions CD pipeline to push to ECR
 # ─────────────────────────────────────────────
-data "aws_iam_openid_connect_provider" "github" {
-  url = "https://token.actions.githubusercontent.com"
-}
+# Note: aws_iam_openid_connect_provider.github resource is defined below (line ~335).
+# The github_actions role references it directly via resource ARN.
 
 resource "aws_iam_role" "github_actions" {
   name = "${var.cluster_name}-github-actions"
@@ -17,7 +16,7 @@ resource "aws_iam_role" "github_actions" {
       {
         Effect = "Allow"
         Principal = {
-          Federated = data.aws_iam_openid_connect_provider.github.arn
+          Federated = aws_iam_openid_connect_provider.github.arn
         }
         Action = "sts:AssumeRoleWithWebIdentity"
         Condition = {
