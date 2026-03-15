@@ -192,9 +192,15 @@ class OutputParserAdapter(ParserPort):
                         root_causes.append(fallback_cause)
 
             if not root_causes:
-                raise ValueError(
-                    "Unable to extract root cause from agent result. "
-                    "Check raw_result structure."
+                # Final fallback: Create a generic root cause from available data
+                raw_output = raw_result.get("raw_output", "")
+                fallback_desc = raw_output[:200].strip() if raw_output else "Analysis completed but root cause extraction was inconclusive"
+                root_causes.append(
+                    RootCause(
+                        description=fallback_desc or "Analysis completed but root cause extraction was inconclusive",
+                        component="unknown",
+                        remediation="Review the raw analysis output for details",
+                    )
                 )
 
             return root_causes

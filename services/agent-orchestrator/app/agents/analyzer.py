@@ -1,6 +1,7 @@
 """Log analyzer agent using LangChain."""
 
 import asyncio
+import logging
 import uuid
 from typing import Any, Dict, List
 
@@ -8,6 +9,7 @@ from langchain.tools import BaseTool
 
 from app.agents.base import BaseAgent
 
+logger = logging.getLogger(__name__)
 
 class LogAnalyzerAgent(BaseAgent):
     """
@@ -115,6 +117,10 @@ Provide:
         # Parse agent output
         output = result.get("output", "")
         intermediate_steps = result.get("intermediate_steps", [])
+        
+        # Log the raw output for debugging
+        logger.info(f"Agent raw output length: {len(output)}")
+        logger.info(f"Agent raw output (first 500 chars): {output[:500]}")
         
         # Extract structured data from output (simplified parsing)
         # In production, use structured output or better parsing
