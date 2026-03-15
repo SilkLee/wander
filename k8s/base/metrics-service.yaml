@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: metrics
+  namespace: workflowai
+  labels:
+    app: metrics
+    component: service
+spec:
+  type: ClusterIP
+  selector:
+    app: metrics
+  ports:
+    - port: 8005
+      targetPort: 8005
+      name: http

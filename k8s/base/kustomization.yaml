@@ -1,0 +1,43 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: workflowai
+
+resources:
+  # Namespace & config
+  - namespace.yaml
+  - secrets.yaml
+  - configmap.yaml
+  # Infrastructure ConfigMaps
+  - postgres-init-configmap.yaml
+  - frontend-nginx-configmap.yaml
+  # PersistentVolumeClaims
+  - agent-cache-pvc.yaml
+  - indexing-cache-pvc.yaml
+  - model-cache-pvc.yaml
+  # Infrastructure StatefulSets & Services
+  - postgres-statefulset.yaml
+  - postgres-service.yaml
+  - redis-statefulset.yaml
+  - redis-service.yaml
+  - elasticsearch-statefulset.yaml
+  - elasticsearch-service.yaml
+  # Go services
+  - api-gateway-deployment.yaml
+  - api-gateway-service.yaml
+  - ingestion-deployment.yaml
+  - ingestion-service.yaml
+  # Python services
+  - agent-orchestrator-deployment.yaml
+  - agent-orchestrator-service.yaml
+  - indexing-deployment.yaml
+  - indexing-service.yaml
+  - model-service-deployment.yaml
+  - model-service-service.yaml
+  - metrics-deployment.yaml
+  - metrics-service.yaml
+  - finetune-deployment.yaml
+  - finetune-service.yaml
+  # Frontend
+  - frontend-deployment.yaml
+  - frontend-service.yaml

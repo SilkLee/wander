@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: workflowai-config
+  namespace: workflowai
+data:
+  REDIS_URL: "redis://redis:6379/0"
+  ELASTICSEARCH_URL: "http://elasticsearch:9200"
+  MODEL_SERVICE_URL: "http://model-service:8004"
+  AGENT_SERVICE_URL: "http://agent-orchestrator:8002"
+  INDEXING_SERVICE_URL: "http://indexing:8003"
+  INGESTION_SERVICE_URL: "http://ingestion:8001"
+  METRICS_SERVICE_URL: "http://metrics:8005"
+  POSTGRES_USER: "workflowai"
+  POSTGRES_DB: "workflowai"

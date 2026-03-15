@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: finetune
+  namespace: workflowai
+  labels:
+    app: finetune
+    component: service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: finetune
+  template:
+    metadata:
+      labels:
+        app: finetune
+        component: service
+    spec:
+      containers:
+        - name: finetune
+          image: <ECR_URL>/workflowai/finetune:sha-<commit>
+          ports:
+            - containerPort: 8006
+              name: http
+          env:
+            - name: PORT
+              value: "8006"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8006
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8006
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            failureThreshold: 6
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"

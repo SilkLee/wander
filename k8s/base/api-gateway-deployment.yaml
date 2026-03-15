@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  namespace: workflowai
+  labels:
+    app: api-gateway
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+    spec:
+      containers:
+        - name: api-gateway
+          image: <ECR_URL>/workflowai/api-gateway:sha-<commit>
+          ports:
+            - containerPort: 8000
+          env:
+            - name: PORT
+              value: "8000"
+            - name: REDIS_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: workflowai-config
+                  key: REDIS_URL
+            - name: AGENT_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: workflowai-config
+                  key: AGENT_SERVICE_URL
+            - name: INDEXING_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: workflowai-config
+                  key: INDEXING_SERVICE_URL
+            - name: MODEL_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: workflowai-config
+                  key: MODEL_SERVICE_URL
+            - name: INGESTION_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: workflowai-config
+                  key: INGESTION_SERVICE_URL
+            - name: METRICS_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: workflowai-config
+                  key: METRICS_SERVICE_URL
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: workflowai-secrets
+                  key: JWT_SECRET
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "250m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"

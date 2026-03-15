@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: indexing
+  namespace: workflowai
+  labels:
+    app: indexing
+    component: service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: indexing
+  template:
+    metadata:
+      labels:
+        app: indexing
+        component: service
+    spec:
+      containers:
+        - name: indexing
+          image: <ECR_URL>/workflowai/indexing:sha-<commit>
+          ports:
+            - containerPort: 8003
+              name: http
+          env:
+            - name: ELASTICSEARCH_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: workflowai-config
+                  key: ELASTICSEARCH_URL
+            - name: EMBEDDING_MODEL
+              value: "sentence-transformers/all-MiniLM-L6-v2"
+            - name: DEVICE
+              value: "cpu"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8003
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8003
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            failureThreshold: 6
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+          volumeMounts:
+            - name: indexing-cache
+              mountPath: /app/cache
+      volumes:
+        - name: indexing-cache
+          persistentVolumeClaim:
+            claimName: indexing-cache

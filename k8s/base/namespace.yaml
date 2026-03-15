@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: workflowai
+  labels:
+    project: workflowai
+    managed-by: kustomize

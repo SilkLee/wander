@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-orchestrator
+  namespace: workflowai
+  labels:
+    app: agent-orchestrator
+    component: service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: agent-orchestrator
+  template:
+    metadata:
+      labels:
+        app: agent-orchestrator
+        component: service
+    spec:
+      containers:
+        - name: agent-orchestrator
+          image: <ECR_URL>/workflowai/agent-orchestrator:sha-<commit>
+          ports:
+            - containerPort: 8002
+              name: http
+          env:
+            - name: REDIS_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: workflowai-config
+                  key: REDIS_URL
+            - name: ELASTICSEARCH_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: workflowai-config
+                  key: ELASTICSEARCH_URL
+            - name: MODEL_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: workflowai-config
+                  key: MODEL_SERVICE_URL
+            - name: USE_LOCAL_MODEL
+              value: "true"
+            - name: OPENAI_MODEL
+              value: "gpt-4-turbo-preview"
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: workflowai-secrets
+                  key: OPENAI_API_KEY
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8002
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8002
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            failureThreshold: 6
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+          volumeMounts:
+            - name: agent-cache
+              mountPath: /app/cache
+      volumes:
+        - name: agent-cache
+          persistentVolumeClaim:
+            claimName: agent-cache
