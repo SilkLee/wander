@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: agent-orchestrator
-          image: 589528730663.dkr.ecr.ap-southeast-1.amazonaws.com/workflowai/agent-orchestrator:sha-47a7fbd
+          image: 589528730663.dkr.ecr.ap-southeast-1.amazonaws.com/workflowai/agent-orchestrator:sha-841faa5
           ports:
             - containerPort: 8002
               name: http
