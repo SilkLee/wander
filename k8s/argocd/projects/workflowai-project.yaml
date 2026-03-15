@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: workflowai
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: workflowai
+spec:
+  description: WorkflowAI production project
+  sourceRepos:
+    - https://github.com/SilkLee/workflow-ai.git
+  destinations:
+    - namespace: workflowai
+      server: https://kubernetes.default.svc
+    - namespace: argocd
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
