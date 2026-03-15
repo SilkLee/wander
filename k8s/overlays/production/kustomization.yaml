@@ -27,7 +27,7 @@ images:
     newTag: sha-47a7fbd
   - name: 589528730663.dkr.ecr.ap-southeast-1.amazonaws.com/workflowai/agent-orchestrator
     newName: 589528730663.dkr.ecr.ap-southeast-1.amazonaws.com/workflowai/agent-orchestrator
-    newTag: sha-841faa5
+    newTag: sha-ea1c0b6
   - name: 589528730663.dkr.ecr.ap-southeast-1.amazonaws.com/workflowai/indexing
     newName: 589528730663.dkr.ecr.ap-southeast-1.amazonaws.com/workflowai/indexing
     newTag: sha-47a7fbd
