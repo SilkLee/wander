@@ -86,6 +86,24 @@ class Settings(BaseSettings):
         description="Path to LoRA adapter file for fine-tuned inference",
     )
 
+    # OpenRouter Configuration
+    use_openrouter: bool = Field(
+        default=False,
+        description="Use OpenRouter API instead of local model",
+    )
+    openrouter_api_key: str = Field(
+        default="",
+        description="OpenRouter API key",
+    )
+    openrouter_model: str = Field(
+        default="qwen/qwen3-4b:free",
+        description="OpenRouter model ID",
+    )
+    openrouter_base_url: str = Field(
+        default="https://openrouter.ai/api/v1",
+        description="OpenRouter API base URL",
+    )
+
 
 # Global settings instance
 settings = Settings()

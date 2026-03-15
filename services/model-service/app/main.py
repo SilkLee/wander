@@ -25,18 +25,25 @@ async def lifespan(app: FastAPI):
     """Lifespan context manager for startup/shutdown events."""
     # Startup
     print(f"Starting Model Service on port {settings.port}")
-    print(f"Model: {settings.model_name}")
-    print(f"Device: {settings.device}")
-    
-    # Preload model
-    print("Loading model...")
-    get_inference_service()
-    print("Model ready")
-    
-    # Load LoRA adapter if configured
-    if settings.lora_adapter_path:
-        loaded = load_lora_adapter(settings.lora_adapter_path)
-        print(f"LoRA adapter loaded: {loaded}")
+    if settings.use_openrouter:
+        print(f"Mode: OpenRouter ({settings.openrouter_model})")
+    else:
+        print(f"Model: {settings.model_name}")
+        print(f"Device: {settings.device}")
+    if settings.use_openrouter:
+        print("OpenRouter mode — skipping local model load")
+        get_inference_service()
+        print("OpenRouter client ready")
+    else:
+        # Preload model
+        print("Loading model...")
+        get_inference_service()
+        print("Model ready")
+
+        # Load LoRA adapter if configured
+        if settings.lora_adapter_path:
+            loaded = load_lora_adapter(settings.lora_adapter_path)
+            print(f"LoRA adapter loaded: {loaded}")
 
     yield
     

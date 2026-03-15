@@ -30,22 +30,42 @@ spec:
               value: "cpu"
             - name: MAX_MODEL_LEN
               value: "4096"
+            - name: USE_OPENROUTER
+              valueFrom:
+                configMapKeyRef:
+                  name: workflowai-config
+                  key: USE_OPENROUTER
+            - name: OPENROUTER_MODEL
+              valueFrom:
+                configMapKeyRef:
+                  name: workflowai-config
+                  key: OPENROUTER_MODEL
+            - name: OPENROUTER_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: workflowai-config
+                  key: OPENROUTER_BASE_URL
+            - name: OPENROUTER_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: workflowai-secrets
+                  key: OPENROUTER_API_KEY
           readinessProbe:
             httpGet:
               path: /health
               port: 8004
-            initialDelaySeconds: 120
-            periodSeconds: 30
-            timeoutSeconds: 10
-            failureThreshold: 10
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
           livenessProbe:
             httpGet:
-              path: /health
+              path: /live
               port: 8004
-            initialDelaySeconds: 180
-            periodSeconds: 30
-            timeoutSeconds: 10
-            failureThreshold: 10
+            initialDelaySeconds: 15
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 5
           resources:
             requests:
               memory: "1Gi"

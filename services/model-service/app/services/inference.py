@@ -1,10 +1,13 @@
-"""LLM inference service using Transformers."""
+"""LLM inference service using Transformers or OpenRouter API."""
 
-from typing import Optional, Generator, Iterator, List, Dict
-import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM, GenerationConfig
+from __future__ import annotations
+
+import json
+from typing import Optional, Generator, Iterator, List, Dict, Union
 
 from app.config import settings
+
+
 
 
 class InferenceService:
@@ -16,6 +19,9 @@ class InferenceService:
 
     def __init__(self):
         """Initialize model and tokenizer."""
+        import torch
+        from transformers import AutoTokenizer, AutoModelForCausalLM
+
         # Use local path if provided, otherwise use HuggingFace model ID
         self.model_path = settings.local_model_path or settings.model_name
         self.is_local = settings.local_model_path is not None and len(settings.local_model_path.strip()) > 0
@@ -86,6 +92,7 @@ class InferenceService:
             Tuple of (generated_text, tokens_generated, finish_reason)
         """
         # Use defaults if not provided
+        import torch
         max_tokens = max_tokens or settings.default_max_tokens
         temperature = temperature if temperature is not None else settings.default_temperature
         top_p = top_p if top_p is not None else settings.default_top_p
@@ -139,6 +146,8 @@ class InferenceService:
             Tuple of (token_text, is_final)
         """
         # Use defaults if not provided
+        import torch
+        from transformers import GenerationConfig
         max_tokens = max_tokens or settings.default_max_tokens
         temperature = temperature if temperature is not None else settings.default_temperature
         top_p = top_p if top_p is not None else settings.default_top_p
@@ -239,13 +248,152 @@ class InferenceService:
         }
 
 
+class OpenRouterInferenceService:
+    """
+    Service for LLM inference via OpenRouter API (OpenAI-compatible).
+
+    Proxies requests to OpenRouter instead of loading a local model.
+    """
+
+    def __init__(self):
+        """Initialize OpenRouter client."""
+        import httpx
+
+        self.model = settings.openrouter_model
+        self.api_key = settings.openrouter_api_key
+        self.base_url = settings.openrouter_base_url.rstrip("/")
+        self.client = httpx.Client(timeout=120.0)
+        print(f"OpenRouter mode: model={self.model}, base_url={self.base_url}")
+
+    # ----- public interface (matches InferenceService) -----
+
+    def generate(
+        self,
+        prompt: str,
+        max_tokens: Optional[int] = None,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = None,
+        stop: Optional[List[str]] = None,
+    ) -> tuple[str, int, str]:
+        """Generate text via OpenRouter (non-streaming)."""
+        max_tokens = max_tokens or settings.default_max_tokens
+        temperature = temperature if temperature is not None else settings.default_temperature
+        top_p = top_p if top_p is not None else settings.default_top_p
+
+        payload = {
+            "model": self.model,
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": max_tokens,
+            "temperature": temperature,
+            "top_p": top_p,
+            "stream": False,
+        }
+        if stop:
+            payload["stop"] = stop
+
+        resp = self.client.post(
+            f"{self.base_url}/chat/completions",
+            headers={
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json",
+            },
+            json=payload,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+
+        choice = data["choices"][0]
+        text = choice["message"]["content"]
+        finish_reason = choice.get("finish_reason", "stop")
+        tokens_generated = data.get("usage", {}).get("completion_tokens", 0)
+
+        return text, tokens_generated, finish_reason
+
+    def generate_stream(
+        self,
+        prompt: str,
+        max_tokens: Optional[int] = None,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = None,
+        stop: Optional[List[str]] = None,
+    ) -> Iterator[tuple[str, bool]]:
+        """Generate text via OpenRouter with SSE streaming."""
+        import httpx
+
+        max_tokens = max_tokens or settings.default_max_tokens
+        temperature = temperature if temperature is not None else settings.default_temperature
+        top_p = top_p if top_p is not None else settings.default_top_p
+
+        payload = {
+            "model": self.model,
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": max_tokens,
+            "temperature": temperature,
+            "top_p": top_p,
+            "stream": True,
+        }
+        if stop:
+            payload["stop"] = stop
+
+        with httpx.stream(
+            "POST",
+            f"{self.base_url}/chat/completions",
+            headers={
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json",
+            },
+            json=payload,
+            timeout=120.0,
+        ) as resp:
+            resp.raise_for_status()
+            for line in resp.iter_lines():
+                if not line or not line.startswith("data: "):
+                    continue
+                data_str = line[len("data: "):]
+                if data_str.strip() == "[DONE]":
+                    break
+                try:
+                    chunk = json.loads(data_str)
+                    delta = chunk["choices"][0].get("delta", {})
+                    token = delta.get("content", "")
+                    if token:
+                        yield (token, False)
+                except (json.JSONDecodeError, KeyError, IndexError):
+                    continue
+
+        # Final marker
+        yield ("", True)
+
+    def get_model_info(self) -> Dict[str, object]:
+        """Get model information."""
+        return {
+            "name": self.model,
+            "path": self.base_url,
+            "is_local": False,
+            "type": "openrouter",
+            "device": "remote",
+            "max_length": settings.max_model_len,
+            "parameters": {
+                "default_max_tokens": settings.default_max_tokens,
+                "default_temperature": settings.default_temperature,
+                "default_top_p": settings.default_top_p,
+            },
+        }
+
+
 # Global inference service instance
-_inference_service: Optional[InferenceService] = None
+_inference_service: Optional[Union[InferenceService, OpenRouterInferenceService]] = None
 
 
-def get_inference_service() -> InferenceService:
+def get_inference_service() -> Union[InferenceService, OpenRouterInferenceService]:
     """Get or create global inference service instance."""
     global _inference_service
     if _inference_service is None:
-        _inference_service = InferenceService()
+        if settings.use_openrouter:
+            print("Using OpenRouter API for inference")
+            _inference_service = OpenRouterInferenceService()
+        else:
+            import torch  # noqa: F811 — lazy import to avoid loading when using OpenRouter
+            print("Using local Transformers model for inference")
+            _inference_service = InferenceService()
     return _inference_service
