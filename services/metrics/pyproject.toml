@@ -1,0 +1,20 @@
+[project]
+name = "workflow-ai-metrics"
+version = "0.2.0"
+description = "DORA Metrics Service for WorkflowAI"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.104.1",
+    "uvicorn[standard]>=0.24.0",
+    "pydantic>=2.5.0",
+    "pydantic-settings>=2.1.0",
+    "sqlalchemy[asyncio]>=2.0.23",
+    "asyncpg>=0.29.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.23.0",
+    "httpx>=0.25.0",
+]

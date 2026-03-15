@@ -74,6 +74,7 @@ services:
       - INDEXING_SERVICE_URL=http://indexing:8003
       - MODEL_SERVICE_URL=http://model-service:8004
       - INGESTION_SERVICE_URL=http://ingestion:8001
+      - METRICS_SERVICE_URL=http://metrics:8005
     depends_on:
       redis:
         condition: service_healthy
@@ -183,25 +184,22 @@ services:
     restart: unless-stopped
 
   # Metrics Service (Python - FastAPI + SQLAlchemy)
-  # COMMENTED OUT: Not implemented yet (only .gitkeep exists)
-  # metrics:
-  #   build:
-  #     context: ./services/metrics
-  #     dockerfile: Dockerfile
-  #   container_name: workflowai-metrics
-  #   ports:
-  #     - "8005:8005"
-  #   environment:
-  #     - PORT=8005
-  #     - DATABASE_URL=postgresql://workflowai:dev_password_123@postgres:5432/workflowai
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #   volumes:
-  #     - ./services/metrics:/app
-  #   networks:
-  #     - workflowai-network
-  #   restart: unless-stopped
+  metrics:
+    build:
+      context: ./services/metrics
+      dockerfile: Dockerfile
+    container_name: workflowai-metrics
+    ports:
+      - "8005:8005"
+    environment:
+      - PORT=8005
+      - DATABASE_URL=postgresql+asyncpg://workflowai:dev_password_123@postgres:5432/workflowai
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - workflowai-network
+    restart: unless-stopped
 
   # Prometheus (Metrics Collection)
   prometheus:
@@ -253,22 +251,21 @@ services:
       - workflowai-network
     restart: unless-stopped
 
-  # Frontend (React)
-  # COMMENTED OUT: Not implemented yet (only .gitkeep exists)
-  # frontend:
-  #   build:
-  #     context: ./frontend
-  #     dockerfile: Dockerfile
-  #   container_name: workflowai-frontend
-  #   ports:
-  #     - "3000:3000"
-  #   environment:
-  #     - REACT_APP_API_URL=http://localhost:8000
-  #   depends_on:
-  #     - api-gateway
-  #   networks:
-  #     - workflowai-network
-  #   restart: unless-stopped
+  # Frontend (React + Vite)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: workflowai-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://api-gateway:8000
+    depends_on:
+      - api-gateway
+    networks:
+      - workflowai-network
+    restart: unless-stopped
 
 volumes:
   postgres_data:

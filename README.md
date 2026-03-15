@@ -225,7 +225,11 @@ docker-compose up --build
   - ✅ Incident Response workflow (LangGraph) - automated triage & alerting
   - ✅ API wiring for incident ingestion & agent callbacks
   - ✅ Removed langchain_classic, upgraded to LangChain 0.1.0+ architecture
-- 📝 **Week 8**: DORA metrics + frontend integration
+- ✅ **Week 8**: DORA metrics + frontend integration
+  - ✅ DORA metrics service (domain models, calculator, PostgreSQL repository, REST API)
+  - ✅ React frontend with router, layout, and 5 workflow pages
+  - ✅ API Gateway proxy routes for metrics service
+  - ✅ Docker Compose + Dockerfiles for metrics and frontend services
 
 ### Month 3: Production Ready (Week 9-12)
 - 📝 **Week 9**: Integration testing + bug fixes
@@ -320,5 +324,5 @@ Preparing for NVIDIA Senior Software Engineer - AI Workflow (IPP) interview
 
 ---
 
-**Last Updated**: 2026-03-14 15:30 PM
-**Status**: ✅ Week 7 Complete - Incident Response workflow + LangChain migration finalized
+**Last Updated**: 2026-03-15 11:30 AM
+**Status**: ✅ Week 8 Complete - DORA metrics service + full frontend integration

@@ -77,6 +77,9 @@ func (r *Router) setupRoutes() {
 		api.POST("/generate", proxyHandler.ProxyGenerate)
 		api.GET("/model/info", proxyHandler.ProxyModelInfo)
 
+		// Metrics Service
+		api.Any("/metrics/*path", proxyHandler.ProxyMetrics)
+
 		// Placeholder workflows endpoint
 		api.GET("/workflows", handlers.WorkflowsHandler)
 	}

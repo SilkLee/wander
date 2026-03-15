@@ -62,3 +62,12 @@ func (h *ProxyHandler) ProxyGenerate(c *gin.Context) {
 func (h *ProxyHandler) ProxyModelInfo(c *gin.Context) {
 	utils.ProxyToService(h.config.ModelServiceURL + "/model/info")(c)
 }
+
+// Metrics Service endpoints
+func (h *ProxyHandler) ProxyMetrics(c *gin.Context) {
+	utils.ProxyToService(h.config.MetricsServiceURL)(c)
+}
+
+func (h *ProxyHandler) ProxyMetricsHealth(c *gin.Context) {
+	utils.ProxyToService(h.config.MetricsServiceURL + "/health")(c)
+}

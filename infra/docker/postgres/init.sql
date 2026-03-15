@@ -86,6 +86,39 @@ CREATE TABLE system_metrics (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- DORA Event tables (deployment tracking for DORA metrics)
+CREATE TABLE deployment_events (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    repository VARCHAR(255) NOT NULL,
+    commit_sha VARCHAR(64) NOT NULL,
+    deployed_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    success BOOLEAN NOT NULL DEFAULT true,
+    metadata JSONB DEFAULT '{}',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE change_events (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    repository VARCHAR(255) NOT NULL,
+    commit_sha VARCHAR(64) NOT NULL,
+    first_commit_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    merged_at TIMESTAMP WITH TIME ZONE,
+    deployed_at TIMESTAMP WITH TIME ZONE,
+    metadata JSONB DEFAULT '{}',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE incident_events (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    repository VARCHAR(255) NOT NULL,
+    detected_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    resolved_at TIMESTAMP WITH TIME ZONE,
+    caused_by_sha VARCHAR(64),
+    severity VARCHAR(20) DEFAULT 'medium',
+    metadata JSONB DEFAULT '{}',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- ============================================================================
 -- SHARED TABLES (used by multiple services)
 -- ============================================================================
@@ -163,6 +196,14 @@ CREATE INDEX idx_document_chunks_embedding_id ON document_chunks(embedding_id);
 -- Users indexes
 CREATE INDEX idx_users_email ON users(email);
 
+-- DORA event indexes
+CREATE INDEX idx_deployment_events_repo ON deployment_events(repository);
+CREATE INDEX idx_deployment_events_deployed_at ON deployment_events(deployed_at DESC);
+CREATE INDEX idx_change_events_repo ON change_events(repository);
+CREATE INDEX idx_change_events_deployed_at ON change_events(deployed_at DESC);
+CREATE INDEX idx_incident_events_repo ON incident_events(repository);
+CREATE INDEX idx_incident_events_detected_at ON incident_events(detected_at DESC);
+
 -- ============================================================================
 -- TRIGGERS (Automatic timestamp updates)
 -- ============================================================================
@@ -222,7 +263,7 @@ ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC;
 
 -- Summary
 \echo '✅ Database initialization complete!'
-\echo '   - Created 12 tables (workflows, metrics, documents, users)'
-\echo '   - Created 15 indexes for performance'
+\echo '   - Created 15 tables (workflows, metrics, documents, DORA events, users)'
+\echo '   - Created 21 indexes for performance'
 \echo '   - Inserted seed data (2 users, 1 workflow)'
 \echo '   - Database ready for WorkflowAI services'
