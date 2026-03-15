@@ -1,0 +1,242 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ─────────────────────────────────────────────
+  # Go service tests
+  # ─────────────────────────────────────────────
+  test-go:
+    name: Test Go (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: api-gateway
+            path: services/api-gateway
+          - service: ingestion
+            path: services/ingestion
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: go-${{ runner.os }}-${{ matrix.service }}-${{ hashFiles(format('{0}/go.sum', matrix.path)) }}
+          restore-keys: |
+            go-${{ runner.os }}-${{ matrix.service }}-
+
+      - name: Download dependencies
+        working-directory: ${{ matrix.path }}
+        run: go mod download
+
+      - name: Run tests
+        working-directory: ${{ matrix.path }}
+        run: go test -v -short ./...
+
+  # ─────────────────────────────────────────────
+  # Python service tests (no DB)
+  # ─────────────────────────────────────────────
+  test-python:
+    name: Test Python (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: agent-orchestrator
+            path: services/agent-orchestrator
+          - service: indexing
+            path: services/indexing
+          - service: model-service
+            path: services/model-service
+          - service: finetune
+            path: services/finetune
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ runner.os }}-${{ matrix.service }}-${{ hashFiles(format('{0}/pyproject.toml', matrix.path)) }}
+          restore-keys: |
+            pip-${{ runner.os }}-${{ matrix.service }}-
+
+      - name: Install dependencies
+        working-directory: ${{ matrix.path }}
+        run: pip install -e '.[dev]'
+
+      - name: Run tests
+        working-directory: ${{ matrix.path }}
+        run: python -m pytest tests/ -v --tb=short
+
+  # ─────────────────────────────────────────────
+  # Metrics service tests (needs PostgreSQL)
+  # ─────────────────────────────────────────────
+  test-metrics:
+    name: Test Python (metrics)
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: workflowai
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: workflowai_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ runner.os }}-metrics-${{ hashFiles('services/metrics/pyproject.toml') }}
+          restore-keys: |
+            pip-${{ runner.os }}-metrics-
+
+      - name: Install dependencies
+        working-directory: services/metrics
+        run: pip install -e '.[dev]'
+
+      - name: Run tests
+        working-directory: services/metrics
+        env:
+          DATABASE_URL: postgresql+asyncpg://workflowai:test_password@localhost:5432/workflowai_test
+        run: python -m pytest tests/ -v --tb=short
+
+  # ─────────────────────────────────────────────
+  # Frontend tests
+  # ─────────────────────────────────────────────
+  test-frontend:
+    name: Test Frontend
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run tests
+        working-directory: frontend
+        run: npx jest
+
+  # ─────────────────────────────────────────────
+  # Go linting
+  # ─────────────────────────────────────────────
+  lint-go:
+    name: Lint Go (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: api-gateway
+            path: services/api-gateway
+          - service: ingestion
+            path: services/ingestion
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          working-directory: ${{ matrix.path }}
+          version: latest
+
+  # ─────────────────────────────────────────────
+  # Python linting
+  # ─────────────────────────────────────────────
+  lint-python:
+    name: Lint Python (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: agent-orchestrator
+            path: services/agent-orchestrator
+          - service: indexing
+            path: services/indexing
+          - service: model-service
+            path: services/model-service
+          - service: metrics
+            path: services/metrics
+          - service: finetune
+            path: services/finetune
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-lint-${{ runner.os }}-${{ matrix.service }}-${{ hashFiles(format('{0}/pyproject.toml', matrix.path)) }}
+          restore-keys: |
+            pip-lint-${{ runner.os }}-${{ matrix.service }}-
+
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Run ruff
+        working-directory: ${{ matrix.path }}
+        run: ruff check .
