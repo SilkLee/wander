@@ -1,0 +1,6 @@
+YAML parse: OK
+Traceback (most recent call last):
+  File "<string>", line 8, in <module>
+KeyError: 'on'
+Jobs: ['test-go', 'test-python', 'test-metrics', 'test-frontend', 'lint-go', 'lint-python']
+Concurrency cancel-in-progress: True
