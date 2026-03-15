@@ -12,15 +12,19 @@ COPY . .
 # Build
 RUN npm run build
 
-# Production stage - serve with simple static server
-FROM node:20-alpine
+# Production stage - nginx for high-performance static serving
+FROM nginx:alpine
 
-WORKDIR /app
+# Copy nginx config
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-RUN npm install -g serve
-
-COPY --from=builder /app/dist ./dist
+# Copy built assets from builder
+COPY --from=builder /app/dist /usr/share/nginx/html
 
 EXPOSE 3000
 
-CMD ["serve", "-s", "dist", "-l", "3000"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD wget -qO- http://localhost:3000/ || exit 1
+
+CMD ["nginx", "-g", "daemon off;"]

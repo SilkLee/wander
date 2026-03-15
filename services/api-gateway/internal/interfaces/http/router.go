@@ -75,10 +75,10 @@ func (r *Router) setupRoutes() {
 
 		// Model Service
 		api.POST("/generate", proxyHandler.ProxyGenerate)
-		api.GET("/model/info", proxyHandler.ProxyModelInfo)
+		api.GET("/model/info", middleware.CacheResponse(30*time.Second), proxyHandler.ProxyModelInfo)
 
-		// Metrics Service
-		api.Any("/metrics/*path", proxyHandler.ProxyMetrics)
+		// Metrics Service (cached GET, pass-through others)
+		api.Any("/metrics/*path", middleware.CacheResponse(30*time.Second), proxyHandler.ProxyMetrics)
 
 		// Placeholder workflows endpoint
 		api.GET("/workflows", handlers.WorkflowsHandler)
@@ -97,8 +97,12 @@ func (r *Router) setupRoutes() {
 // Run starts the HTTP server with graceful shutdown
 func (r *Router) Run(port string) error {
 	r.server = &http.Server{
-		Addr:    ":" + port,
-		Handler: r.engine,
+		Addr:              ":" + port,
+		Handler:           r.engine,
+		ReadTimeout:       15 * time.Second,
+		WriteTimeout:      30 * time.Second,
+		IdleTimeout:       120 * time.Second,
+		ReadHeaderTimeout: 5 * time.Second,
 	}
 
 	// Start server in goroutine

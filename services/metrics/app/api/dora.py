@@ -12,6 +12,7 @@ from app.domain.models import ChangeEvent, DeploymentEvent, IncidentEvent
 from app.infrastructure.repository import DORARepository, InMemoryDORARepository
 from app.models.dora import DORAResponse, DORATrendPoint
 from app.utils import parse_iso
+from app.infrastructure.cache import dora_cache
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/metrics", tags=["metrics"])
@@ -96,6 +97,12 @@ async def get_dora_metrics(
     start = parse_iso(from_date) if from_date else now - timedelta(days=30)
     end = parse_iso(to_date) if to_date else now
 
+    # Check cache first
+    cache_key = f"dora:{repo}:{from_date}:{to_date}"
+    cached = dora_cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     # Seed demo data for in-memory repo on first request
     if isinstance(repository, InMemoryDORARepository) and not _demo_seeded:
         _seed_demo_data(repository)
@@ -131,7 +138,7 @@ async def get_dora_metrics(
         )
         period = week_end
 
-    return DORAResponse(
+    response = DORAResponse(
         deployment_frequency=snapshot.deployment_frequency,
         lead_time=snapshot.lead_time_hours,
         change_failure_rate=snapshot.change_failure_rate,
@@ -139,3 +146,7 @@ async def get_dora_metrics(
         level=snapshot.level.value,
         trend=trend,
     )
+
+    # Store in cache
+    dora_cache.set(cache_key, response)
+    return response

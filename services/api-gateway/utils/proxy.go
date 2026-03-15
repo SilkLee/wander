@@ -2,11 +2,29 @@ package utils
 
 import (
 	"io"
+	"net"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
+
+// sharedClient is a package-level HTTP client with connection pooling.
+// Reused across all proxy requests to avoid per-request TCP handshake overhead.
+var sharedClient = &http.Client{
+	Transport: &http.Transport{
+		DialContext: (&net.Dialer{
+			Timeout:   10 * time.Second,
+			KeepAlive: 30 * time.Second,
+		}).DialContext,
+		MaxIdleConns:        100,
+		MaxIdleConnsPerHost: 20,
+		IdleConnTimeout:     90 * time.Second,
+		TLSHandshakeTimeout: 10 * time.Second,
+	},
+	Timeout: 30 * time.Second,
+}
 
 // ProxyToService creates a handler function that proxies requests to a downstream service
 func ProxyToService(targetURL string) gin.HandlerFunc {
@@ -44,9 +62,8 @@ func ProxyToService(targetURL string) gin.HandlerFunc {
 			req.Header.Set("X-Username", username.(string))
 		}
 
-		// Send request
-		client := &http.Client{}
-		resp, err := client.Do(req)
+		// Send request using shared pooled client
+		resp, err := sharedClient.Do(req)
 		if err != nil {
 			c.JSON(http.StatusBadGateway, gin.H{
 				"error": "Failed to reach downstream service",

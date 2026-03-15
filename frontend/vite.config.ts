@@ -16,5 +16,14 @@ export default defineConfig({
         target: 'http://localhost:8002',
         changeOrigin: true,
       },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          router: ['react-router-dom'],
+        },
+      },
     },
+  },
 });

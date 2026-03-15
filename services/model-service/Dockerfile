@@ -47,5 +47,5 @@ EXPOSE 8004
 HEALTHCHECK --interval=30s --timeout=10s --start-period=300s --retries=3 \
     CMD python -c "import httpx; httpx.get('http://localhost:8004/health')"
 
-# Run application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8004"]
+# Run application with gunicorn (single worker for GPU-bound inference)
+CMD ["gunicorn", "app.main:app", "-w", "1", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8004", "--timeout", "300"]

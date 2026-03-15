@@ -81,6 +81,11 @@ services:
     networks:
       - workflowai-network
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.50'
 
   # Ingestion Service (Go - Gin)
   ingestion:
@@ -99,6 +104,11 @@ services:
     networks:
       - workflowai-network
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.50'
 
   # Agent Orchestrator (Python - FastAPI + LangChain)
   agent-orchestrator:
@@ -128,6 +138,11 @@ services:
     volumes:
       - agent_cache:/app/cache
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.00'
 
   # Indexing Service (Python - FastAPI + Sentence Transformers)
   indexing:
@@ -152,6 +167,11 @@ services:
     networks:
       - workflowai-network
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.00'
 
   # Model Service (Python - FastAPI + vLLM)
   model-service:
@@ -182,6 +202,11 @@ services:
     networks:
       - workflowai-network
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '2.00'
 
   # Metrics Service (Python - FastAPI + SQLAlchemy)
   metrics:
@@ -200,6 +225,11 @@ services:
     networks:
       - workflowai-network
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.00'
 
   # Prometheus (Metrics Collection)
   prometheus:
@@ -266,6 +296,11 @@ services:
     networks:
       - workflowai-network
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.25'
 
 volumes:
   postgres_data:
