@@ -11,6 +11,7 @@ from app.domain.calculator import calculate_dora
 from app.domain.models import ChangeEvent, DeploymentEvent, IncidentEvent
 from app.infrastructure.repository import DORARepository, InMemoryDORARepository
 from app.models.dora import DORAResponse, DORATrendPoint
+from app.utils import parse_iso
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/metrics", tags=["metrics"])
@@ -92,13 +93,8 @@ async def get_dora_metrics(
     global _demo_seeded  # noqa: PLW0603
 
     now = datetime.now(timezone.utc)
-    start = datetime.fromisoformat(from_date) if from_date else now - timedelta(days=30)
-    end = datetime.fromisoformat(to_date) if to_date else now
-
-    if start.tzinfo is None:
-        start = start.replace(tzinfo=timezone.utc)
-    if end.tzinfo is None:
-        end = end.replace(tzinfo=timezone.utc)
+    start = parse_iso(from_date) if from_date else now - timedelta(days=30)
+    end = parse_iso(to_date) if to_date else now
 
     # Seed demo data for in-memory repo on first request
     if isinstance(repository, InMemoryDORARepository) and not _demo_seeded:

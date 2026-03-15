@@ -11,6 +11,14 @@ from app.models.dora import (
     EventResponse,
     IncidentEventRequest,
 )
+from app.utils import parse_iso
+from app.models.dora import (
+    ChangeEventRequest,
+    DeploymentEventRequest,
+    EventListResponse,
+    EventResponse,
+    IncidentEventRequest,
+)
 
 router = APIRouter(prefix="/metrics", tags=["events"])
 
@@ -28,9 +36,7 @@ async def record_deployment(
     request: DeploymentEventRequest,
     repository=Depends(_get_repository),
 ) -> EventResponse:
-    deployed_at = datetime.fromisoformat(request.deployed_at)
-    if deployed_at.tzinfo is None:
-        deployed_at = deployed_at.replace(tzinfo=timezone.utc)
+    deployed_at = parse_iso(request.deployed_at)
     event_id = await repository.record_deployment(
         repo=request.repo,
         sha=request.sha,
@@ -45,19 +51,13 @@ async def record_change(
     request: ChangeEventRequest,
     repository=Depends(_get_repository),
 ) -> EventResponse:
-    first_commit_at = datetime.fromisoformat(request.first_commit_at)
-    if first_commit_at.tzinfo is None:
-        first_commit_at = first_commit_at.replace(tzinfo=timezone.utc)
+    first_commit_at = parse_iso(request.first_commit_at)
     merged_at = None
     if request.merged_at:
-        merged_at = datetime.fromisoformat(request.merged_at)
-        if merged_at.tzinfo is None:
-            merged_at = merged_at.replace(tzinfo=timezone.utc)
+        merged_at = parse_iso(request.merged_at)
     deployed_at = None
     if request.deployed_at:
-        deployed_at = datetime.fromisoformat(request.deployed_at)
-        if deployed_at.tzinfo is None:
-            deployed_at = deployed_at.replace(tzinfo=timezone.utc)
+        deployed_at = parse_iso(request.deployed_at)
     event_id = await repository.record_change(
         repo=request.repo,
         sha=request.sha,
@@ -73,14 +73,10 @@ async def record_incident(
     request: IncidentEventRequest,
     repository=Depends(_get_repository),
 ) -> EventResponse:
-    detected_at = datetime.fromisoformat(request.detected_at)
-    if detected_at.tzinfo is None:
-        detected_at = detected_at.replace(tzinfo=timezone.utc)
+    detected_at = parse_iso(request.detected_at)
     resolved_at = None
     if request.resolved_at:
-        resolved_at = datetime.fromisoformat(request.resolved_at)
-        if resolved_at.tzinfo is None:
-            resolved_at = resolved_at.replace(tzinfo=timezone.utc)
+        resolved_at = parse_iso(request.resolved_at)
     event_id = await repository.record_incident(
         repo=request.repo,
         detected_at=detected_at,
@@ -102,13 +98,8 @@ async def list_events(
     from datetime import timedelta
 
     now = datetime.now(timezone.utc)
-    start = datetime.fromisoformat(from_date) if from_date else now - timedelta(days=30)
-    end = datetime.fromisoformat(to_date) if to_date else now
-
-    if start.tzinfo is None:
-        start = start.replace(tzinfo=timezone.utc)
-    if end.tzinfo is None:
-        end = end.replace(tzinfo=timezone.utc)
+    start = parse_iso(from_date) if from_date else now - timedelta(days=30)
+    end = parse_iso(to_date) if to_date else now
 
     events: list[dict] = []
 

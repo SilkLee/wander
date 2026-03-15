@@ -100,3 +100,5 @@ Thumbs.db
 *.key
 credentials.json
 secrets.yaml
+.venv/
+nul

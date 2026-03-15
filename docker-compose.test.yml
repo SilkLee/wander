@@ -1,0 +1,105 @@
+# docker-compose.test.yml — Minimal stack for integration testing
+# Usage:
+#   docker-compose -f docker-compose.test.yml up -d
+#   python -m pytest tests/ -v --tb=short
+#   docker-compose -f docker-compose.test.yml down -v
+
+version: '3.8'
+
+services:
+  # PostgreSQL for metrics service
+  postgres:
+    image: postgres:15-alpine
+    container_name: workflowai-test-postgres
+    environment:
+      POSTGRES_USER: workflowai
+      POSTGRES_PASSWORD: dev_password_123
+      POSTGRES_DB: workflowai
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./infra/docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U workflowai"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - test-network
+
+  # Redis for API Gateway rate limiting
+  redis:
+    image: redis:7-alpine
+    container_name: workflowai-test-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - test-network
+
+  # API Gateway (Go)
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+      dockerfile: Dockerfile
+    container_name: workflowai-test-gateway
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - REDIS_URL=redis://redis:6379/0
+      - JWT_SECRET=test-secret-key
+      - AGENT_SERVICE_URL=http://agent-orchestrator:8002
+      - METRICS_SERVICE_URL=http://metrics:8005
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - test-network
+
+  # Metrics Service (Python)
+  metrics:
+    build:
+      context: ./services/metrics
+      dockerfile: Dockerfile
+    container_name: workflowai-test-metrics
+    ports:
+      - "8005:8005"
+    environment:
+      - PORT=8005
+      - DATABASE_URL=postgresql+asyncpg://workflowai:dev_password_123@postgres:5432/workflowai
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - test-network
+
+  # Test runner — runs integration tests then exits
+  test-runner:
+    image: python:3.11-slim
+    container_name: workflowai-test-runner
+    working_dir: /app
+    volumes:
+      - .:/app
+    environment:
+      - API_GATEWAY_URL=http://api-gateway:8000
+      - METRICS_SERVICE_URL=http://metrics:8005
+    command: >
+      sh -c "
+        pip install httpx pytest pytest-asyncio &&
+        sleep 10 &&
+        python -m pytest tests/integration/ -v --tb=short
+      "
+    depends_on:
+      - api-gateway
+      - metrics
+    networks:
+      - test-network
+
+networks:
+  test-network:
+    driver: bridge
