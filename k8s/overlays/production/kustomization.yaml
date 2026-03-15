@@ -16,27 +16,27 @@ resources:
   - hpa-frontend.yaml
 
 images:
-  - name: <ECR_URL>/workflowai/api-gateway
-    newName: <ECR_URL>/workflowai/api-gateway
-    newTag: sha-latest
-  - name: <ECR_URL>/workflowai/ingestion
-    newName: <ECR_URL>/workflowai/ingestion
-    newTag: sha-latest
-  - name: <ECR_URL>/workflowai/agent-orchestrator
-    newName: <ECR_URL>/workflowai/agent-orchestrator
-    newTag: sha-latest
-  - name: <ECR_URL>/workflowai/indexing
-    newName: <ECR_URL>/workflowai/indexing
-    newTag: sha-latest
-  - name: <ECR_URL>/workflowai/model-service
-    newName: <ECR_URL>/workflowai/model-service
-    newTag: sha-latest
-  - name: <ECR_URL>/workflowai/metrics
-    newName: <ECR_URL>/workflowai/metrics
-    newTag: sha-latest
-  - name: <ECR_URL>/workflowai/finetune
-    newName: <ECR_URL>/workflowai/finetune
-    newTag: sha-latest
-  - name: <ECR_URL>/workflowai/frontend
-    newName: <ECR_URL>/workflowai/frontend
-    newTag: sha-latest
+  - name: 589528730663.dkr.ecr.ap-southeast-1.amazonaws.com/workflowai/api-gateway
+    newName: 589528730663.dkr.ecr.ap-southeast-1.amazonaws.com/workflowai/api-gateway
+    newTag: sha-47a7fbd
+  - name: 589528730663.dkr.ecr.ap-southeast-1.amazonaws.com/workflowai/ingestion
+    newName: 589528730663.dkr.ecr.ap-southeast-1.amazonaws.com/workflowai/ingestion
+    newTag: sha-47a7fbd
+  - name: 589528730663.dkr.ecr.ap-southeast-1.amazonaws.com/workflowai/agent-orchestrator
+    newName: 589528730663.dkr.ecr.ap-southeast-1.amazonaws.com/workflowai/agent-orchestrator
+    newTag: sha-47a7fbd
+  - name: 589528730663.dkr.ecr.ap-southeast-1.amazonaws.com/workflowai/indexing
+    newName: 589528730663.dkr.ecr.ap-southeast-1.amazonaws.com/workflowai/indexing
+    newTag: sha-47a7fbd
+  - name: 589528730663.dkr.ecr.ap-southeast-1.amazonaws.com/workflowai/model-service
+    newName: 589528730663.dkr.ecr.ap-southeast-1.amazonaws.com/workflowai/model-service
+    newTag: sha-47a7fbd
+  - name: 589528730663.dkr.ecr.ap-southeast-1.amazonaws.com/workflowai/metrics
+    newName: 589528730663.dkr.ecr.ap-southeast-1.amazonaws.com/workflowai/metrics
+    newTag: sha-47a7fbd
+  - name: 589528730663.dkr.ecr.ap-southeast-1.amazonaws.com/workflowai/finetune
+    newName: 589528730663.dkr.ecr.ap-southeast-1.amazonaws.com/workflowai/finetune
+    newTag: sha-47a7fbd
+  - name: 589528730663.dkr.ecr.ap-southeast-1.amazonaws.com/workflowai/frontend
+    newName: 589528730663.dkr.ecr.ap-southeast-1.amazonaws.com/workflowai/frontend
+    newTag: sha-47a7fbd

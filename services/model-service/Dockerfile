@@ -12,7 +12,7 @@ COPY pyproject.toml ./
 
 # Install dependencies with uv (without vLLM for smaller image)
 # Install CPU-only PyTorch first to save space
-RUN uv pip install --system --no-cache torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+RUN pip install --no-cache-dir --trusted-host download.pytorch.org torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu
 
 # Install other dependencies
 RUN uv pip install --system --no-cache --native-tls -r pyproject.toml

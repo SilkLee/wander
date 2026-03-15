@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: metrics
-          image: <ECR_URL>/workflowai/metrics:sha-<commit>
+          image: 589528730663.dkr.ecr.ap-southeast-1.amazonaws.com/workflowai/metrics:sha-47a7fbd
           ports:
             - containerPort: 8005
               name: http

@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: api-gateway
-          image: <ECR_URL>/workflowai/api-gateway:sha-<commit>
+          image: 589528730663.dkr.ecr.ap-southeast-1.amazonaws.com/workflowai/api-gateway:sha-47a7fbd
           ports:
             - containerPort: 8000
           env:

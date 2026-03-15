@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: indexing
-          image: <ECR_URL>/workflowai/indexing:sha-<commit>
+          image: 589528730663.dkr.ecr.ap-southeast-1.amazonaws.com/workflowai/indexing:sha-47a7fbd
           ports:
             - containerPort: 8003
               name: http

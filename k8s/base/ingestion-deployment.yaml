@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: ingestion
-          image: <ECR_URL>/workflowai/ingestion:sha-<commit>
+          image: 589528730663.dkr.ecr.ap-southeast-1.amazonaws.com/workflowai/ingestion:sha-47a7fbd
           ports:
             - containerPort: 8001
           env:
