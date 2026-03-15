@@ -59,14 +59,13 @@ class LangChainAgentAdapter(AgentPort):
             raise ValueError("log_content cannot be empty")
 
         try:
-            # Run agent.execute() in thread pool (it's synchronous)
-            result = await asyncio.to_thread(  # type: ignore
-                self._agent.execute,
+            # LogAnalyzerAgent.execute() is async, so await it directly
+            result = await self._agent.execute(
                 {
                     "log_content": log_content,
                     "log_type": "build",
                     "context": {},
-                },
+                }
             )
 
 
