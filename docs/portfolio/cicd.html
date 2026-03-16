@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CI/CD Pipeline &mdash; WorkflowAI Portfolio</title>
+  <style>
+/* ============================================================
+   WorkflowAI Portfolio — Shared Stylesheet
+   NVIDIA-inspired dark theme with green accents
+   ============================================================ */
+
+/* ---------- CSS Variables ---------- */
+:root {
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #111111;
+  --bg-card: #1a1a1a;
+  --bg-card-hover: #222222;
+  --bg-code: #0d1117;
+  --border: #2a2a2a;
+  --border-hover: #3a3a3a;
+  --text-primary: #e6e6e6;
+  --text-secondary: #999999;
+  --text-muted: #666666;
+  --accent: #76b900;
+  --accent-dim: #5a8f00;
+  --accent-glow: rgba(118, 185, 0, 0.15);
+  --accent-blue: #3b82f6;
+  --accent-purple: #8b5cf6;
+  --accent-orange: #f59e0b;
+  --accent-red: #ef4444;
+  --accent-cyan: #06b6d4;
+  --shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 48px rgba(0, 0, 0, 0.6);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-xs: 4px;
+  --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --max-width: 1200px;
+}
+
+/* ---------- Reset ---------- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+a { color: var(--accent); text-decoration: none; transition: color var(--transition); }
+a:hover { color: #8ed100; }
+img { max-width: 100%; display: block; }
+::selection { background: var(--accent); color: #000; }
+
+/* ---------- Top Navigation ---------- */
+.top-nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+  background: rgba(10, 10, 10, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 2rem; height: 64px;
+  display: flex; align-items: center;
+}
+.nav-inner {
+  max-width: var(--max-width); margin: 0 auto; width: 100%;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.nav-brand {
+  display: flex; align-items: center; gap: 0.75rem;
+  font-weight: 700; font-size: 1.1rem; color: var(--text-primary);
+}
+.nav-brand .logo-icon {
+  width: 32px; height: 32px; background: var(--accent); border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900; font-size: 0.9rem; color: #000;
+}
+.nav-links {
+  display: flex; gap: 0.25rem; list-style: none;
+}
+.nav-links a {
+  color: var(--text-secondary); padding: 0.5rem 0.85rem; border-radius: var(--radius-sm);
+  font-size: 0.875rem; font-weight: 500; transition: all var(--transition);
+}
+.nav-links a:hover, .nav-links a.active { color: var(--text-primary); background: var(--accent-glow); }
+.nav-links a.active { color: var(--accent); }
+.nav-hamburger {
+  display: none; background: none; border: none; color: var(--text-primary);
+  font-size: 1.5rem; cursor: pointer; padding: 0.5rem;
+}
+
+/* ---------- Page Layout ---------- */
+.page-body { padding-top: 64px; }
+.hero {
+  padding: 6rem 2rem 3rem; text-align: center;
+  background: radial-gradient(ellipse at 50% 0%, var(--accent-glow) 0%, transparent 60%);
+}
+.hero h1 {
+  font-size: clamp(2.2rem, 5vw, 3.5rem); font-weight: 800; letter-spacing: -0.03em;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.hero .subtitle {
+  font-size: 1.15rem; color: var(--text-secondary);
+  max-width: 720px; margin: 0 auto 2rem; line-height: 1.8;
+}
+.hero .badge-row { display: flex; justify-content: center; gap: 0.75rem; flex-wrap: wrap; }
+.badge {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.35rem 0.85rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600;
+  border: 1px solid var(--border); background: var(--bg-card);
+}
+
+/* ---------- Section ---------- */
+.section {
+  max-width: var(--max-width); margin: 0 auto; padding: 4rem 2rem;
+}
+.section-header { margin-bottom: 3rem; text-align: center; }
+.section-header h2 { font-size: 2rem; font-weight: 700; margin-bottom: 0.75rem; }
+.section-header p { color: var(--text-secondary); font-size: 1.05rem; max-width: 600px; margin: 0 auto; }
+.section-divider { border: none; border-top: 1px solid var(--border); margin: 0; }
+
+/* ---------- Cards ---------- */
+.card-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem;
+}
+.card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 1.75rem; transition: all var(--transition); position: relative; overflow: hidden;
+}
+.card:hover {
+  border-color: var(--border-hover); background: var(--bg-card-hover);
+  transform: translateY(-2px); box-shadow: var(--shadow);
+}
+.card h3 { font-size: 1.15rem; font-weight: 600; margin-bottom: 0.5rem; }
+.card p { color: var(--text-secondary); font-size: 0.92rem; line-height: 1.65; }
+
+/* ---------- Stats Row ---------- */
+.stats-row {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1.5rem; margin-bottom: 3rem;
+}
+.stat-card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 1.5rem; text-align: center;
+}
+.stat-card .stat-value {
+  font-size: 2.2rem; font-weight: 800; color: var(--accent); letter-spacing: -0.02em;
+}
+.stat-card .stat-label {
+  font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem; font-weight: 500;
+}
+
+/* ---------- Tables ---------- */
+.table-wrapper {
+  overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border);
+}
+table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+thead { background: var(--bg-secondary); }
+th {
+  text-align: left; padding: 0.85rem 1rem; font-weight: 600; color: var(--text-secondary);
+  font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border);
+}
+td { padding: 0.85rem 1rem; border-bottom: 1px solid var(--border); }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+/* ---------- Code Blocks ---------- */
+pre {
+  background: var(--bg-code); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 1.25rem; overflow-x: auto; font-family: var(--font-mono);
+  font-size: 0.85rem; line-height: 1.65; margin: 1rem 0;
+}
+code {
+  font-family: var(--font-mono); font-size: 0.88em;
+  background: var(--bg-code); padding: 0.15rem 0.4rem; border-radius: var(--radius-xs);
+}
+pre code { background: none; padding: 0; }
+
+/* ---------- Tags ---------- */
+.tag {
+  display: inline-block; padding: 0.2rem 0.6rem; border-radius: 999px;
+  font-size: 0.75rem; font-weight: 600; border: 1px solid;
+  margin-right: 0.4rem; margin-bottom: 0.4rem;
+}
+.tag-blue { border-color: var(--accent-blue); color: var(--accent-blue); background: rgba(59, 130, 246, 0.1); }
+.tag-purple { border-color: var(--accent-purple); color: var(--accent-purple); background: rgba(139, 92, 246, 0.1); }
+.tag-orange { border-color: var(--accent-orange); color: var(--accent-orange); background: rgba(245, 158, 11, 0.1); }
+.tag-green { border-color: var(--accent); color: var(--accent); background: rgba(118, 185, 0, 0.1); }
+.tag-red { border-color: var(--accent-red); color: var(--accent-red); background: rgba(239, 68, 68, 0.1); }
+.tag-cyan { border-color: var(--accent-cyan); color: var(--accent-cyan); background: rgba(6, 182, 212, 0.1); }
+
+/* ---------- Bar Chart ---------- */
+.bar-chart { display: flex; flex-direction: column; gap: 1rem; margin: 1.5rem 0; }
+.bar-row { display: flex; align-items: center; gap: 1rem; }
+.bar-label { width: 180px; font-size: 0.85rem; color: var(--text-secondary); text-align: right; flex-shrink: 0; }
+.bar-track { flex: 1; height: 28px; background: var(--bg-secondary); border-radius: 4px; overflow: hidden; position: relative; }
+.bar-fill {
+  height: 100%; border-radius: 4px;
+  transition: width 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  display: flex; align-items: center; padding-left: 0.75rem;
+  font-size: 0.78rem; font-weight: 700; color: #000; width: 0;
+}
+.bar-fill.green { background: linear-gradient(90deg, var(--accent), #8ed100); }
+.bar-fill.blue { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+.bar-fill.purple { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+.bar-fill.orange { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+.bar-fill.cyan { background: linear-gradient(90deg, #06b6d4, #22d3ee); }
+
+/* ---------- Accordion ---------- */
+.accordion-item {
+  border: 1px solid var(--border); border-radius: var(--radius);
+  margin-bottom: 0.75rem; overflow: hidden; background: var(--bg-card);
+}
+.accordion-header {
+  width: 100%; display: flex; align-items: center; justify-content: space-between;
+  padding: 1.15rem 1.25rem; background: none; border: none;
+  color: var(--text-primary); font-size: 1rem; font-weight: 600;
+  cursor: pointer; text-align: left; font-family: inherit;
+  transition: background var(--transition);
+}
+.accordion-header:hover { background: rgba(255, 255, 255, 0.03); }
+.accordion-header .arrow { transition: transform var(--transition); font-size: 0.8rem; color: var(--text-muted); }
+.accordion-item.open .accordion-header .arrow { transform: rotate(180deg); }
+.accordion-body { max-height: 0; overflow: hidden; transition: max-height 0.35s ease; }
+.accordion-body-inner {
+  padding: 0 1.25rem 1.25rem; color: var(--text-secondary); font-size: 0.95rem; line-height: 1.75;
+}
+.accordion-item.open .accordion-body { max-height: 2000px; }
+
+/* ---------- Callout ---------- */
+.callout {
+  background: var(--accent-glow); border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: 1rem 1.25rem; margin: 1.5rem 0; font-size: 0.92rem;
+}
+.callout-blue { background: rgba(59, 130, 246, 0.1); border-left-color: var(--accent-blue); }
+.callout-purple { background: rgba(139, 92, 246, 0.1); border-left-color: var(--accent-purple); }
+.callout-orange { background: rgba(245, 158, 11, 0.1); border-left-color: var(--accent-orange); }
+.callout-red { background: rgba(239, 68, 68, 0.1); border-left-color: var(--accent-red); }
+
+/* ---------- Footer ---------- */
+.site-footer {
+  border-top: 1px solid var(--border); padding: 2.5rem 2rem;
+  text-align: center; color: var(--text-muted); font-size: 0.85rem;
+}
+.site-footer a { color: var(--text-secondary); }
+.site-footer a:hover { color: var(--accent); }
+
+/* ---------- Utility ---------- */
+.text-accent { color: var(--accent); }
+.text-muted { color: var(--text-muted); }
+.text-secondary { color: var(--text-secondary); }
+.font-mono { font-family: var(--font-mono); }
+.mt-1 { margin-top: 0.5rem; }
+.mt-2 { margin-top: 1rem; }
+.mt-3 { margin-top: 1.5rem; }
+.mt-4 { margin-top: 2rem; }
+.mb-2 { margin-bottom: 1rem; }
+.mb-3 { margin-bottom: 1.5rem; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+
+/* ---------- Animations ---------- */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-in { opacity: 0; animation: fadeInUp 0.6s ease forwards; }
+.animate-in:nth-child(1) { animation-delay: 0.1s; }
+.animate-in:nth-child(2) { animation-delay: 0.2s; }
+.animate-in:nth-child(3) { animation-delay: 0.3s; }
+.animate-in:nth-child(4) { animation-delay: 0.4s; }
+.animate-in:nth-child(5) { animation-delay: 0.5s; }
+.animate-in:nth-child(6) { animation-delay: 0.6s; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+  .nav-links.open {
+    display: flex; flex-direction: column; position: absolute; top: 64px; left: 0; right: 0;
+    background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(20px);
+    padding: 1rem; border-bottom: 1px solid var(--border);
+  }
+  .nav-hamburger { display: block; }
+  .hero { padding: 4rem 1.5rem 3rem; }
+  .section { padding: 3rem 1.5rem; }
+  .card-grid { grid-template-columns: 1fr; }
+  .grid-2 { grid-template-columns: 1fr; }
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .bar-label { width: 100px; font-size: 0.78rem; }
+  .pipeline-diagram { overflow-x: auto; }
+  .pipeline-diagram svg { min-width: 900px; }
+}
+@media (max-width: 480px) {
+  .stats-row { grid-template-columns: 1fr; }
+  .hero h1 { font-size: 1.8rem; }
+}
+</style>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+/* ============================================================
+   CI/CD Page — Specific Styles
+   ============================================================ */
+
+/* Pipeline Diagram Container */
+.pipeline-diagram {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2rem;
+  overflow-x: auto;
+  margin-bottom: 2rem;
+}
+.pipeline-diagram svg { display: block; margin: 0 auto; }
+
+/* Animated dashed arrows */
+@keyframes dashFlow {
+  from { stroke-dashoffset: 20; }
+  to { stroke-dashoffset: 0; }
+}
+.flow-arrow {
+  stroke-dasharray: 6, 4;
+  animation: dashFlow 0.8s linear infinite;
+}
+
+/* Pulse glow on layer headers */
+@keyframes pulseGlow {
+  0%, 100% { filter: drop-shadow(0 0 4px currentColor); }
+  50% { filter: drop-shadow(0 0 12px currentColor); }
+}
+.layer-pulse { animation: pulseGlow 3s ease-in-out infinite; }
+
+/* Security flow diagram */
+.security-flow {
+  display: flex; align-items: center; justify-content: center;
+  gap: 0; flex-wrap: wrap; margin: 2rem 0;
+}
+.sec-node {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 1rem 1.25rem; text-align: center; min-width: 150px;
+  transition: all var(--transition);
+}
+.sec-node:hover { border-color: var(--accent-blue); transform: translateY(-2px); box-shadow: var(--shadow); }
+.sec-node .sec-icon { font-size: 1.5rem; margin-bottom: 0.4rem; }
+.sec-node .sec-label { font-size: 0.82rem; font-weight: 600; color: var(--text-primary); }
+.sec-node .sec-detail { font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem; }
+.sec-arrow {
+  color: var(--accent-blue); font-size: 1.2rem; padding: 0 0.5rem; font-weight: 700;
+}
+
+/* Job detail mini-cards */
+.job-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;
+}
+.job-card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 1.25rem; transition: all var(--transition);
+}
+.job-card:hover { border-color: var(--border-hover); background: var(--bg-card-hover); }
+.job-card h4 { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.5rem; }
+.job-card .job-meta {
+  font-size: 0.82rem; color: var(--text-secondary); line-height: 1.65;
+}
+.job-card .job-meta code { font-size: 0.78rem; }
+
+/* Runbook cards */
+.runbook-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1.25rem;
+}
+.runbook-card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 1.5rem; transition: all var(--transition);
+}
+.runbook-card:hover { border-color: var(--border-hover); box-shadow: var(--shadow); }
+.runbook-card h4 { font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem; }
+.runbook-card pre { margin: 0.5rem 0 0; font-size: 0.8rem; padding: 0.85rem; }
+
+/* Layer legend strip */
+.layer-legend {
+  display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap;
+  margin: 1.5rem 0 0;
+}
+.layer-legend-item {
+  display: flex; align-items: center; gap: 0.4rem; font-size: 0.82rem; color: var(--text-secondary);
+}
+.layer-legend-swatch {
+  width: 14px; height: 14px; border-radius: 3px;
+}
+
+/* Timing badge */
+.timing-badge {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  background: var(--accent-glow); border: 1px solid var(--accent-dim);
+  border-radius: 999px; padding: 0.3rem 0.85rem;
+  font-size: 0.82rem; font-weight: 600; color: var(--accent);
+}
+
+@media (max-width: 768px) {
+  .security-flow { flex-direction: column; }
+  .sec-arrow { transform: rotate(90deg); }
+  .job-grid { grid-template-columns: 1fr; }
+  .runbook-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand"><div class="logo-icon">W</div><span>WorkflowAI</span></a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="architecture.html">Architecture</a></li>
+      <li><a href="cicd.html">CI/CD</a></li>
+      <li><a href="demo.html">Demo</a></li>
+      <li><a href="performance.html">Performance</a></li>
+      <li><a href="interview.html">Interview Q&amp;A</a></li>
+      <li><a href="cost.html">Cost Analysis</a></li>
+      <li><a href="teardown.html">Teardown</a></li>
+    </ul>
+    <button class="nav-hamburger" aria-label="Menu">&#9776;</button>
+  </div>
+</nav>
+
+<div class="page-body">
+
+  <!-- ==================== HERO ==================== -->
+  <section class="hero">
+    <h1>CI/CD Pipeline Architecture</h1>
+    <p class="subtitle">From <code>git push</code> to production &mdash; 15-job CI matrix, Docker build &amp; ECR push, ArgoCD GitOps auto-sync, Kyverno policy enforcement</p>
+    <div class="badge-row">
+      <span class="badge" style="border-color: var(--accent-blue); color: var(--accent-blue);">CI &middot; 15 Jobs</span>
+      <span class="badge" style="border-color: var(--accent-purple); color: var(--accent-purple);">CD &middot; 4 Stages</span>
+      <span class="badge" style="border-color: var(--accent-orange); color: var(--accent-orange);">ArgoCD &middot; GitOps</span>
+      <span class="badge" style="border-color: var(--accent); color: var(--accent);">Kyverno &middot; 6 Policies</span>
+      <span class="badge" style="border-color: var(--accent-cyan); color: var(--accent-cyan);">~8&ndash;12 min</span>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- ==================== SECTION 1: PIPELINE OVERVIEW ==================== -->
+  <section class="section">
+    <div class="section-header">
+      <h2>Pipeline Interaction Diagram</h2>
+      <p>Five layers from developer push to live production &mdash; fully automated, zero manual steps</p>
+    </div>
+
+    <div class="pipeline-diagram">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 920" width="960" height="920">
+        <defs>
+          <marker id="arr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+            <path d="M0,0 L8,4 L0,8 Z" fill="#555"/>
+          </marker>
+          <marker id="arr-blue" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+            <path d="M0,0 L8,4 L0,8 Z" fill="#3b82f6"/>
+          </marker>
+          <marker id="arr-purple" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+            <path d="M0,0 L8,4 L0,8 Z" fill="#8b5cf6"/>
+          </marker>
+          <marker id="arr-orange" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+            <path d="M0,0 L8,4 L0,8 Z" fill="#f59e0b"/>
+          </marker>
+          <marker id="arr-green" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+            <path d="M0,0 L8,4 L0,8 Z" fill="#76b900"/>
+          </marker>
+        </defs>
+
+        <!-- ===== LAYER 1: DEVELOPER ===== -->
+        <rect x="20" y="10" width="920" height="70" rx="8" fill="rgba(230,230,230,0.03)" stroke="#444" stroke-width="1"/>
+        <text x="40" y="32" fill="#666" font-size="11" font-weight="700" letter-spacing="1">LAYER 1 &mdash; DEVELOPER</text>
+        <rect x="360" y="35" width="240" height="34" rx="6" fill="#1a1a1a" stroke="#e6e6e6" stroke-width="1.5"/>
+        <text x="480" y="57" fill="#e6e6e6" font-size="13" font-weight="600" text-anchor="middle">git push to main</text>
+
+        <!-- Arrow: Developer → CI -->
+        <line x1="480" y1="80" x2="480" y2="110" class="flow-arrow" stroke="#3b82f6" stroke-width="2" marker-end="url(#arr-blue)"/>
+
+        <!-- ===== LAYER 2: CI PIPELINE ===== -->
+        <rect x="20" y="110" width="920" height="230" rx="8" fill="rgba(59,130,246,0.04)" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="5,3"/>
+        <text x="40" y="132" fill="#3b82f6" font-size="11" font-weight="700" letter-spacing="1">LAYER 2 &mdash; CI PIPELINE (GitHub Actions &middot; ci.yml)</text>
+        <text x="920" y="132" fill="#3b82f6" font-size="10" font-weight="600" text-anchor="end" opacity="0.6">~3&ndash;5 min</text>
+
+        <!-- CI: Trigger info -->
+        <text x="40" y="155" fill="#666" font-size="10">Trigger: push/** &amp; PR to main &bull; Concurrency: cancel-in-progress &bull; fail-fast: false</text>
+
+        <!-- Test Jobs Box -->
+        <rect x="40" y="168" width="430" height="155" rx="6" fill="#111" stroke="#3b82f6" stroke-width="1"/>
+        <text x="55" y="188" fill="#60a5fa" font-size="11" font-weight="700">TEST JOBS (8)</text>
+
+        <!-- Go Tests -->
+        <rect x="55" y="198" width="195" height="25" rx="4" fill="rgba(0,173,216,0.08)" stroke="#00ADD8" stroke-width="0.8"/>
+        <text x="65" y="215" fill="#00ADD8" font-size="10" font-weight="600">Go &times;2</text>
+        <text x="120" y="215" fill="#999" font-size="9">api-gateway, ingestion</text>
+
+        <!-- Python Tests -->
+        <rect x="55" y="228" width="195" height="25" rx="4" fill="rgba(55,118,171,0.08)" stroke="#3776AB" stroke-width="0.8"/>
+        <text x="65" y="245" fill="#3776AB" font-size="10" font-weight="600">Python &times;4</text>
+        <text x="137" y="245" fill="#999" font-size="9">agent, idx, model, ft</text>
+
+        <!-- Python+DB Test -->
+        <rect x="55" y="258" width="195" height="25" rx="4" fill="rgba(55,118,171,0.08)" stroke="#3776AB" stroke-width="0.8"/>
+        <text x="65" y="275" fill="#3776AB" font-size="10" font-weight="600">Python+DB &times;1</text>
+        <text x="160" y="275" fill="#999" font-size="9">metrics + PG 15</text>
+
+        <!-- Frontend Test -->
+        <rect x="55" y="288" width="195" height="25" rx="4" fill="rgba(97,218,251,0.08)" stroke="#61DAFB" stroke-width="0.8"/>
+        <text x="65" y="305" fill="#61DAFB" font-size="10" font-weight="600">React &times;1</text>
+        <text x="130" y="305" fill="#999" font-size="9">Jest (Node 20)</text>
+
+        <!-- Connecting bracket for Go detail -->
+        <rect x="260" y="198" width="200" height="115" rx="4" fill="rgba(255,255,255,0.015)" stroke="#333" stroke-width="0.5"/>
+        <text x="270" y="214" fill="#666" font-size="9">Go 1.22 &bull; go test -v -short ./...</text>
+        <text x="270" y="230" fill="#666" font-size="9">Python 3.11 &bull; pytest -v --tb=short</text>
+        <text x="270" y="246" fill="#666" font-size="9">CPU-only PyTorch index (-90s)</text>
+        <text x="270" y="262" fill="#666" font-size="9">PostgreSQL 15 sidecar, pg_isready</text>
+        <text x="270" y="278" fill="#666" font-size="9">npm ci &bull; npx jest</text>
+        <text x="270" y="298" fill="#76b900" font-size="9" font-weight="600">Total: 470 tests &bull; 458 pass &bull; 12 skip</text>
+
+        <!-- Lint Jobs Box -->
+        <rect x="490" y="168" width="440" height="155" rx="6" fill="#111" stroke="#3b82f6" stroke-width="1"/>
+        <text x="505" y="188" fill="#60a5fa" font-size="11" font-weight="700">LINT JOBS (7)</text>
+
+        <!-- Go Lint -->
+        <rect x="505" y="198" width="195" height="25" rx="4" fill="rgba(0,173,216,0.08)" stroke="#00ADD8" stroke-width="0.8"/>
+        <text x="515" y="215" fill="#00ADD8" font-size="10" font-weight="600">Go &times;2</text>
+        <text x="565" y="215" fill="#999" font-size="9">golangci-lint</text>
+
+        <!-- Python Lint -->
+        <rect x="505" y="228" width="195" height="25" rx="4" fill="rgba(55,118,171,0.08)" stroke="#3776AB" stroke-width="0.8"/>
+        <text x="515" y="245" fill="#3776AB" font-size="10" font-weight="600">Python &times;5</text>
+        <text x="590" y="245" fill="#999" font-size="9">ruff check .</text>
+
+        <!-- Lint detail -->
+        <rect x="710" y="198" width="210" height="55" rx="4" fill="rgba(255,255,255,0.015)" stroke="#333" stroke-width="0.5"/>
+        <text x="720" y="214" fill="#666" font-size="9">golangci-lint (latest, official action)</text>
+        <text x="720" y="230" fill="#666" font-size="9">ruff: agent, idx, model, metrics, ft</text>
+        <text x="720" y="246" fill="#666" font-size="9">All 7 lint jobs run in parallel</text>
+
+        <!-- 15 jobs total callout -->
+        <rect x="505" y="268" width="200" height="30" rx="15" fill="rgba(118,185,0,0.12)" stroke="#76b900" stroke-width="1"/>
+        <text x="605" y="288" fill="#76b900" font-size="12" font-weight="700" text-anchor="middle">15 / 15 Jobs Green &#10003;</text>
+
+        <!-- Arrow: CI → CD -->
+        <line x1="480" y1="340" x2="480" y2="370" class="flow-arrow" stroke="#8b5cf6" stroke-width="2" marker-end="url(#arr-purple)"/>
+        <text x="492" y="360" fill="#8b5cf6" font-size="9" font-weight="600">on success (main only)</text>
+
+        <!-- ===== LAYER 3: CD PIPELINE ===== -->
+        <rect x="20" y="370" width="920" height="210" rx="8" fill="rgba(139,92,246,0.04)" stroke="#8b5cf6" stroke-width="1.5" stroke-dasharray="5,3"/>
+        <text x="40" y="392" fill="#8b5cf6" font-size="11" font-weight="700" letter-spacing="1">LAYER 3 &mdash; CD PIPELINE (GitHub Actions &middot; cd.yml)</text>
+        <text x="920" y="392" fill="#8b5cf6" font-size="10" font-weight="600" text-anchor="end" opacity="0.6">~3&ndash;5 min</text>
+
+        <text x="40" y="412" fill="#666" font-size="10">Trigger: workflow_run CI completed (main) &bull; cancel-in-progress: false</text>
+
+        <!-- Stage 1: Gate -->
+        <rect x="40" y="425" width="200" height="60" rx="6" fill="#111" stroke="#a78bfa" stroke-width="1"/>
+        <text x="50" y="443" fill="#a78bfa" font-size="9" font-weight="700">STAGE 1</text>
+        <text x="50" y="458" fill="#e6e6e6" font-size="11" font-weight="600">Gate Check</text>
+        <text x="50" y="473" fill="#999" font-size="9">Verify CI success, extract SHA</text>
+
+        <!-- Arrow 1→2 -->
+        <line x1="240" y1="455" x2="265" y2="455" class="flow-arrow" stroke="#8b5cf6" stroke-width="1.5" marker-end="url(#arr-purple)"/>
+
+        <!-- Stage 2: Detect -->
+        <rect x="270" y="425" width="200" height="60" rx="6" fill="#111" stroke="#a78bfa" stroke-width="1"/>
+        <text x="280" y="443" fill="#a78bfa" font-size="9" font-weight="700">STAGE 2</text>
+        <text x="280" y="458" fill="#e6e6e6" font-size="11" font-weight="600">Change Detection</text>
+        <text x="280" y="473" fill="#999" font-size="9">dorny/paths-filter &bull; 8 paths</text>
+
+        <!-- Arrow 2→3 -->
+        <line x1="470" y1="455" x2="495" y2="455" class="flow-arrow" stroke="#8b5cf6" stroke-width="1.5" marker-end="url(#arr-purple)"/>
+
+        <!-- Stage 3: Build -->
+        <rect x="500" y="425" width="200" height="60" rx="6" fill="#111" stroke="#a78bfa" stroke-width="1"/>
+        <text x="510" y="443" fill="#a78bfa" font-size="9" font-weight="700">STAGE 3</text>
+        <text x="510" y="458" fill="#e6e6e6" font-size="11" font-weight="600">Build &amp; Push ECR</text>
+        <text x="510" y="473" fill="#999" font-size="9">OIDC &rarr; STS &bull; sha-&lt;commit&gt; tag</text>
+
+        <!-- Arrow 3→4 -->
+        <line x1="700" y1="455" x2="725" y2="455" class="flow-arrow" stroke="#8b5cf6" stroke-width="1.5" marker-end="url(#arr-purple)"/>
+
+        <!-- Stage 4: Kustomize -->
+        <rect x="730" y="425" width="200" height="60" rx="6" fill="#111" stroke="#a78bfa" stroke-width="1"/>
+        <text x="740" y="443" fill="#a78bfa" font-size="9" font-weight="700">STAGE 4</text>
+        <text x="740" y="458" fill="#e6e6e6" font-size="11" font-weight="600">Update Kustomize</text>
+        <text x="740" y="473" fill="#999" font-size="9">git commit [skip ci] &bull; push</text>
+
+        <!-- CD detail: 8 service paths -->
+        <rect x="40" y="500" width="890" height="65" rx="6" fill="rgba(255,255,255,0.015)" stroke="#333" stroke-width="0.5"/>
+        <text x="55" y="518" fill="#999" font-size="10" font-weight="600">Path-filtered services (only changed services rebuild):</text>
+        <text x="55" y="536" fill="#a78bfa" font-size="10" font-family="JetBrains Mono, monospace">api-gateway</text>
+        <text x="170" y="536" fill="#a78bfa" font-size="10" font-family="JetBrains Mono, monospace">ingestion</text>
+        <text x="265" y="536" fill="#a78bfa" font-size="10" font-family="JetBrains Mono, monospace">agent-orchestrator</text>
+        <text x="425" y="536" fill="#a78bfa" font-size="10" font-family="JetBrains Mono, monospace">indexing</text>
+        <text x="510" y="536" fill="#a78bfa" font-size="10" font-family="JetBrains Mono, monospace">model-service</text>
+        <text x="635" y="536" fill="#a78bfa" font-size="10" font-family="JetBrains Mono, monospace">metrics</text>
+        <text x="710" y="536" fill="#a78bfa" font-size="10" font-family="JetBrains Mono, monospace">finetune</text>
+        <text x="790" y="536" fill="#a78bfa" font-size="10" font-family="JetBrains Mono, monospace">frontend</text>
+        <text x="55" y="554" fill="#666" font-size="9">Image tag: 589528730663.dkr.ecr.ap-southeast-1.amazonaws.com/workflowai/&lt;service&gt;:sha-&lt;commit&gt;</text>
+
+        <!-- Arrow: CD → GitOps -->
+        <line x1="480" y1="580" x2="480" y2="610" class="flow-arrow" stroke="#f59e0b" stroke-width="2" marker-end="url(#arr-orange)"/>
+        <text x="492" y="600" fill="#f59e0b" font-size="9" font-weight="600">git change detected</text>
+
+        <!-- ===== LAYER 4: GITOPS / ADMISSION ===== -->
+        <rect x="20" y="610" width="920" height="160" rx="8" fill="rgba(245,158,11,0.04)" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="5,3"/>
+        <text x="40" y="632" fill="#f59e0b" font-size="11" font-weight="700" letter-spacing="1">LAYER 4 &mdash; GITOPS &amp; POLICY ENFORCEMENT</text>
+        <text x="920" y="632" fill="#f59e0b" font-size="10" font-weight="600" text-anchor="end" opacity="0.6">~1&ndash;2 min</text>
+
+        <!-- ArgoCD box -->
+        <rect x="40" y="645" width="440" height="110" rx="6" fill="#111" stroke="#fbbf24" stroke-width="1"/>
+        <text x="55" y="663" fill="#fbbf24" font-size="11" font-weight="700">ArgoCD GitOps</text>
+        <text x="55" y="681" fill="#999" font-size="10">1. Detect kustomization.yaml change</text>
+        <text x="55" y="696" fill="#999" font-size="10">2. Render manifests (kustomize build)</text>
+        <text x="55" y="711" fill="#999" font-size="10">3. Diff against live cluster &rarr; apply rolling update</text>
+        <text x="55" y="726" fill="#999" font-size="10">4. Prune removed resources</text>
+        <text x="55" y="741" fill="#76b900" font-size="10" font-weight="600">selfHeal: true &bull; auto-sync &bull; app-of-apps</text>
+
+        <!-- Kyverno box -->
+        <rect x="500" y="645" width="430" height="110" rx="6" fill="#111" stroke="#fbbf24" stroke-width="1"/>
+        <text x="515" y="663" fill="#fbbf24" font-size="11" font-weight="700">Kyverno Admission Controller</text>
+        <text x="515" y="681" fill="#999" font-size="10">6 ClusterPolicies &bull; Enforce mode</text>
+        <text x="515" y="699" fill="#ef4444" font-size="9" font-weight="600">REJECT</text>
+        <text x="560" y="699" fill="#999" font-size="10">:latest tags, missing limits, no probes</text>
+        <text x="515" y="714" fill="#ef4444" font-size="9" font-weight="600">REJECT</text>
+        <text x="560" y="714" fill="#999" font-size="10">missing labels, non-ECR images</text>
+        <text x="515" y="729" fill="#ef4444" font-size="9" font-weight="600">REJECT</text>
+        <text x="560" y="729" fill="#999" font-size="10">privilege escalation</text>
+        <text x="515" y="748" fill="#76b900" font-size="10" font-weight="600">&#10003; All 13 pods compliant &mdash; zero rejections</text>
+
+        <!-- Arrow between ArgoCD and Kyverno -->
+        <line x1="480" y1="700" x2="500" y2="700" class="flow-arrow" stroke="#fbbf24" stroke-width="1.5" marker-end="url(#arr-orange)"/>
+        <text x="484" y="694" fill="#fbbf24" font-size="8">admits</text>
+
+        <!-- Arrow: GitOps → EKS -->
+        <line x1="480" y1="770" x2="480" y2="800" class="flow-arrow" stroke="#76b900" stroke-width="2" marker-end="url(#arr-green)"/>
+        <text x="492" y="792" fill="#76b900" font-size="9" font-weight="600">rolling deployment</text>
+
+        <!-- ===== LAYER 5: AWS EKS ===== -->
+        <rect x="20" y="800" width="920" height="100" rx="8" fill="rgba(118,185,0,0.04)" stroke="#76b900" stroke-width="1.5" stroke-dasharray="5,3"/>
+        <text x="40" y="822" fill="#76b900" font-size="11" font-weight="700" letter-spacing="1">LAYER 5 &mdash; AWS EKS CLUSTER (ap-southeast-1)</text>
+
+        <text x="55" y="845" fill="#999" font-size="11">2&times; t3.large nodes &bull; Namespace: <tspan fill="#76b900" font-weight="600">workflowai</tspan></text>
+        <text x="55" y="865" fill="#999" font-size="11">13/13 pods Running &bull; 0 restarts &bull; ALB health check passing</text>
+        <text x="55" y="885" fill="#999" font-size="10">Routes: <tspan font-family="JetBrains Mono, monospace" fill="#76b900">/api/*</tspan> &rarr; api-gateway:8000 &bull; <tspan font-family="JetBrains Mono, monospace" fill="#76b900">/*</tspan> &rarr; frontend:3000</text>
+
+        <!-- Pod count icon -->
+        <rect x="750" y="835" width="170" height="50" rx="25" fill="rgba(118,185,0,0.12)" stroke="#76b900" stroke-width="1.5"/>
+        <text x="835" y="860" fill="#76b900" font-size="18" font-weight="800" text-anchor="middle">13 / 13</text>
+        <text x="835" y="878" fill="#76b900" font-size="10" font-weight="600" text-anchor="middle">pods healthy</text>
+
+        <!-- Total time annotation -->
+        <rect x="350" y="905" width="260" height="12" rx="6" fill="none"/>
+        <text x="480" y="915" fill="#76b900" font-size="11" font-weight="700" text-anchor="middle">Push &rarr; Production: ~8&ndash;12 minutes</text>
+      </svg>
+    </div>
+
+    <div class="layer-legend">
+      <div class="layer-legend-item"><div class="layer-legend-swatch" style="background:#e6e6e6;"></div> Developer</div>
+      <div class="layer-legend-item"><div class="layer-legend-swatch" style="background:#3b82f6;"></div> CI Pipeline</div>
+      <div class="layer-legend-item"><div class="layer-legend-swatch" style="background:#8b5cf6;"></div> CD Pipeline</div>
+      <div class="layer-legend-item"><div class="layer-legend-swatch" style="background:#f59e0b;"></div> GitOps + Kyverno</div>
+      <div class="layer-legend-item"><div class="layer-legend-swatch" style="background:#76b900;"></div> AWS EKS</div>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- ==================== SECTION 2: SECURITY MODEL ==================== -->
+  <section class="section">
+    <div class="section-header">
+      <h2>Security Model</h2>
+      <p>Zero long-lived credentials &mdash; OIDC federation + temporary STS tokens for every deployment</p>
+    </div>
+
+    <div class="callout callout-blue mb-3">
+      <strong>No <code>AWS_ACCESS_KEY_ID</code> / <code>AWS_SECRET_ACCESS_KEY</code> stored anywhere.</strong>
+      GitHub&rsquo;s OIDC token is exchanged for short-lived STS credentials on every CD run.
+    </div>
+
+    <h3 style="margin-bottom: 1rem;">OIDC Federation Flow</h3>
+    <div class="security-flow">
+      <div class="sec-node">
+        <div class="sec-icon">&#128187;</div>
+        <div class="sec-label">GitHub Actions</div>
+        <div class="sec-detail">Mints OIDC JWT</div>
+      </div>
+      <div class="sec-arrow">&rarr;</div>
+      <div class="sec-node">
+        <div class="sec-icon">&#128272;</div>
+        <div class="sec-label">AWS STS</div>
+        <div class="sec-detail">Validates OIDC token</div>
+      </div>
+      <div class="sec-arrow">&rarr;</div>
+      <div class="sec-node">
+        <div class="sec-icon">&#128274;</div>
+        <div class="sec-label">AssumeRole</div>
+        <div class="sec-detail">WebIdentity &rarr; temp creds</div>
+      </div>
+      <div class="sec-arrow">&rarr;</div>
+      <div class="sec-node">
+        <div class="sec-icon">&#9201;</div>
+        <div class="sec-label">~15 min TTL</div>
+        <div class="sec-detail">Credentials expire after job</div>
+      </div>
+    </div>
+
+    <div class="grid-2 mt-4">
+      <div class="card">
+        <h3>Kubernetes Secrets</h3>
+        <p>Secrets are <strong>never committed to git</strong>. Created via <code>kubectl create secret</code> at bootstrap. ArgoCD <code>ignoreDifferences</code> preserves runtime secrets during sync.</p>
+        <div class="table-wrapper mt-2">
+          <table>
+            <thead><tr><th>Secret</th><th>Management</th></tr></thead>
+            <tbody>
+              <tr><td><code>POSTGRES_PASSWORD</code></td><td>K8s Secret &rarr; env var</td></tr>
+              <tr><td><code>JWT_SECRET</code></td><td>K8s Secret &rarr; env var</td></tr>
+              <tr><td><code>OPENROUTER_API_KEY</code></td><td>K8s Secret &rarr; env var</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <h3>IAM &amp; IRSA</h3>
+        <p>Pod-level AWS access via <strong>IAM Roles for Service Accounts</strong> (IRSA). Each K8s ServiceAccount is annotated with an IAM role ARN &mdash; pods assume AWS roles via STS.</p>
+        <div class="callout mt-2" style="margin-bottom: 0;">
+          <strong>Trust Policy:</strong><br>
+          GitHub OIDC provider (repo: <code>SilkLee/workflow-ai</code>)<br>
+          Permissions: ECR push, EKS describe (least privilege)
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- ==================== SECTION 3: CI JOB MATRIX ==================== -->
+  <section class="section">
+    <div class="section-header">
+      <h2>CI Job Matrix Detail</h2>
+      <p>15 parallel jobs &mdash; 8 test + 7 lint &mdash; all using <code>fail-fast: false</code></p>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-value">15</div>
+        <div class="stat-label">CI Jobs</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">470</div>
+        <div class="stat-label">Total Tests</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">458</div>
+        <div class="stat-label">Passing</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">12</div>
+        <div class="stat-label">Skipped (GPU)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="color: var(--accent);">0</div>
+        <div class="stat-label">Failures</div>
+      </div>
+    </div>
+
+    <div class="job-grid">
+      <div class="job-card" style="border-top: 2px solid #00ADD8;">
+        <h4><span class="tag tag-cyan">Go</span> Tests &times;2</h4>
+        <div class="job-meta">
+          <strong>Runner:</strong> ubuntu-latest<br>
+          <strong>Go:</strong> 1.22<br>
+          <strong>Cache:</strong> <code>go.sum</code> keyed<br>
+          <strong>Command:</strong> <code>go test -v -short ./...</code><br>
+          <strong>Services:</strong> api-gateway, ingestion<br>
+          <strong>Tests:</strong> ~100 (60 + 40)
+        </div>
+      </div>
+
+      <div class="job-card" style="border-top: 2px solid #3776AB;">
+        <h4><span class="tag tag-blue">Python</span> Tests &times;4</h4>
+        <div class="job-meta">
+          <strong>Runner:</strong> ubuntu-latest<br>
+          <strong>Python:</strong> 3.11<br>
+          <strong>Cache:</strong> <code>pyproject.toml</code> keyed<br>
+          <strong>Install:</strong> CPU-only PyTorch index<br>
+          <strong>Command:</strong> <code>pytest -v --tb=short</code><br>
+          <strong>Services:</strong> agent, indexing, model, finetune
+        </div>
+      </div>
+
+      <div class="job-card" style="border-top: 2px solid #8b5cf6;">
+        <h4><span class="tag tag-purple">Python+DB</span> Test &times;1</h4>
+        <div class="job-meta">
+          <strong>Runner:</strong> ubuntu-latest<br>
+          <strong>Sidecar:</strong> PostgreSQL 15<br>
+          <strong>Health:</strong> <code>pg_isready</code>, 10s interval<br>
+          <strong>DB URL:</strong> <code>postgresql+asyncpg://...localhost:5432</code><br>
+          <strong>Service:</strong> metrics (~60 tests)
+        </div>
+      </div>
+
+      <div class="job-card" style="border-top: 2px solid #61DAFB;">
+        <h4><span class="tag tag-cyan">React</span> Test &times;1</h4>
+        <div class="job-meta">
+          <strong>Runner:</strong> ubuntu-latest<br>
+          <strong>Node.js:</strong> 20<br>
+          <strong>Cache:</strong> <code>package-lock.json</code> keyed<br>
+          <strong>Install:</strong> <code>npm ci</code><br>
+          <strong>Command:</strong> <code>npx jest</code><br>
+          <strong>Tests:</strong> ~110
+        </div>
+      </div>
+
+      <div class="job-card" style="border-top: 2px solid #00ADD8;">
+        <h4><span class="tag tag-cyan">Go</span> Lint &times;2</h4>
+        <div class="job-meta">
+          <strong>Linter:</strong> <code>golangci-lint</code> (latest)<br>
+          <strong>Action:</strong> Official golangci-lint action<br>
+          <strong>Services:</strong> api-gateway, ingestion
+        </div>
+      </div>
+
+      <div class="job-card" style="border-top: 2px solid #3776AB;">
+        <h4><span class="tag tag-blue">Python</span> Lint &times;5</h4>
+        <div class="job-meta">
+          <strong>Linter:</strong> <code>ruff check .</code><br>
+          <strong>Services:</strong> agent-orchestrator, indexing,<br>
+          model-service, metrics, finetune<br>
+          <strong>Note:</strong> ruff is 10&ndash;100&times; faster than flake8
+        </div>
+      </div>
+    </div>
+
+    <h3 class="mt-4 mb-2">Test Distribution by Service</h3>
+    <div class="bar-chart">
+      <div class="bar-row">
+        <div class="bar-label">Frontend (React)</div>
+        <div class="bar-track"><div class="bar-fill cyan" data-width="100%">110</div></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Agent Orchestrator</div>
+        <div class="bar-track"><div class="bar-fill purple" data-width="73%">80</div></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">API Gateway (Go)</div>
+        <div class="bar-track"><div class="bar-fill blue" data-width="55%">60</div></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Metrics</div>
+        <div class="bar-track"><div class="bar-fill green" data-width="55%">60</div></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Indexing</div>
+        <div class="bar-track"><div class="bar-fill purple" data-width="45%">50</div></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Ingestion (Go)</div>
+        <div class="bar-track"><div class="bar-fill blue" data-width="36%">40</div></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Model Service</div>
+        <div class="bar-track"><div class="bar-fill orange" data-width="36%">40</div></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Finetune</div>
+        <div class="bar-track"><div class="bar-fill orange" data-width="27%">30</div></div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- ==================== SECTION 4: DESIGN DECISIONS ==================== -->
+  <section class="section">
+    <div class="section-header">
+      <h2>Key Design Decisions</h2>
+      <p>Why we chose each tool and pattern &mdash; with rationale for every tradeoff</p>
+    </div>
+
+    <div class="accordion-item">
+      <button class="accordion-header">
+        <span>Why GitHub Actions (not Jenkins / GitLab CI)?</span>
+        <span class="arrow">&#9660;</span>
+      </button>
+      <div class="accordion-body">
+        <div class="accordion-body-inner">
+          <strong>Native GitHub integration:</strong> OIDC federation, <code>workflow_run</code> chaining, path-filter actions &mdash; all first-party.<br>
+          <strong>Zero infrastructure:</strong> No Jenkins server to maintain, patch, or scale.<br>
+          <strong>Matrix strategy:</strong> 15 parallel jobs scale automatically with GitHub-hosted runners.<br>
+          <strong>Cost:</strong> Free for public repos &mdash; ideal for a portfolio project.
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <button class="accordion-header">
+        <span>Why ArgoCD (not Flux / Spinnaker)?</span>
+        <span class="arrow">&#9660;</span>
+      </button>
+      <div class="accordion-body">
+        <div class="accordion-body-inner">
+          <strong>Web UI:</strong> Built-in dashboard for sync status visualization &mdash; critical for debugging.<br>
+          <strong>App-of-apps:</strong> Hierarchical application management (root &rarr; workloads + policies).<br>
+          <strong>selfHeal:</strong> Automatic drift detection and correction. <code>kubectl patch</code> gets reverted within seconds.<br>
+          <strong>Kustomize native:</strong> No plugins needed for our manifest strategy.
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <button class="accordion-header">
+        <span>Why <code>sha-&lt;commit&gt;</code> tags (not semver)?</span>
+        <span class="arrow">&#9660;</span>
+      </button>
+      <div class="accordion-body">
+        <div class="accordion-body-inner">
+          <strong>Traceability:</strong> Every running image maps to exactly one git commit.<br>
+          <strong>No ambiguity:</strong> <code>:latest</code> or <code>:v1.2.3</code> can be overwritten; <code>sha-abc123</code> cannot.<br>
+          <strong>Rollback:</strong> Point to any previous SHA &mdash; no version ordering needed.<br>
+          <strong>CI/CD simplicity:</strong> Tag = commit SHA &mdash; no version bump logic, no release workflow.
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <button class="accordion-header">
+        <span>Why <code>[skip ci]</code> on tag updates?</span>
+        <span class="arrow">&#9660;</span>
+      </button>
+      <div class="accordion-body">
+        <div class="accordion-body-inner">
+          The CD pipeline commits updated kustomize tags back to <code>main</code>. Without <code>[skip ci]</code>, this triggers another CI run &rarr; another CD run &rarr; <strong>infinite loop</strong>. The <code>[skip ci]</code> marker breaks the cycle cleanly.
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <button class="accordion-header">
+        <span>Why <code>cancel-in-progress: false</code> for CD?</span>
+        <span class="arrow">&#9660;</span>
+      </button>
+      <div class="accordion-body">
+        <div class="accordion-body-inner">
+          A deploy in progress <strong>must complete</strong>. Half-pushed images or partial kustomize updates leave the system in an inconsistent state. CI can be cancelled freely (newer code supersedes), but CD cannot. This is a deliberate asymmetry.
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <button class="accordion-header">
+        <span>Why Enforce mode for Kyverno (not Audit)?</span>
+        <span class="arrow">&#9660;</span>
+      </button>
+      <div class="accordion-body">
+        <div class="accordion-body-inner">
+          <strong>Shift-left:</strong> Non-compliant manifests are caught <em>before</em> they reach the cluster, not after.<br>
+          <strong>Pre-verified compliance:</strong> All 13 running pods already comply with all 6 policies &mdash; verified before enabling Enforce mode.<br>
+          <strong>CI/CD safety net:</strong> Even if a developer bypasses code review, Kyverno blocks non-compliant deployments at admission time.<br>
+          <strong>Scoped blast radius:</strong> Policies target <code>workflowai</code> namespace only &mdash; kube-system, argocd, monitoring, kyverno namespaces are unaffected.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- ==================== SECTION 5: OPERATIONAL RUNBOOK ==================== -->
+  <section class="section">
+    <div class="section-header">
+      <h2>Operational Runbook</h2>
+      <p>Quick-reference commands for day-to-day operations and troubleshooting</p>
+    </div>
+
+    <div class="runbook-grid">
+      <div class="runbook-card">
+        <h4>&#128269; Check CI Status</h4>
+        <pre><code># Latest runs
+gh run list --limit 5
+
+# Watch a specific run
+gh run watch &lt;run-id&gt; --exit-status
+
+# View failed job logs
+gh run view &lt;run-id&gt; --log-failed</code></pre>
+      </div>
+
+      <div class="runbook-card">
+        <h4>&#128640; Check Deployment</h4>
+        <pre><code># Pod status
+kubectl get pods -n workflowai
+
+# Rollout status
+kubectl rollout status deployment/api-gateway -n workflowai
+
+# ArgoCD app status
+kubectl get applications -n argocd</code></pre>
+      </div>
+
+      <div class="runbook-card">
+        <h4>&#9202; Current Image Tags</h4>
+        <pre><code>kubectl get deployment -n workflowai \
+  -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.template.spec.containers[0].image}{"\n"}{end}'</code></pre>
+      </div>
+
+      <div class="runbook-card">
+        <h4>&#8634; Rollback</h4>
+        <pre><code># Revert to previous SHA tag
+cd k8s/overlays/production
+kustomize edit set image \
+  "&lt;ECR&gt;/workflowai/&lt;svc&gt;=&lt;ECR&gt;/workflowai/&lt;svc&gt;:sha-&lt;prev&gt;"
+git commit -m "rollback: &lt;svc&gt; to sha-&lt;prev&gt;"
+git push  # ArgoCD auto-syncs</code></pre>
+      </div>
+    </div>
+
+    <h3 class="mt-4 mb-2">Troubleshooting Guide</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Symptom</th><th>Diagnosis</th><th>Fix</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>CI fails on Python</td>
+            <td>pip install logs &mdash; PyTorch index?</td>
+            <td>Verify <code>--extra-index-url</code> for CPU wheels</td>
+          </tr>
+          <tr>
+            <td>CD skipped entirely</td>
+            <td>CI didn&rsquo;t succeed, or no changes on <code>main</code></td>
+            <td>Check <code>workflow_run</code> trigger condition</td>
+          </tr>
+          <tr>
+            <td>Images not pushed to ECR</td>
+            <td>OIDC role trust policy mismatch</td>
+            <td>Verify GitHub OIDC provider in IAM</td>
+          </tr>
+          <tr>
+            <td>ArgoCD out of sync</td>
+            <td>Manual <code>kubectl</code> change reverted by selfHeal</td>
+            <td>Commit change to git instead</td>
+          </tr>
+          <tr>
+            <td>Pod CrashLoopBackOff</td>
+            <td>Missing secret or config</td>
+            <td><code>kubectl logs &lt;pod&gt; -n workflowai</code></td>
+          </tr>
+          <tr>
+            <td>ALB 404</td>
+            <td>Ingress path not matching</td>
+            <td>Check <code>k8s/overlays/production/ingress.yaml</code></td>
+          </tr>
+          <tr>
+            <td><code>[skip ci]</code> not working</td>
+            <td>Commit message format wrong</td>
+            <td>Ensure exact <code>[skip ci]</code> in message body</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout callout-orange mt-3">
+      <strong>Key Operational Insight:</strong> <code>selfHeal: true</code> means git is the <em>only</em> way to change cluster state. Direct <code>kubectl patch</code> on ConfigMaps or Deployments gets reverted within seconds. All changes must flow through: Code change &rarr; git commit &rarr; git push &rarr; ArgoCD detects &rarr; sync.
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <p><strong>WorkflowAI</strong> &mdash; Built by <strong>Ren</strong> for NVIDIA IPP &bull; <a href="https://github.com/SilkLee/workflow-ai">GitHub</a></p>
+  </footer>
+</div>
+
+<script>
+/* ============================================================
+   WorkflowAI Portfolio — Shared Scripts
+   ============================================================ */
+document.addEventListener('DOMContentLoaded', () => {
+  // ---- Mobile Navigation Toggle ----
+  const hamburger = document.querySelector('.nav-hamburger');
+  const navLinks = document.querySelector('.nav-links');
+  if (hamburger && navLinks) {
+    hamburger.addEventListener('click', () => navLinks.classList.toggle('open'));
+    navLinks.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => navLinks.classList.remove('open'));
+    });
+  }
+
+  // ---- Active Nav Link ----
+  const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+  document.querySelectorAll('.nav-links a').forEach(a => {
+    const href = a.getAttribute('href');
+    if (href === currentPage || (currentPage === '' && href === 'index.html')) {
+      a.classList.add('active');
+    }
+  });
+
+  // ---- Accordion ----
+  document.querySelectorAll('.accordion-header').forEach(header => {
+    header.addEventListener('click', () => {
+      const item = header.parentElement;
+      const wasOpen = item.classList.contains('open');
+      item.parentElement.querySelectorAll('.accordion-item').forEach(i => i.classList.remove('open'));
+      if (!wasOpen) item.classList.add('open');
+    });
+  });
+
+  // ---- Intersection Observer: Animate Bars ----
+  const barObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const bar = entry.target;
+        const targetWidth = bar.getAttribute('data-width');
+        if (targetWidth) {
+          requestAnimationFrame(() => {
+            bar.style.width = targetWidth;
+            bar.classList.add('animated');
+          });
+        }
+        barObserver.unobserve(bar);
+      }
+    });
+  }, { threshold: 0.2 });
+  document.querySelectorAll('.bar-fill').forEach(bar => barObserver.observe(bar));
+
+  // ---- Intersection Observer: Fade-in animations ----
+  const fadeObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+        fadeObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.animate-in').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(20px)';
+    el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+    fadeObserver.observe(el);
+  });
+
+  // ---- Copy code blocks ----
+  document.querySelectorAll('pre').forEach(pre => {
+    const btn = document.createElement('button');
+    btn.textContent = 'Copy';
+    btn.style.cssText = 'position:absolute;top:8px;right:8px;background:#333;color:#ccc;border:none;border-radius:4px;padding:4px 10px;font-size:0.75rem;cursor:pointer;opacity:0;transition:opacity 0.2s;';
+    pre.style.position = 'relative';
+    pre.appendChild(btn);
+    pre.addEventListener('mouseenter', () => btn.style.opacity = '1');
+    pre.addEventListener('mouseleave', () => btn.style.opacity = '0');
+    btn.addEventListener('click', () => {
+      const code = pre.querySelector('code') || pre;
+      navigator.clipboard.writeText(code.textContent.replace(/^Copy/, '')).then(() => {
+        btn.textContent = 'Copied!';
+        setTimeout(() => btn.textContent = 'Copy', 1500);
+      });
+    });
+  });
+});
+</script>
+
+</body>
+</html>
