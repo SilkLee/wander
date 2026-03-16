@@ -45,7 +45,12 @@ async def test_health_endpoint_success():
 
 def test_ready_endpoint():
     """Test readiness probe endpoint."""
-    response = client.get("/ready")
+    with patch("redis.asyncio.from_url") as mock_redis:
+        mock_instance = AsyncMock()
+        mock_instance.ping = AsyncMock(return_value=True)
+        mock_instance.aclose = AsyncMock()
+        mock_redis.return_value = mock_instance
+        response = client.get("/ready")
     assert response.status_code == 200
     data = response.json()
     assert data["ready"] is True
