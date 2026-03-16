@@ -460,7 +460,7 @@ pre code { background: none; padding: 0; }
     </div>
 
     <div class="pipeline-diagram">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 920" width="960" height="920">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 1200" width="960" height="1200">
         <defs>
           <marker id="arr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
             <path d="M0,0 L8,4 L0,8 Z" fill="#555"/>
@@ -482,6 +482,8 @@ pre code { background: none; padding: 0; }
         <!-- ===== LAYER 1: DEVELOPER ===== -->
         <rect x="20" y="10" width="920" height="70" rx="8" fill="rgba(230,230,230,0.03)" stroke="#444" stroke-width="1"/>
         <text x="40" y="32" fill="#666" font-size="11" font-weight="700" letter-spacing="1">LAYER 1 &mdash; DEVELOPER</text>
+        <rect x="720" y="16" width="210" height="22" rx="4" fill="rgba(255,255,255,0.03)" stroke="#444" stroke-width="0.5"/>
+        <text x="825" y="31" fill="#666" font-size="9" font-weight="500" text-anchor="middle">&#128187; Local workstation</text>
         <rect x="360" y="35" width="240" height="34" rx="6" fill="#1a1a1a" stroke="#e6e6e6" stroke-width="1.5"/>
         <text x="480" y="57" fill="#e6e6e6" font-size="13" font-weight="600" text-anchor="middle">git push to main</text>
 
@@ -491,7 +493,8 @@ pre code { background: none; padding: 0; }
         <!-- ===== LAYER 2: CI PIPELINE ===== -->
         <rect x="20" y="110" width="920" height="230" rx="8" fill="rgba(59,130,246,0.04)" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="5,3"/>
         <text x="40" y="132" fill="#3b82f6" font-size="11" font-weight="700" letter-spacing="1">LAYER 2 &mdash; CI PIPELINE (GitHub Actions &middot; ci.yml)</text>
-        <text x="920" y="132" fill="#3b82f6" font-size="10" font-weight="600" text-anchor="end" opacity="0.6">~3&ndash;5 min</text>
+        <rect x="660" y="118" width="260" height="22" rx="4" fill="rgba(59,130,246,0.08)" stroke="#3b82f6" stroke-width="0.5"/>
+        <text x="790" y="133" fill="#60a5fa" font-size="9" font-weight="500" text-anchor="middle">&#9729; GitHub-hosted runners (ubuntu-latest)</text>
 
         <!-- CI: Trigger info -->
         <text x="40" y="155" fill="#666" font-size="10">Trigger: push/** &amp; PR to main &bull; Concurrency: cancel-in-progress &bull; fail-fast: false</text>
@@ -560,7 +563,8 @@ pre code { background: none; padding: 0; }
         <!-- ===== LAYER 3: CD PIPELINE ===== -->
         <rect x="20" y="370" width="920" height="210" rx="8" fill="rgba(139,92,246,0.04)" stroke="#8b5cf6" stroke-width="1.5" stroke-dasharray="5,3"/>
         <text x="40" y="392" fill="#8b5cf6" font-size="11" font-weight="700" letter-spacing="1">LAYER 3 &mdash; CD PIPELINE (GitHub Actions &middot; cd.yml)</text>
-        <text x="920" y="392" fill="#8b5cf6" font-size="10" font-weight="600" text-anchor="end" opacity="0.6">~3&ndash;5 min</text>
+        <rect x="630" y="378" width="290" height="22" rx="4" fill="rgba(139,92,246,0.08)" stroke="#8b5cf6" stroke-width="0.5"/>
+        <text x="775" y="393" fill="#a78bfa" font-size="9" font-weight="500" text-anchor="middle">&#9729; GitHub runner &#8594; OIDC &#8594; ECR (ap-southeast-1)</text>
 
         <text x="40" y="412" fill="#666" font-size="10">Trigger: workflow_run CI completed (main) &bull; cancel-in-progress: false</text>
 
@@ -617,7 +621,8 @@ pre code { background: none; padding: 0; }
         <!-- ===== LAYER 4: GITOPS / ADMISSION ===== -->
         <rect x="20" y="610" width="920" height="160" rx="8" fill="rgba(245,158,11,0.04)" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="5,3"/>
         <text x="40" y="632" fill="#f59e0b" font-size="11" font-weight="700" letter-spacing="1">LAYER 4 &mdash; GITOPS &amp; POLICY ENFORCEMENT</text>
-        <text x="920" y="632" fill="#f59e0b" font-size="10" font-weight="600" text-anchor="end" opacity="0.6">~1&ndash;2 min</text>
+        <rect x="620" y="618" width="310" height="22" rx="4" fill="rgba(245,158,11,0.08)" stroke="#f59e0b" stroke-width="0.5"/>
+        <text x="775" y="633" fill="#fbbf24" font-size="9" font-weight="500" text-anchor="middle">&#9880; argocd ns + kyverno ns (in-cluster pods)</text>
 
         <!-- ArgoCD box -->
         <rect x="40" y="645" width="440" height="110" rx="6" fill="#111" stroke="#fbbf24" stroke-width="1"/>
@@ -649,21 +654,102 @@ pre code { background: none; padding: 0; }
         <text x="492" y="792" fill="#76b900" font-size="9" font-weight="600">rolling deployment</text>
 
         <!-- ===== LAYER 5: AWS EKS ===== -->
-        <rect x="20" y="800" width="920" height="100" rx="8" fill="rgba(118,185,0,0.04)" stroke="#76b900" stroke-width="1.5" stroke-dasharray="5,3"/>
-        <text x="40" y="822" fill="#76b900" font-size="11" font-weight="700" letter-spacing="1">LAYER 5 &mdash; AWS EKS CLUSTER (ap-southeast-1)</text>
+        <rect x="20" y="800" width="920" height="380" rx="8" fill="rgba(118,185,0,0.04)" stroke="#76b900" stroke-width="1.5" stroke-dasharray="5,3"/>
+        <text x="40" y="822" fill="#76b900" font-size="11" font-weight="700" letter-spacing="1">LAYER 5 &mdash; AWS EKS CLUSTER (ap-southeast-1 &bull; 2&#215; t3.large)</text>
+        <rect x="620" y="808" width="310" height="22" rx="4" fill="rgba(118,185,0,0.08)" stroke="#76b900" stroke-width="0.5"/>
+        <text x="775" y="823" fill="#76b900" font-size="9" font-weight="500" text-anchor="middle">&#9880; workflowai ns + kube-system + monitoring ns</text>
 
-        <text x="55" y="845" fill="#999" font-size="11">2&times; t3.large nodes &bull; Namespace: <tspan fill="#76b900" font-weight="600">workflowai</tspan></text>
-        <text x="55" y="865" fill="#999" font-size="11">13/13 pods Running &bull; 0 restarts &bull; ALB health check passing</text>
-        <text x="55" y="885" fill="#999" font-size="10">Routes: <tspan font-family="JetBrains Mono, monospace" fill="#76b900">/api/*</tspan> &rarr; api-gateway:8000 &bull; <tspan font-family="JetBrains Mono, monospace" fill="#76b900">/*</tspan> &rarr; frontend:3000</text>
+        <!-- ALB Ingress -->
+        <rect x="300" y="835" width="360" height="28" rx="14" fill="rgba(118,185,0,0.12)" stroke="#76b900" stroke-width="1"/>
+        <text x="480" y="854" fill="#76b900" font-size="10" font-weight="700" text-anchor="middle">ALB Ingress &#8594; /api/* &#8594; api-gateway:8000 &bull; /* &#8594; frontend:3000</text>
 
-        <!-- Pod count icon -->
-        <rect x="750" y="835" width="170" height="50" rx="25" fill="rgba(118,185,0,0.12)" stroke="#76b900" stroke-width="1.5"/>
-        <text x="835" y="860" fill="#76b900" font-size="18" font-weight="800" text-anchor="middle">13 / 13</text>
-        <text x="835" y="878" fill="#76b900" font-size="10" font-weight="600" text-anchor="middle">pods healthy</text>
+        <!-- ===== NODE 1 ===== -->
+        <rect x="40" y="875" width="440" height="280" rx="6" fill="#111" stroke="#555" stroke-width="1"/>
+        <text x="55" y="895" fill="#999" font-size="10" font-weight="700">NODE 1: ip-10-0-1-86 (t3.large &bull; AZ-a)</text>
+
+        <!-- Node 1 pods -->
+        <rect x="55" y="905" width="130" height="34" rx="4" fill="rgba(0,173,216,0.08)" stroke="#00ADD8" stroke-width="0.8"/>
+        <text x="65" y="920" fill="#00ADD8" font-size="9" font-weight="600">api-gateway</text>
+        <text x="65" y="932" fill="#666" font-size="8">:8000 &bull; HPA 2-5</text>
+
+        <rect x="195" y="905" width="130" height="34" rx="4" fill="rgba(0,173,216,0.08)" stroke="#00ADD8" stroke-width="0.8"/>
+        <text x="205" y="920" fill="#00ADD8" font-size="9" font-weight="600">ingestion</text>
+        <text x="205" y="932" fill="#666" font-size="8">:8001 &bull; 1 replica</text>
+
+        <rect x="335" y="905" width="130" height="34" rx="4" fill="rgba(97,218,251,0.08)" stroke="#61DAFB" stroke-width="0.8"/>
+        <text x="345" y="920" fill="#61DAFB" font-size="9" font-weight="600">frontend</text>
+        <text x="345" y="932" fill="#666" font-size="8">:3000 &bull; HPA 2-4</text>
+
+        <rect x="55" y="947" width="130" height="34" rx="4" fill="rgba(55,118,171,0.08)" stroke="#3776AB" stroke-width="0.8"/>
+        <text x="65" y="962" fill="#3776AB" font-size="9" font-weight="600">model-service</text>
+        <text x="65" y="974" fill="#666" font-size="8">:8004 &bull; OpenRouter</text>
+
+        <rect x="195" y="947" width="130" height="34" rx="4" fill="rgba(55,118,171,0.08)" stroke="#3776AB" stroke-width="0.8"/>
+        <text x="205" y="962" fill="#3776AB" font-size="9" font-weight="600">finetune</text>
+        <text x="205" y="974" fill="#666" font-size="8">:8006 &bull; LoRA/PEFT</text>
+
+        <!-- Node 1 StatefulSets -->
+        <rect x="55" y="993" width="130" height="34" rx="4" fill="rgba(245,158,11,0.08)" stroke="#f59e0b" stroke-width="0.8"/>
+        <text x="65" y="1008" fill="#f59e0b" font-size="9" font-weight="600">postgres-0</text>
+        <text x="65" y="1020" fill="#666" font-size="8">:5432 &bull; StatefulSet</text>
+
+        <rect x="195" y="993" width="130" height="34" rx="4" fill="rgba(245,158,11,0.08)" stroke="#f59e0b" stroke-width="0.8"/>
+        <text x="205" y="1008" fill="#f59e0b" font-size="9" font-weight="600">redis-0</text>
+        <text x="205" y="1020" fill="#666" font-size="8">:6379 &bull; StatefulSet</text>
+
+        <rect x="335" y="993" width="130" height="34" rx="4" fill="rgba(245,158,11,0.08)" stroke="#f59e0b" stroke-width="0.8"/>
+        <text x="345" y="1008" fill="#f59e0b" font-size="9" font-weight="600">elasticsearch-0</text>
+        <text x="345" y="1020" fill="#666" font-size="8">:9200 &bull; StatefulSet</text>
+
+        <!-- Node 1 count -->
+        <rect x="55" y="1037" width="410" height="20" rx="4" fill="rgba(118,185,0,0.06)"/>
+        <text x="260" y="1051" fill="#76b900" font-size="9" font-weight="600" text-anchor="middle">8 pods on this node</text>
+
+        <!-- ===== NODE 2 ===== -->
+        <rect x="500" y="875" width="430" height="280" rx="6" fill="#111" stroke="#555" stroke-width="1"/>
+        <text x="515" y="895" fill="#999" font-size="10" font-weight="700">NODE 2: ip-10-0-2-110 (t3.large &bull; AZ-b)</text>
+
+        <!-- Node 2 pods -->
+        <rect x="515" y="905" width="130" height="34" rx="4" fill="rgba(0,173,216,0.08)" stroke="#00ADD8" stroke-width="0.8"/>
+        <text x="525" y="920" fill="#00ADD8" font-size="9" font-weight="600">api-gateway</text>
+        <text x="525" y="932" fill="#666" font-size="8">:8000 &bull; HPA replica</text>
+
+        <rect x="655" y="905" width="130" height="34" rx="4" fill="rgba(97,218,251,0.08)" stroke="#61DAFB" stroke-width="0.8"/>
+        <text x="665" y="920" fill="#61DAFB" font-size="9" font-weight="600">frontend</text>
+        <text x="665" y="932" fill="#666" font-size="8">:3000 &bull; HPA replica</text>
+
+        <rect x="795" y="905" width="120" height="34" rx="4" fill="rgba(139,92,246,0.08)" stroke="#8b5cf6" stroke-width="0.8"/>
+        <text x="805" y="920" fill="#8b5cf6" font-size="9" font-weight="600">agent-orch</text>
+        <text x="805" y="932" fill="#666" font-size="8">:8002 &bull; LangGraph</text>
+
+        <rect x="515" y="947" width="130" height="34" rx="4" fill="rgba(55,118,171,0.08)" stroke="#3776AB" stroke-width="0.8"/>
+        <text x="525" y="962" fill="#3776AB" font-size="9" font-weight="600">indexing</text>
+        <text x="525" y="974" fill="#666" font-size="8">:8003 &bull; Faiss+ES</text>
+
+        <rect x="655" y="947" width="130" height="34" rx="4" fill="rgba(55,118,171,0.08)" stroke="#3776AB" stroke-width="0.8"/>
+        <text x="665" y="962" fill="#3776AB" font-size="9" font-weight="600">metrics</text>
+        <text x="665" y="974" fill="#666" font-size="8">:8005 &bull; DORA</text>
+
+        <!-- Node 2 count -->
+        <rect x="515" y="993" width="400" height="20" rx="4" fill="rgba(118,185,0,0.06)"/>
+        <text x="715" y="1007" fill="#76b900" font-size="9" font-weight="600" text-anchor="middle">5 pods on this node</text>
+
+        <!-- Infrastructure pods (shared across nodes) -->
+        <rect x="500" y="1025" width="430" height="110" rx="6" fill="rgba(255,255,255,0.015)" stroke="#333" stroke-width="0.5"/>
+        <text x="515" y="1043" fill="#666" font-size="9" font-weight="700">INFRASTRUCTURE PODS (other namespaces)</text>
+        <text x="515" y="1060" fill="#fbbf24" font-size="9">argocd ns: application-controller, repo-server, server, redis, dex, notifications (7)</text>
+        <text x="515" y="1075" fill="#fbbf24" font-size="9">kyverno ns: admission-controller, background-controller, cleanup-controller, reports (4)</text>
+        <text x="515" y="1090" fill="#06b6d4" font-size="9">monitoring ns: prometheus, grafana, alertmanager, node-exporter, kube-state-metrics (7)</text>
+        <text x="515" y="1105" fill="#999" font-size="9">kube-system: aws-lb-controller, coredns, ebs-csi, aws-node (10+)</text>
+        <text x="515" y="1125" fill="#76b900" font-size="9" font-weight="600">Total across cluster: 40+ pods &bull; 4 namespaces &bull; 0 CrashLoopBackOff</text>
+
+        <!-- Pod count badge -->
+        <rect x="100" y="1075" width="260" height="60" rx="30" fill="rgba(118,185,0,0.12)" stroke="#76b900" stroke-width="1.5"/>
+        <text x="230" y="1100" fill="#76b900" font-size="22" font-weight="800" text-anchor="middle">13 / 13</text>
+        <text x="230" y="1120" fill="#76b900" font-size="10" font-weight="600" text-anchor="middle">workflowai pods healthy</text>
 
         <!-- Total time annotation -->
-        <rect x="350" y="905" width="260" height="12" rx="6" fill="none"/>
-        <text x="480" y="915" fill="#76b900" font-size="11" font-weight="700" text-anchor="middle">Push &rarr; Production: ~8&ndash;12 minutes</text>
+        <text x="480" y="1190" fill="#76b900" font-size="12" font-weight="700" text-anchor="middle">Push &#8594; Production: ~8&#8211;12 minutes</text>
       </svg>
     </div>
 
@@ -1074,6 +1160,152 @@ git push  # ArgoCD auto-syncs</code></pre>
 
     <div class="callout callout-orange mt-3">
       <strong>Key Operational Insight:</strong> <code>selfHeal: true</code> means git is the <em>only</em> way to change cluster state. Direct <code>kubectl patch</code> on ConfigMaps or Deployments gets reverted within seconds. All changes must flow through: Code change &rarr; git commit &rarr; git push &rarr; ArgoCD detects &rarr; sync.
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- ==================== SECTION 6: RUNTIME ENVIRONMENT MAP ==================== -->
+  <section class="section">
+    <div class="section-header">
+      <h2>Runtime Environment Map</h2>
+      <p>Where every component runs &mdash; from CI runners to production pods, mapped end-to-end</p>
+    </div>
+
+    <div class="table-wrapper mb-3">
+      <table>
+        <thead>
+          <tr><th>Pipeline Stage</th><th>Execution Environment</th><th>Key Components</th><th>Details</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="tag tag-blue">CI &mdash; Test</span></td>
+            <td>GitHub-hosted runner<br><code>ubuntu-latest</code></td>
+            <td>Go 1.22, Python 3.11, Node 20</td>
+            <td>15 parallel jobs, each on its own ephemeral VM. PostgreSQL 15 sidecar for metrics tests.</td>
+          </tr>
+          <tr>
+            <td><span class="tag tag-blue">CI &mdash; Lint</span></td>
+            <td>GitHub-hosted runner<br><code>ubuntu-latest</code></td>
+            <td>golangci-lint, ruff</td>
+            <td>7 lint jobs (2 Go + 5 Python), all parallel.</td>
+          </tr>
+          <tr>
+            <td><span class="tag tag-purple">CD &mdash; Build</span></td>
+            <td>GitHub-hosted runner<br>&#8594; OIDC &#8594; AWS STS</td>
+            <td>Docker buildx, ECR push</td>
+            <td>OIDC federation for zero-credential ECR push. Image tag: <code>sha-&lt;commit&gt;</code>.</td>
+          </tr>
+          <tr>
+            <td><span class="tag tag-purple">CD &mdash; Deploy</span></td>
+            <td>GitHub runner &#8594; git push<br>ArgoCD detects change</td>
+            <td>Kustomize edit, git commit</td>
+            <td>Updates <code>k8s/overlays/production/kustomization.yaml</code>, pushes with <code>[skip ci]</code>.</td>
+          </tr>
+          <tr>
+            <td><span class="tag tag-orange">GitOps Sync</span></td>
+            <td>In-cluster pod<br><code>argocd</code> namespace</td>
+            <td>argocd-application-controller-0<br>argocd-repo-server</td>
+            <td>Detects kustomization.yaml diff, renders manifests, applies rolling update. selfHeal reverts kubectl drift.</td>
+          </tr>
+          <tr>
+            <td><span class="tag tag-orange">Admission Control</span></td>
+            <td>In-cluster pod<br><code>kyverno</code> namespace</td>
+            <td>kyverno-admission-controller<br>kyverno-background-controller</td>
+            <td>Webhook intercepts every CREATE/UPDATE in <code>workflowai</code> ns. 6 policies in Enforce mode.</td>
+          </tr>
+          <tr>
+            <td><span class="tag tag-green">Production</span></td>
+            <td>EKS 2&times; t3.large<br><code>workflowai</code> namespace</td>
+            <td>13 pods across 2 AZs</td>
+            <td>8 Deployments + 3 StatefulSets. HPA on api-gateway (2-5) and frontend (2-4).</td>
+          </tr>
+          <tr>
+            <td><span class="tag tag-cyan">Monitoring</span></td>
+            <td>In-cluster pod<br><code>monitoring</code> namespace</td>
+            <td>prometheus-0, grafana, alertmanager-0<br>node-exporter (per node)</td>
+            <td>Prometheus scrapes all /metrics endpoints. Grafana dashboards for DORA + infra.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="mb-2">Pod-to-Node Distribution (workflowai namespace)</h3>
+    <div class="grid-2">
+      <div class="card">
+        <h3 style="color:#76b900;">Node 1 &mdash; ip-10-0-1-86 (AZ-a)</h3>
+        <p class="mb-2" style="color:var(--text-muted);font-size:0.85rem;">8 pods &bull; Hosts all StatefulSets</p>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>Pod</th><th>Type</th><th>Port</th><th>Replicas</th></tr></thead>
+            <tbody>
+              <tr><td><code>api-gateway</code></td><td>Deployment</td><td>8000</td><td>1 of 2 (HPA)</td></tr>
+              <tr><td><code>ingestion</code></td><td>Deployment</td><td>8001</td><td>1</td></tr>
+              <tr><td><code>model-service</code></td><td>Deployment</td><td>8004</td><td>1</td></tr>
+              <tr><td><code>finetune</code></td><td>Deployment</td><td>8006</td><td>1</td></tr>
+              <tr><td><code>frontend</code></td><td>Deployment</td><td>3000</td><td>1 of 2 (HPA)</td></tr>
+              <tr><td><code>postgres-0</code></td><td>StatefulSet</td><td>5432</td><td>1 (PVC)</td></tr>
+              <tr><td><code>redis-0</code></td><td>StatefulSet</td><td>6379</td><td>1 (PVC)</td></tr>
+              <tr><td><code>elasticsearch-0</code></td><td>StatefulSet</td><td>9200</td><td>1 (PVC)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="color:#76b900;">Node 2 &mdash; ip-10-0-2-110 (AZ-b)</h3>
+        <p class="mb-2" style="color:var(--text-muted);font-size:0.85rem;">5 pods &bull; Cross-AZ redundancy</p>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>Pod</th><th>Type</th><th>Port</th><th>Replicas</th></tr></thead>
+            <tbody>
+              <tr><td><code>api-gateway</code></td><td>Deployment</td><td>8000</td><td>1 of 2 (HPA)</td></tr>
+              <tr><td><code>frontend</code></td><td>Deployment</td><td>3000</td><td>1 of 2 (HPA)</td></tr>
+              <tr><td><code>agent-orchestrator</code></td><td>Deployment</td><td>8002</td><td>1</td></tr>
+              <tr><td><code>indexing</code></td><td>Deployment</td><td>8003</td><td>1</td></tr>
+              <tr><td><code>metrics</code></td><td>Deployment</td><td>8005</td><td>1</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout mt-3">
+      <strong>Cross-AZ High Availability:</strong> HPA services (api-gateway, frontend) have replicas on <em>both</em> nodes across different AZs. If one node fails, the ALB routes traffic to surviving replicas. StatefulSets (postgres, redis, elasticsearch) run with PersistentVolumeClaims on EBS, pinned to a single AZ.
+    </div>
+
+    <h3 class="mt-4 mb-2">Infrastructure Pods (Non-Application)</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Namespace</th><th>Service</th><th>Pods</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>argocd</code></td>
+            <td>ArgoCD v2.13</td>
+            <td>application-controller-0, repo-server, server, redis, dex, notifications, applicationset (7)</td>
+            <td>GitOps continuous delivery &mdash; watches git, syncs cluster state</td>
+          </tr>
+          <tr>
+            <td><code>kyverno</code></td>
+            <td>Kyverno v1.11.4</td>
+            <td>admission-controller, background-controller, cleanup-controller, reports-controller (4)</td>
+            <td>Policy enforcement &mdash; admission webhook validates every pod spec</td>
+          </tr>
+          <tr>
+            <td><code>monitoring</code></td>
+            <td>Prometheus Stack</td>
+            <td>prometheus-0, grafana, alertmanager-0, kube-state-metrics, node-exporter &times;2, operator (7)</td>
+            <td>Metrics collection, dashboards, alerting</td>
+          </tr>
+          <tr>
+            <td><code>kube-system</code></td>
+            <td>AWS Controllers</td>
+            <td>aws-load-balancer-controller &times;2, coredns &times;2, ebs-csi &times;4, aws-node &times;2 (10+)</td>
+            <td>ALB provisioning, DNS resolution, EBS volume management, CNI networking</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </section>
 
