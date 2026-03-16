@@ -128,10 +128,40 @@ fi
 log "  kube-prometheus-stack installed."
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Step 5: Apply Kubernetes secrets for workflowai namespace
+# Step 5: Install Kyverno (policy engine)
 # ─────────────────────────────────────────────────────────────────────────────
 log ""
-log "Step 5: Creating workflowai namespace and secrets..."
+log "Step 5: Installing Kyverno policy engine..."
+
+helm repo add kyverno https://kyverno.github.io/kyverno/ 2>/dev/null || true
+helm repo update kyverno
+
+if helm status kyverno -n kyverno &>/dev/null; then
+  warn "  Kyverno already installed — upgrading..."
+  helm upgrade kyverno kyverno/kyverno \
+    -n kyverno \
+    --create-namespace \
+    --set admissionController.replicas=1 \
+    --set backgroundController.replicas=1
+else
+  helm install kyverno kyverno/kyverno \
+    -n kyverno \
+    --create-namespace \
+    --set admissionController.replicas=1 \
+    --set backgroundController.replicas=1
+fi
+
+# Wait for Kyverno webhook to be ready before applying policies
+log "  Waiting for Kyverno webhook to become ready..."
+kubectl wait --for=condition=Ready --timeout=120s \
+  -n kyverno pod -l app.kubernetes.io/component=admission-controller 2>/dev/null || true
+log "  Kyverno installed."
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Step 6: Apply Kubernetes secrets for workflowai namespace
+# ─────────────────────────────────────────────────────────────────────────────
+log ""
+log "Step 6: Creating workflowai namespace and secrets..."
 
 kubectl apply -f k8s/base/namespace.yaml
 
@@ -152,10 +182,10 @@ kubectl create secret generic workflowai-secrets \
 log "  Secrets created/updated."
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Step 6: Apply ArgoCD AppProject and root application
+# Step 7: Apply ArgoCD AppProject and root application
 # ─────────────────────────────────────────────────────────────────────────────
 log ""
-log "Step 6: Applying ArgoCD AppProject and root application..."
+log "Step 7: Applying ArgoCD AppProject and root application..."
 
 # Wait for ArgoCD CRDs to be ready
 log "  Waiting for ArgoCD CRDs..."
@@ -168,10 +198,10 @@ kubectl apply -f k8s/argocd/root-app.yaml
 log "  ArgoCD root application applied."
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Step 7: Wait for workflowai pods and print ALB URL
+# Step 8: Wait for workflowai pods and print ALB URL
 # ─────────────────────────────────────────────────────────────────────────────
 log ""
-log "Step 7: Waiting for workflowai pods to start (up to 5 minutes)..."
+log "Step 8: Waiting for workflowai pods to start (up to 5 minutes)..."
 kubectl wait --for=condition=Available --timeout=300s \
   deployment/api-gateway deployment/frontend \
   -n "$NAMESPACE" 2>/dev/null || warn "  Some deployments not yet ready — ArgoCD may still be syncing."

@@ -282,22 +282,34 @@ This commit updates `k8s/overlays/production/kustomization.yaml` with the new im
 │  ├── source: k8s/argocd/apps/                            │
 │  ├── syncPolicy: automated (prune + selfHeal)            │
 │  │                                                       │
-│  └──► workflowai (Application)                           │
-│       ├── source: k8s/overlays/production/               │
+│  ├──► workflowai (Application)                           │
+│  │    ├── source: k8s/overlays/production/               │
+│  │    ├── syncPolicy: automated (prune + selfHeal)       │
+│  │    ├── ignoreDifferences:                             │
+│  │    │   └── Secret/workflowai-secrets /data            │
+│  │    │       (preserves runtime-applied secrets)        │
+│  │    │                                                  │
+│  │    └──► workflowai Namespace                          │
+│  │         ├── 8 Deployments (services)                   │
+│  │         ├── 8 Services (ClusterIP)                     │
+│  │         ├── 3 StatefulSets (PG, Redis, ES)            │
+│  │         ├── 3 PVCs (model-cache, index-cache, agent)  │
+│  │         ├── 1 Ingress (ALB, path-based)               │
+│  │         ├── 2 HPAs (api-gateway, frontend)            │
+│  │         ├── ConfigMaps + Secrets                       │
+│  │         └── Namespace manifest                         │
+│  │                                                       │
+│  └──► workflowai-policies (Application)                  │
+│       ├── source: k8s/policies/                           │
 │       ├── syncPolicy: automated (prune + selfHeal)       │
-│       ├── ignoreDifferences:                             │
-│       │   └── Secret/workflowai-secrets /data            │
-│       │       (preserves runtime-applied secrets)        │
 │       │                                                  │
-│       └──► workflowai Namespace                          │
-│            ├── 8 Deployments (services)                   │
-│            ├── 8 Services (ClusterIP)                     │
-│            ├── 3 StatefulSets (PG, Redis, ES)            │
-│            ├── 3 PVCs (model-cache, index-cache, agent)  │
-│            ├── 1 Ingress (ALB, path-based)               │
-│            ├── 2 HPAs (api-gateway, frontend)            │
-│            ├── ConfigMaps + Secrets                       │
-│            └── Namespace manifest                         │
+│       └──► Cluster-scoped ClusterPolicies                │
+│            ├── disallow-latest-tag                        │
+│            ├── require-resource-limits                    │
+│            ├── require-labels                             │
+│            ├── require-probes                             │
+│            ├── restrict-image-registries                  │
+│            └── disallow-privilege-escalation              │
 └───────────────────────────────────────────────────────────┘
 ```
 
@@ -305,8 +317,9 @@ This commit updates `k8s/overlays/production/kustomization.yaml` with the new im
 
 1. **Root App** (`k8s/argocd/root-app.yaml`): Points to `k8s/argocd/apps/` — manages child Application resources
 2. **WorkflowAI App** (`k8s/argocd/apps/workflowai.yaml`): Points to `k8s/overlays/production/` — manages all workload manifests
+3. **Policies App** (`k8s/argocd/apps/policies.yaml`): Points to `k8s/policies/` — manages Kyverno ClusterPolicy resources
 
-This two-level structure means adding a new environment (staging, canary) only requires adding a new child Application YAML.
+This two-level structure means adding a new environment (staging, canary) or cross-cutting concern (policies, RBAC) only requires adding a new child Application YAML.
 
 ### Sync Policy
 
@@ -419,10 +432,20 @@ k8s/
 │       ├── hpa-api-gateway.yaml       # HorizontalPodAutoscaler
 │       └── hpa-frontend.yaml          # HorizontalPodAutoscaler
 │
+├── policies/                           # Kyverno ClusterPolicy resources
+│   ├── kustomization.yaml             # Policy resource list
+│   ├── disallow-latest-tag.yaml       # Reject :latest image tags
+│   ├── require-resource-limits.yaml   # Require CPU/memory limits
+│   ├── require-labels.yaml            # Require app + part-of labels
+│   ├── require-probes.yaml            # Require readiness + liveness probes
+│   ├── restrict-image-registries.yaml # Allow only ECR + Docker Hub
+│   └── disallow-privilege-escalation.yaml # Block privileged containers
+│
 └── argocd/
     ├── root-app.yaml                  # Root Application (app-of-apps)
     ├── apps/
-    │   └── workflowai.yaml            # Child Application (workloads)
+    │   ├── workflowai.yaml            # Child Application (workloads)
+    │   └── policies.yaml              # Child Application (Kyverno policies)
     └── projects/
         └── workflowai-project.yaml    # ArgoCD AppProject (RBAC)
 ```
@@ -484,6 +507,69 @@ Developer pushes to main
 ```
 
 **Total time**: Push → production: **~8-12 minutes** (3-5 CI + 3-5 CD + 1-2 ArgoCD sync)
+
+---
+
+---
+
+## Kyverno Policy Enforcement
+
+### Overview
+
+Kyverno is deployed as a Kubernetes admission controller that enforces policies on all resources in the `workflowai` namespace. Policies run in **Enforce** mode — non-compliant resources are **rejected** at admission time, not just audited.
+
+### Installation
+
+Kyverno is installed via Helm during cluster bootstrap (Step 5 in `infra/scripts/bootstrap-cluster.sh`):
+
+```bash
+helm install kyverno kyverno/kyverno \
+  -n kyverno \
+  --create-namespace \
+  --set admissionController.replicas=1 \
+  --set backgroundController.replicas=1
+```
+
+### Policy Catalog (6 policies)
+
+| Policy | Severity | What It Enforces |
+|--------|----------|-----------------|
+| `disallow-latest-tag` | Medium | All container images must have an explicit tag; `:latest` is rejected |
+| `require-resource-limits` | Medium | CPU and memory limits required on every container |
+| `require-labels` | Medium | `app` and `app.kubernetes.io/part-of` labels required on all pods |
+| `require-probes` | Medium | `readinessProbe` and `livenessProbe` required on all containers |
+| `restrict-image-registries` | High | Only ECR (`589528730663.dkr.ecr.ap-southeast-1.amazonaws.com`) and Docker Hub (for infra images) allowed |
+| `disallow-privilege-escalation` | High | Blocks `privileged: true` and `allowPrivilegeEscalation: true` |
+
+### Policy Management (GitOps)
+
+Policies live in `k8s/policies/` and are managed by a dedicated ArgoCD Application (`k8s/argocd/apps/policies.yaml`). The GitOps flow for policy changes:
+
+```
+Edit policy YAML in k8s/policies/
+        │
+        ▼
+  git commit + push
+        │
+        ▼
+  ArgoCD detects change in k8s/policies/
+        │
+        ▼
+  ArgoCD syncs ClusterPolicy resources
+        │
+        ▼
+  Kyverno webhook picks up new/updated policies
+        │
+        ▼
+  All subsequent pod admissions evaluated against updated policies
+```
+
+### Why Enforce Mode (not Audit)?
+
+- **Shift-left**: Non-compliant manifests are caught before they reach the cluster, not after
+- **Existing compliance**: All 13 running pods already comply with all 6 policies (verified before enabling Enforce)
+- **CI/CD safety net**: Even if a developer bypasses code review, Kyverno blocks non-compliant deployments at admission time
+- **No false positives**: Policies are scoped to `workflowai` namespace only — kube-system, argocd, monitoring, kyverno namespaces are unaffected
 
 ---
 
@@ -594,10 +680,13 @@ A deploy in progress must complete — half-pushed images or partial kustomize u
 | `.github/workflows/cd.yml` | CD pipeline definition (4 stages) |
 | `k8s/argocd/root-app.yaml` | ArgoCD root Application (app-of-apps) |
 | `k8s/argocd/apps/workflowai.yaml` | ArgoCD child Application (workloads) |
+| `k8s/argocd/apps/policies.yaml` | ArgoCD child Application (Kyverno policies) |
 | `k8s/argocd/projects/workflowai-project.yaml` | ArgoCD AppProject (RBAC boundaries) |
+| `k8s/policies/` | Kyverno ClusterPolicy resources (6 policies, Enforce mode) |
 | `k8s/overlays/production/kustomization.yaml` | Production image tags (updated by CD) |
 | `k8s/overlays/production/ingress.yaml` | ALB Ingress (path-based routing) |
 | `k8s/base/kustomization.yaml` | Base resource list |
+| `infra/scripts/bootstrap-cluster.sh` | Cluster bootstrap (8 steps incl. Kyverno) |
 | `Makefile` | Local ops: terraform, bootstrap, deploy, status, clean |
 
 ---

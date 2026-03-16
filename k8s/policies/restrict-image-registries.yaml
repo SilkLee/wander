@@ -1,0 +1,46 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: restrict-image-registries
+  annotations:
+    policies.kyverno.io/title: Restrict Image Registries
+    policies.kyverno.io/category: Best Practices
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      Only images from the approved ECR registry and trusted upstream
+      infrastructure images are allowed. Prevents pulling untrusted images.
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: validate-image-registry
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - workflowai
+      validate:
+        message: >-
+          Images must come from the approved ECR registry
+          (589528730663.dkr.ecr.ap-southeast-1.amazonaws.com/workflowai/*)
+          or be a trusted upstream image (postgres, redis, elasticsearch).
+          Unauthorized registries are blocked.
+        deny:
+          conditions:
+            all:
+              - key: "{{ images.containers.*.registry }}"
+                operator: AnyNotIn
+                value:
+                  - "589528730663.dkr.ecr.ap-southeast-1.amazonaws.com"
+                  - "docker.io"
+                  - "index.docker.io"
+      preconditions:
+        all:
+          - key: "{{ request.operation || 'BACKGROUND' }}"
+            operator: AnyIn
+            value:
+              - CREATE
+              - UPDATE

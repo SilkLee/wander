@@ -1,0 +1,54 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-probes
+  annotations:
+    policies.kyverno.io/title: Require Health Probes
+    policies.kyverno.io/category: Best Practices
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      Readiness and liveness probes are required on all containers to
+      enable proper health checking, rolling updates, and traffic routing.
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: validate-readiness-probe
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - workflowai
+      validate:
+        message: >-
+          A readinessProbe is required on all containers.
+          Add spec.containers[*].readinessProbe to your Deployment.
+        pattern:
+          spec:
+            containers:
+              - readinessProbe:
+                  httpGet:
+                    path: "?*"
+                    port: "?*"
+    - name: validate-liveness-probe
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - workflowai
+      validate:
+        message: >-
+          A livenessProbe is required on all containers.
+          Add spec.containers[*].livenessProbe to your Deployment.
+        pattern:
+          spec:
+            containers:
+              - livenessProbe:
+                  httpGet:
+                    path: "?*"
+                    port: "?*"

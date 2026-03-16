@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: workflowai-policies
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: workflowai
+spec:
+  project: workflowai
+  source:
+    repoURL: https://github.com/SilkLee/workflow-ai.git
+    targetRevision: main
+    path: k8s/policies
+  destination:
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false

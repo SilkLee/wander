@@ -86,7 +86,8 @@ workflow-ai/
 │   └── terraform/          # AWS EKS deployment (ap-southeast-1)
 ├── k8s/                    # Kubernetes manifests (Kustomize)
 │   ├── base/               # Base manifests (Deployments, Services)
-│   └── overlays/           # Environment overrides (dev, production)
+│   ├── overlays/           # Environment overrides (dev, production)
+│   └── policies/           # Kyverno ClusterPolicies (Enforce mode)
 ├── docs/                   # Documentation
 │   ├── tech-stack.md       # Technology selection rationale
 │   ├── architecture.md     # System design deep-dive
@@ -180,6 +181,8 @@ docker-compose up --build
 - **Orchestration**: Docker Compose (local) / Kubernetes (production)
 - **IaC**: Terraform
 - **CI/CD**: GitHub Actions
+- **GitOps**: ArgoCD (app-of-apps, selfHeal)
+- **Policy Engine**: Kyverno (6 ClusterPolicies, Enforce mode)
 - **Cloud**: AWS (ap-southeast-1) — EKS, ECR, ALB, IRSA
 
 ---
@@ -263,7 +266,7 @@ docker-compose up --build
   - ✅ Kubernetes manifests (Kustomize: Deployments, Services, StatefulSets, Ingress, HPA, PVCs)
   - ✅ ArgoCD GitOps (app-of-apps, automated sync + prune + selfHeal)
   - ✅ Finetune service Dockerfile added (multi-stage, gunicorn, port 8006)
-  - ✅ Cluster bootstrap (ALB Controller, ArgoCD, kube-prometheus-stack via Helm)
+  - ✅ Cluster bootstrap (ALB Controller, ArgoCD, Prometheus, Kyverno via Helm)
   - ✅ Root Makefile (terraform, deploy, status, test-ci, docker-build, clean targets)
 - ✅ **Week 12**: Portfolio packaging + interview prep
   - ✅ Interactive portfolio website (8 pages: HTML/CSS/JS, NVIDIA-themed dark mode)
@@ -293,7 +296,7 @@ export POSTGRES_PASSWORD=<strong-password>
 export JWT_SECRET=<strong-secret>
 export OPENAI_API_KEY=<your-key>
 
-# 4. Bootstrap cluster (ALB Controller, ArgoCD, Prometheus) + apply ArgoCD root app
+# 4. Bootstrap cluster (ALB Controller, ArgoCD, Prometheus, Kyverno) + apply ArgoCD root app
 make bootstrap
 
 # 5. Check deployment status

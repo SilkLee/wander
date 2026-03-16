@@ -144,6 +144,8 @@ Git Push / CI Event / Deployment
 │  │   └── ALB Ingress (path-based routing)                  │
 │  ├── Namespace: argocd                                     │
 │  │   └── ArgoCD (app-of-apps pattern)                      │
+│  ├── Namespace: kyverno                                    │
+│  │   └── Kyverno (policy engine, Enforce mode)             │
 │  └── Namespace: monitoring                                 │
 │       └── kube-prometheus-stack (Prometheus + Grafana)      │
 │                                                           │
@@ -212,6 +214,14 @@ Git Push / CI Event / Deployment
 
 **Consequence**: Atomic commits across services, single CI pipeline, easier cross-service refactoring. Trade-off: larger clone, broader CI triggers (mitigated with path-based CI filters).
 
+### ADR-7: Kyverno Policy Engine (Enforce Mode)
+
+**Context**: Need admission control to enforce pod security standards, image provenance, and resource governance across the `workflowai` namespace.
+
+**Decision**: Kyverno in Enforce mode with 6 ClusterPolicies, managed via ArgoCD GitOps. Scoped to `workflowai` namespace only.
+
+**Consequence**: Non-compliant pods are rejected at admission time. All existing manifests already comply (verified pre-enforcement). Policy changes follow the same git → ArgoCD flow as application changes.
+
 ---
 
 ## Security Model
@@ -224,6 +234,7 @@ Git Push / CI Event / Deployment
 | Secrets | Kubernetes Secrets (no hardcoded values in manifests) |
 | IAM | IRSA (pod-level AWS permissions via OIDC) |
 | CI/CD Auth | GitHub OIDC federation (no long-lived AWS keys) |
+| Admission Control | Kyverno (6 policies, Enforce mode — reject non-compliant pods) |
 
 **Public Routes** (no JWT): Frontend-facing workflow endpoints (`/api/v1/workflows/*`, `/api/metrics/*`) are rate-limited but not JWT-protected, as the React frontend has no auth layer.
 

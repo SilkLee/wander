@@ -1,0 +1,48 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-labels
+  annotations:
+    policies.kyverno.io/title: Require Labels
+    policies.kyverno.io/category: Best Practices
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      All pods must have 'app' and 'app.kubernetes.io/part-of' labels
+      for service discovery, monitoring, and resource ownership tracking.
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: require-app-label
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - workflowai
+      validate:
+        message: >-
+          The label 'app' is required on all pods for service discovery
+          and monitoring. Add metadata.labels.app to your Deployment template.
+        pattern:
+          metadata:
+            labels:
+              app: "?*"
+    - name: require-part-of-label
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - workflowai
+      validate:
+        message: >-
+          The label 'app.kubernetes.io/part-of' is required on all pods
+          for resource ownership tracking. Add it to your Deployment template.
+        pattern:
+          metadata:
+            labels:
+              app.kubernetes.io/part-of: "?*"
