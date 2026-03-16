@@ -88,3 +88,25 @@ func (h *ProxyHandler) ProxyWorkflowExecute(c *gin.Context) {
 func (h *ProxyHandler) ProxyWorkflowTypes(c *gin.Context) {
 	utils.ProxyToExactURL(h.config.AgentServiceURL + "/workflows/types")(c)
 }
+
+// Public Metrics endpoints (proxy to Metrics Service with path rewrite)
+// Handles /api/metrics/*path -> http://metrics:8005/metrics/*path
+func (h *ProxyHandler) ProxyMetricsDORA(c *gin.Context) {
+	utils.ProxyToExactURL(h.config.MetricsServiceURL + "/metrics/dora")(c)
+}
+
+func (h *ProxyHandler) ProxyMetricsDeploymentEvent(c *gin.Context) {
+	utils.ProxyToExactURL(h.config.MetricsServiceURL + "/metrics/events/deployment")(c)
+}
+
+func (h *ProxyHandler) ProxyMetricsChangeEvent(c *gin.Context) {
+	utils.ProxyToExactURL(h.config.MetricsServiceURL + "/metrics/events/change")(c)
+}
+
+func (h *ProxyHandler) ProxyMetricsIncidentEvent(c *gin.Context) {
+	utils.ProxyToExactURL(h.config.MetricsServiceURL + "/metrics/events/incident")(c)
+}
+
+func (h *ProxyHandler) ProxyMetricsEvents(c *gin.Context) {
+	utils.ProxyToExactURL(h.config.MetricsServiceURL + "/metrics/events")(c)
+}

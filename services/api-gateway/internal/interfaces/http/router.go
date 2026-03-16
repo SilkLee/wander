@@ -91,6 +91,17 @@ func (r *Router) setupRoutes() {
 		workflows.GET("/types", proxyHandler.ProxyWorkflowTypes)
 	}
 
+	// Public metrics routes (no JWT required — frontend has no auth)
+	metrics := r.engine.Group("/api/metrics")
+	metrics.Use(middleware.RateLimit(cfg.RateLimitRPS))
+	{
+		metrics.GET("/dora", middleware.CacheResponse(30*time.Second), proxyHandler.ProxyMetricsDORA)
+		metrics.POST("/events/deployment", proxyHandler.ProxyMetricsDeploymentEvent)
+		metrics.POST("/events/change", proxyHandler.ProxyMetricsChangeEvent)
+		metrics.POST("/events/incident", proxyHandler.ProxyMetricsIncidentEvent)
+		metrics.GET("/events", proxyHandler.ProxyMetricsEvents)
+	}
+
 	// Admin routes (require admin role)
 	admin := r.engine.Group("/admin")
 	admin.Use(middleware.RateLimit(cfg.RateLimitRPS))
