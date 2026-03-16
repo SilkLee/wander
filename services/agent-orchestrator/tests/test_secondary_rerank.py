@@ -4,8 +4,6 @@ Covers: secondary_rerank function signature, return structure,
 passthrough behavior (stub), and integration hooks in agent flows.
 """
 
-import pytest
-from typing import Any, Dict, List
 
 
 # ---------------------------------------------------------------------------

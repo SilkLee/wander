@@ -1,7 +1,6 @@
 """Elasticsearch client for indexing and search."""
 
 from typing import List, Dict, Any, Optional
-import uuid
 from elasticsearch import AsyncElasticsearch
 from elasticsearch.helpers import async_bulk
 

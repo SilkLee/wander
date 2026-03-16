@@ -2,6 +2,7 @@ package parser
 
 import (
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -34,14 +35,16 @@ func ParseLog(content string, logType LogType) *FailureSignal {
 
 	lines := strings.Split(content, "\n")
 
-	// Extract error patterns
-	errorPatterns := []string{
-		`(?i)error:?\s*(.+)`,
-		`(?i)exception:?\s*(.+)`,
-		`(?i)fatal:?\s*(.+)`,
-		`(?i)failed:?\s*(.+)`,
-		`(?i)panic:?\s*(.+)`,
-	}
+	// Pre-compiled error patterns (avoid recompiling inside loops)
+var errorPatterns = []*regexp.Regexp{
+	regexp.MustCompile(`(?i)error:?\s*(.+)`),
+	regexp.MustCompile(`(?i)exception:?\s*(.+)`),
+	regexp.MustCompile(`(?i)fatal:?\s*(.+)`),
+	regexp.MustCompile(`(?i)failed:?\s*(.+)`),
+	regexp.MustCompile(`(?i)panic:?\s*(.+)`),
+}
+
+var exitCodeRe = regexp.MustCompile(`exit code:?\s*(\d+)`)
 
 	var errorLines []string
 	var stackTraceLines []string
@@ -56,8 +59,7 @@ func ParseLog(content string, logType LogType) *FailureSignal {
 		}
 
 		// Check for error patterns
-		for _, pattern := range errorPatterns {
-			re := regexp.MustCompile(pattern)
+		for _, re := range errorPatterns {
 			if matches := re.FindStringSubmatch(trimmedLine); len(matches) > 1 {
 				errorLines = append(errorLines, matches[1])
 				signal.LineNumber = i + 1
@@ -91,10 +93,8 @@ func ParseLog(content string, logType LogType) *FailureSignal {
 		}
 
 		// Extract exit code
-		if matches := regexp.MustCompile(`exit code:?\s*(\d+)`).FindStringSubmatch(trimmedLine); len(matches) > 1 {
-			if _, err := regexp.MatchString(`\d+`, matches[1]); err == nil {
-				signal.ExitCode = parseExitCode(matches[1])
-			}
+		if matches := exitCodeRe.FindStringSubmatch(trimmedLine); len(matches) > 1 {
+			signal.ExitCode = parseExitCode(matches[1])
 		}
 	}
 
@@ -148,25 +148,9 @@ func extractKeywords(line string) []string {
 
 // parseExitCode parses exit code from string
 func parseExitCode(s string) int {
-	var code int
-	if _, err := regexp.MatchString(`^\d+$`, s); err == nil {
-		// Simple parsing (would use strconv.Atoi in production)
-		switch s {
-		case "0":
-			code = 0
-		case "1":
-			code = 1
-		case "2":
-			code = 2
-		case "127":
-			code = 127
-		case "137":
-			code = 137
-		case "143":
-			code = 143
-		default:
-			code = 1
-		}
+	code, err := strconv.Atoi(s)
+	if err != nil {
+		return 1
 	}
 	return code
 }

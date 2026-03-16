@@ -3,7 +3,6 @@
 import asyncio
 import logging
 from typing import Dict, Optional
-import uuid
 
 from app.agents.analyzer import LogAnalyzerAgent
 from app.consumers.stream_consumer import StreamConsumer
@@ -141,10 +140,10 @@ class WorkflowProcessor:
         logger.info(f"Analysis ID: {result.get('analysis_id')}")
         logger.info(f"Severity: {result.get('severity')}")
         logger.info(f"Root Cause: {result.get('root_cause')}")
-        logger.info(f"Suggested Fixes:")
+        logger.info("Suggested Fixes:")
         for i, fix in enumerate(result.get("suggested_fixes", []), 1):
             logger.info(f"  {i}. {fix}")
-        logger.info(f"References:")
+        logger.info("References:")
         for i, ref in enumerate(result.get("references", []), 1):
             logger.info(f"  {i}. {ref}")
         logger.info(f"Confidence: {result.get('confidence_score')}")

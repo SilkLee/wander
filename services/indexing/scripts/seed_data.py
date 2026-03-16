@@ -362,7 +362,7 @@ SEED_DOCUMENTS = [
 
 async def seed_knowledge_base():
     """Seed the knowledge base with initial documents."""
-    print(f"Starting knowledge base seeding...")
+    print("Starting knowledge base seeding...")
     print(f"Elasticsearch URL: {settings.ELASTICSEARCH_URL}")
     print(f"Target index: {settings.ELASTICSEARCH_INDEX}")
     print(f"Embedding model: {settings.EMBEDDING_MODEL}")
@@ -398,7 +398,7 @@ async def seed_knowledge_base():
     success_count, fail_count = await search_service.index_batch(documents_to_index)
     
     print(f"\n{'='*60}")
-    print(f"Seeding completed!")
+    print("Seeding completed!")
     print(f"  Successfully indexed: {success_count} documents")
     print(f"  Failed: {fail_count} documents")
     print(f"{'='*60}")

@@ -5,7 +5,6 @@ run_code_review execution, node wrapper functions, stability wrappers
 (CircuitBreaker + run_with_retry), degraded mode, and package exports.
 """
 
-import pytest
 
 
 # ---------------------------------------------------------------------------

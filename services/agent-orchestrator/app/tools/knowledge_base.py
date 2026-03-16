@@ -1,6 +1,6 @@
 """Knowledge base tool for RAG-based search."""
 
-from typing import Optional, Type
+from typing import Type
 
 from langchain_core.tools import BaseTool
 from pydantic import BaseModel, Field
@@ -153,7 +153,7 @@ Input should be a clear, specific search query describing the issue or informati
                 return self._fallback_elasticsearch_search(query)
             return f"Error searching knowledge base: {str(e)}"
             
-        except httpx.RequestError as e:
+        except httpx.RequestError:
             # Network errors - try direct Elasticsearch as fallback
             return self._fallback_elasticsearch_search(query)
             

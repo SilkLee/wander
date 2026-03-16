@@ -4,7 +4,6 @@ Reuses existing extraction logic from analyzer.py _extract_* methods.
 Converts raw agent dict output to domain models (LogAnalysis, Severity, Confidence, RootCause).
 """
 
-import re
 from typing import Any, Optional
 
 from app.application.ports import ParserPort

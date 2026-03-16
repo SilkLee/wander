@@ -18,7 +18,11 @@ func main() {
 	if err := utils.InitRedis(cfg.RedisURL); err != nil {
 		log.Fatalf("Failed to connect to Redis: %v", err)
 	}
-	defer utils.CloseRedis()
+	defer func() {
+		if err := utils.CloseRedis(); err != nil {
+			log.Printf("Failed to close Redis: %v", err)
+		}
+	}()
 
 	// 3. Initialize HTTP router with all dependencies
 	router := http.NewRouter(cfg)

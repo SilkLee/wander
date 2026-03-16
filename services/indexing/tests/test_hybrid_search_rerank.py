@@ -1,6 +1,6 @@
 """Tests for rerank integration in hybrid search pipeline."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 

@@ -2,6 +2,7 @@ package utils
 
 import (
 	"io"
+	"log"
 	"net"
 	"net/http"
 	"strings"
@@ -81,7 +82,9 @@ func ProxyToService(targetURL string) gin.HandlerFunc {
 
 		// Copy status code and body
 		c.Status(resp.StatusCode)
-		io.Copy(c.Writer, resp.Body)
+		if _, err := io.Copy(c.Writer, resp.Body); err != nil {
+			log.Printf("proxy: error copying response body: %v", err)
+		}
 	}
 }
 
@@ -131,6 +134,8 @@ func ProxyToExactURL(targetURL string) gin.HandlerFunc {
 		}
 
 		c.Status(resp.StatusCode)
-		io.Copy(c.Writer, resp.Body)
+		if _, err := io.Copy(c.Writer, resp.Body); err != nil {
+			log.Printf("proxy: error copying response body: %v", err)
+		}
 	}
 }

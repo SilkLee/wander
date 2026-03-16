@@ -5,14 +5,11 @@ handling of optional/nullable fields.
 """
 
 from typing import Optional
-from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from app.domain.models.confidence import Confidence
 from app.domain.models.log_analysis import LogAnalysis
 from app.domain.models.root_cause import RootCause
-from app.domain.models.severity import Severity
 
 
 class RootCauseDTO(BaseModel):

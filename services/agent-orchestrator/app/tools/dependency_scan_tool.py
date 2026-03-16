@@ -67,7 +67,7 @@ class DependencyScanTool(BaseTool):
                 changes: list[Any] = raw_changes if isinstance(raw_changes, list) else []
 
                 if len(changes) == 0:
-                    return f"No dependency changes detected in the provided diff."
+                    return "No dependency changes detected in the provided diff."
 
                 formatted: list[str] = ["Dependency changes detected:\n"]
                 for i, entry in enumerate(changes, 1):

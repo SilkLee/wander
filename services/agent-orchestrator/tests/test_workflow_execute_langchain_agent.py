@@ -10,7 +10,6 @@ Covers:
 - Request schema accepts langchain_tool_agent workflow_type
 """
 
-import pytest
 from unittest.mock import AsyncMock, patch
 from fastapi.testclient import TestClient
 

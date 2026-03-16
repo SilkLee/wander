@@ -48,7 +48,9 @@ func CacheResponse(ttl time.Duration) gin.HandlerFunc {
 			c.Header("X-Cache", "HIT")
 			c.Header("Content-Type", "application/json")
 			c.Writer.WriteHeader(http.StatusOK)
-			c.Writer.Write(cached)
+			if _, err := c.Writer.Write(cached); err != nil {
+				return
+			}
 			c.Abort()
 			return
 		}

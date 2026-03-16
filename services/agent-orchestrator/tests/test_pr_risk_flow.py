@@ -5,8 +5,6 @@ node wrapper functions, stability wrappers (CircuitBreaker + run_with_retry),
 degraded mode, and package exports.
 """
 
-import pytest
-from typing import Dict, Any
 
 
 # ---------------------------------------------------------------------------

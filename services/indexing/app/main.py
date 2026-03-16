@@ -8,7 +8,6 @@ import uvicorn
 
 from app.config import settings
 from app.api import health, indexing
-from app.services import get_embedding_service
 
 
 @asynccontextmanager

@@ -12,13 +12,6 @@ from app.models.dora import (
     IncidentEventRequest,
 )
 from app.utils import parse_iso
-from app.models.dora import (
-    ChangeEventRequest,
-    DeploymentEventRequest,
-    EventListResponse,
-    EventResponse,
-    IncidentEventRequest,
-)
 
 router = APIRouter(prefix="/metrics", tags=["events"])
 

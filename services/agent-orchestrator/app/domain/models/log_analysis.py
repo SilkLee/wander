@@ -5,13 +5,12 @@ and enforces business rules for determining actionability and criticality.
 """
 
 from dataclasses import dataclass, field
-from typing import Optional
 from uuid import UUID, uuid4
 
 from .confidence import Confidence
 from .root_cause import RootCause
 from .severity import Severity
-from ..events import DomainEvent, AnalysisCompletedEvent
+from ..events import DomainEvent
 
 
 @dataclass(frozen=True)

@@ -88,7 +88,7 @@ async def health_check() -> HealthResponse:
     
     try:
         # Use asyncio.to_thread to avoid blocking FastAPI event loop
-        inference_service = await asyncio.to_thread(get_inference_service)
+        await asyncio.to_thread(get_inference_service)
         model_loaded = True
     except Exception as e:
         print(f"Model health check failed: {e}")
@@ -169,18 +169,18 @@ async def generate_stream(request: GenerateRequest):
                 ):
                     if is_final:
                         # Send final event with metadata
-                        yield f"event: done\n"
+                        yield "event: done\n"
                         yield f"data: {{\"tokens_generated\": {token_count}, \"finish_reason\": \"stop\"}}\n\n"
                     else:
                         # Send token event
                         token_count += 1
                         # Escape special characters for JSON
                         escaped_token = token_text.replace('\\', '\\\\').replace('"', '\\"').replace('\n', '\\n').replace('\r', '\\r')
-                        yield f"event: token\n"
+                        yield "event: token\n"
                         yield f"data: {{\"token\": \"{escaped_token}\"}}\n\n"
             except Exception as e:
                 # Send error event
-                yield f"event: error\n"
+                yield "event: error\n"
                 yield f"data: {{\"error\": \"{str(e)}\"}}\n\n"
         
         return StreamingResponse(

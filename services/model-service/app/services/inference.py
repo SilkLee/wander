@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from typing import Optional, Generator, Iterator, List, Dict, Union
+from typing import Optional, Iterator, List, Dict, Union
 
 from app.config import settings
 
@@ -69,7 +69,7 @@ class InferenceService:
             self.model = self.model.to(self.device)
         
         self.model.eval()
-        print(f"Model loaded successfully")
+        print("Model loaded successfully")
     def generate(
         self,
         prompt: str,
@@ -147,7 +147,6 @@ class InferenceService:
         """
         # Use defaults if not provided
         import torch
-        from transformers import GenerationConfig
         max_tokens = max_tokens or settings.default_max_tokens
         temperature = temperature if temperature is not None else settings.default_temperature
         top_p = top_p if top_p is not None else settings.default_top_p
@@ -155,17 +154,7 @@ class InferenceService:
         # Tokenize input
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
         input_ids = inputs.input_ids
-        input_length = input_ids.shape[1]
         
-        # Generation config
-        gen_config = GenerationConfig(
-            max_new_tokens=max_tokens,
-            temperature=temperature,
-            top_p=top_p,
-            do_sample=temperature > 0,
-            pad_token_id=self.tokenizer.eos_token_id,
-            eos_token_id=self.tokenizer.eos_token_id,
-        )
         
         # Track generated tokens
         generated_tokens = []
@@ -393,7 +382,6 @@ def get_inference_service() -> Union[InferenceService, OpenRouterInferenceServic
             print("Using OpenRouter API for inference")
             _inference_service = OpenRouterInferenceService()
         else:
-            import torch  # noqa: F811 — lazy import to avoid loading when using OpenRouter
             print("Using local Transformers model for inference")
             _inference_service = InferenceService()
     return _inference_service

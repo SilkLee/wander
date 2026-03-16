@@ -3,7 +3,7 @@
 import asyncio
 import json
 import logging
-from typing import AsyncGenerator, Dict, Optional
+from typing import AsyncGenerator, Dict
 
 from redis.asyncio import Redis
 from redis.exceptions import ResponseError

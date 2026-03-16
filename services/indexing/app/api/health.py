@@ -4,7 +4,6 @@ from fastapi import APIRouter
 
 from app.models.requests import HealthResponse
 from app.services import get_embedding_service, get_search_service
-from app.config import settings
 
 router = APIRouter(tags=["health"])
 
@@ -34,7 +33,7 @@ async def health_check() -> HealthResponse:
     # Check embedding model
     model_loaded = False
     try:
-        embedding_service = get_embedding_service()
+        get_embedding_service()
         model_loaded = True
     except Exception as e:
         print(f"Embedding model health check failed: {e}")

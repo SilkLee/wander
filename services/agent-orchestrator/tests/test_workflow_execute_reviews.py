@@ -10,7 +10,6 @@ Covers:
 - Request schema accepts pr_risk and code_review workflow_types
 """
 
-import pytest
 from unittest.mock import AsyncMock, patch
 from fastapi.testclient import TestClient
 

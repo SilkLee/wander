@@ -4,7 +4,6 @@ Covers: AgentRole enum, build_triage_graph compilation, run_langgraph execution,
 TriageState schema, node functions, edge routing, and package exports.
 """
 
-import pytest
 from typing import Dict
 
 from app.agents.roles import AgentRole

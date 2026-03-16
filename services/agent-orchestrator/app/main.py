@@ -1,6 +1,5 @@
 """FastAPI main application for Agent Orchestrator service."""
 
-import asyncio
 from contextlib import asynccontextmanager
 
 from redis.asyncio import Redis
@@ -9,7 +8,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
-from app.config import settings
 from app.config import settings
 from app.api import health, workflows
 from app.consumers import StreamConsumer

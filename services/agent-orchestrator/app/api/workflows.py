@@ -158,18 +158,18 @@ Log content:
                     full_text += str(token)
 
                     # Send token event
-                    yield f"event: token\n"
+                    yield "event: token\n"
                     yield f'data: {{"token": {json.dumps(token)}}}\n\n'
 
                 # Send done event
-                yield f"event: done\n"
+                yield "event: done\n"
                 yield f'data: {{"full_text": {json.dumps(full_text)}}}\n\n'
 
             except Exception as e:
                 # Send error event
                 import json
 
-                yield f"event: error\n"
+                yield "event: error\n"
                 yield f'data: {{"error": {json.dumps(str(e))}}}\n\n'
 
         return StreamingResponse(

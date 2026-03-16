@@ -5,7 +5,6 @@ completes successfully and produces actionable results for downstream systems.
 """
 
 from dataclasses import dataclass, field
-from uuid import UUID
 
 from app.domain.events.base import DomainEvent
 from app.domain.models.severity import Severity

@@ -55,7 +55,7 @@ func setupTestRedis(t *testing.T) {
 
 func teardownTestRedis(t *testing.T) {
 	t.Helper()
-	utils.CloseRedis()
+	_ = utils.CloseRedis()
 }
 
 func TestRateLimit_Integration(t *testing.T) {
