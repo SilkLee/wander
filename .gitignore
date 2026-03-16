@@ -102,3 +102,17 @@ credentials.json
 secrets.yaml
 .venv/
 nul
+
+# Agent working files
+.sisyphus/
+
+# CI artifacts
+ci-full-log.txt
+
+# Terraform artifacts (plans, lock files)
+*.tfplan
+tfplan
+.terraform.lock.hcl
+
+# Local bootstrap scripts
+infra/scripts/run-bootstrap.sh

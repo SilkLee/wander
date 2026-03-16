@@ -1,5 +1,0 @@
-OK: k8s/base/frontend-nginx-configmap.yaml
-OK: k8s/base/frontend-deployment.yaml
-OK: k8s/base/frontend-service.yaml
-OK: k8s/base/kustomization.yaml
-nginx proxy check: OK
