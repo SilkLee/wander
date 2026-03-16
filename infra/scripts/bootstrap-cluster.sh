@@ -140,12 +140,13 @@ if helm status kyverno -n kyverno &>/dev/null; then
   warn "  Kyverno already installed — upgrading..."
   helm upgrade kyverno kyverno/kyverno \
     -n kyverno \
-    --create-namespace \
+    --version 3.1.4 \
     --set admissionController.replicas=1 \
     --set backgroundController.replicas=1
 else
   helm install kyverno kyverno/kyverno \
     -n kyverno \
+    --version 3.1.4 \
     --create-namespace \
     --set admissionController.replicas=1 \
     --set backgroundController.replicas=1

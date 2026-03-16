@@ -942,12 +942,13 @@ pre code {
           <rect x="20" y="620" width="920" height="65" rx="8" fill="rgba(245,158,11,0.04)" stroke="#444" stroke-width="1" stroke-dasharray="5,3"/>
           <text x="40" y="640" fill="#666" font-size="11" font-weight="700" letter-spacing="1">INFRASTRUCTURE (AWS ap-southeast-1)</text>
 
-          <text x="120" y="665" fill="#f59e0b" font-size="11" font-weight="600" text-anchor="middle">EKS Cluster</text>
-          <text x="280" y="665" fill="#f59e0b" font-size="11" font-weight="600" text-anchor="middle">2x t3.large</text>
-          <text x="440" y="665" fill="#f59e0b" font-size="11" font-weight="600" text-anchor="middle">ECR (8 repos)</text>
-          <text x="600" y="665" fill="#f59e0b" font-size="11" font-weight="600" text-anchor="middle">Terraform IaC</text>
-          <text x="760" y="665" fill="#f59e0b" font-size="11" font-weight="600" text-anchor="middle">GitHub Actions</text>
-          <text x="890" y="665" fill="#f59e0b" font-size="11" font-weight="600" text-anchor="middle">ArgoCD</text>
+          <text x="100" y="665" fill="#f59e0b" font-size="11" font-weight="600" text-anchor="middle">EKS Cluster</text>
+          <text x="230" y="665" fill="#f59e0b" font-size="11" font-weight="600" text-anchor="middle">2x t3.large</text>
+          <text x="360" y="665" fill="#f59e0b" font-size="11" font-weight="600" text-anchor="middle">ECR (8 repos)</text>
+          <text x="490" y="665" fill="#f59e0b" font-size="11" font-weight="600" text-anchor="middle">Terraform IaC</text>
+          <text x="620" y="665" fill="#f59e0b" font-size="11" font-weight="600" text-anchor="middle">GitHub Actions</text>
+          <text x="740" y="665" fill="#f59e0b" font-size="11" font-weight="600" text-anchor="middle">ArgoCD</text>
+          <text x="870" y="665" fill="#f59e0b" font-size="11" font-weight="600" text-anchor="middle">Kyverno</text>
 
           <!-- Arrow marker definition -->
           <defs>
@@ -1142,6 +1143,10 @@ pre code {
 
     <div class="callout mt-3">
       <strong>CI/CD Pipeline:</strong> GitHub Actions &rarr; Matrix testing (Go &times;2, Python &times;4, Frontend) &rarr; Docker build + ECR push (<code>sha-&lt;commit&gt;</code>) &rarr; Kustomize image update &rarr; ArgoCD auto-sync.
+    </div>
+
+    <div class="callout mt-2" style="border-left-color: #f59e0b;">
+      <strong>Kyverno Policy Engine:</strong> 6 ClusterPolicies in <strong>Enforce</strong> mode &mdash; disallow-latest-tag, require-resource-limits, require-labels, require-probes, restrict-image-registries, disallow-privilege-escalation. Non-compliant workloads are <em>rejected at admission time</em>, ensuring cluster security without manual gate-keeping.
     </div>
   </section>
 
