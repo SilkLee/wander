@@ -91,6 +91,7 @@ workflow-ai/
 │   ├── tech-stack.md       # Technology selection rationale
 │   ├── architecture.md     # System design deep-dive
 │   ├── api.md              # API endpoint reference
+│   ├── cicd.md              # CI/CD system architecture
 │   ├── performance-report.md # Benchmarks & optimizations
 │   ├── interview-prep/     # Q&A preparation materials
 │   └── portfolio/          # Interactive HTML portfolio website
@@ -350,6 +351,7 @@ locust -f locustfile.py --host=http://localhost:8000 --users=1000 --spawn-rate=1
 - **[API Documentation](docs/api.md)** - Endpoint reference & request/response formats
 - **[Interview Preparation](docs/interview-prep/)** - Technical Q&A, demo script
 - **[Performance Report](docs/performance-report.md)** - Benchmarks & optimizations
+- **[CI/CD System Architecture](docs/cicd.md)** - Pipeline design, GitOps flow, security model
 - **[Portfolio Website](docs/portfolio/index.html)** - Interactive project showcase (open in browser)
 
 ---
