@@ -5,7 +5,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Go Version](https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go)](https://golang.org/)
 [![Python Version](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python)](https://www.python.org/)
-[![CI](https://img.shields.io/badge/CI-15%2F15%20passing-brightgreen?logo=github)](https://github.com/SilkLee/workflow-ai/actions)
+[![CI](https://github.com/SilkLee/workflow-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/SilkLee/workflow-ai/actions/workflows/ci.yml)
+[![CD](https://github.com/SilkLee/workflow-ai/actions/workflows/cd.yml/badge.svg)](https://github.com/SilkLee/workflow-ai/actions/workflows/cd.yml)
 [![EKS](https://img.shields.io/badge/EKS-13%2F13%20pods-brightgreen?logo=amazonaws)]()
 
 ---
