@@ -122,6 +122,7 @@ def _create_tables():
                 {
                     "id": str(uuid.uuid4()),
                     "repo": "default",
+                    "sha": f"abc{i:04d}",
                     "detected_at": ts,
                     "resolved_at": ts + timedelta(hours=3),
                     "caused_by_sha": f"abc{i:04d}",
@@ -140,6 +141,49 @@ def _create_tables():
 
 
 from app.main import app  # noqa: E402
+
+
+@pytest.fixture(autouse=True)
+def _reinit_db_engine():
+    """Re-create the async engine inside the current event loop.
+
+    The database module creates the async engine at import time (outside any
+    event loop).  asyncpg connection pools are bound to the event loop that
+    was running when they were created; if the pool was created outside a
+    loop (or on a different loop) asyncpg raises "Future attached to a
+    different loop" errors.
+
+    This fixture disposes the stale engine and re-creates it so that the
+    pool is bound to the test's event loop.
+    """
+    db_url = os.getenv("DATABASE_URL", "")
+    if not db_url:
+        yield
+        return
+
+    import app.infrastructure.database as db_mod
+    from sqlalchemy.ext.asyncio import (
+        AsyncSession,
+        async_sessionmaker,
+        create_async_engine,
+    )
+
+    # Dispose the old engine (created at import time)
+    if db_mod._engine is not None:
+        # dispose() on async engine is sync-safe (doesn't need await)
+        db_mod._engine.sync_engine.dispose(close=False)
+
+    # Re-create engine — the asyncpg pool will bind to the current event loop
+    db_mod._engine = create_async_engine(
+        db_url, echo=False, pool_size=5, max_overflow=10
+    )
+    db_mod._session_factory = async_sessionmaker(
+        db_mod._engine, class_=AsyncSession, expire_on_commit=False
+    )
+    yield
+    # Dispose after each test to avoid cross-test loop leaks
+    if db_mod._engine is not None:
+        db_mod._engine.sync_engine.dispose(close=False)
 
 
 @pytest_asyncio.fixture
