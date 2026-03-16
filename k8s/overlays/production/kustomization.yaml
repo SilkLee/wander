@@ -21,7 +21,7 @@ patches:
 images:
   - name: 589528730663.dkr.ecr.ap-southeast-1.amazonaws.com/workflowai/api-gateway
     newName: 589528730663.dkr.ecr.ap-southeast-1.amazonaws.com/workflowai/api-gateway
-    newTag: sha-1f3da29
+    newTag: sha-1faa8cf
   - name: 589528730663.dkr.ecr.ap-southeast-1.amazonaws.com/workflowai/ingestion
     newName: 589528730663.dkr.ecr.ap-southeast-1.amazonaws.com/workflowai/ingestion
     newTag: sha-47a7fbd
